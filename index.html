@@ -27,10 +27,10 @@
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     // =========================================================================
-    // COLE SUAS CHAVES AQUI
+    // ATENÇÃO: NÃO ESQUEÇA DE COLAR SUAS CHAVES AQUI ANTES DE SALVAR!
     // =========================================================================
     const firebaseConfig = {
-     apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
   projectId: "ace-mind-c13a1",
   storageBucket: "ace-mind-c13a1.firebasestorage.app",
@@ -38,14 +38,20 @@
   appId: "1:22508213575:web:a7a38ac233b893f992e862"
     };
 
-    const app = initializeApp(firebaseConfig);
-    window.db = getFirestore(app);
-    window.auth = getAuth(app);
-    
-    window.fbAPI = { 
-      collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc,
-      signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut 
-    };
+    try {
+      const app = initializeApp(firebaseConfig);
+      window.db = getFirestore(app);
+      window.auth = getAuth(app);
+      
+      window.fbAPI = { 
+        collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc,
+        signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut 
+      };
+      window.firebasePronto = true; // Avisa o React que o banco acordou
+    } catch (erro) {
+      console.error("Erro ao iniciar Firebase:", erro);
+      window.firebaseErro = true;
+    }
   </script>
 </head>
 <body>
@@ -58,10 +64,10 @@
     // TELA 1: LOGIN E CADASTRO
     // --------------------------------------------------
     const TelaAutenticacao = ({ setUsuarioLogado }) => {
-      const [modo, setModo] = useState('login'); // 'login' ou 'cadastro'
+      const [modo, setModo] = useState('login'); 
       const [email, setEmail] = useState('');
       const [senha, setSenha] = useState('');
-      const [cargo, setCargo] = useState('paciente'); // paciente, psicologo, admin
+      const [cargo, setCargo] = useState('paciente'); // Agora só tem essas duas opções abertas ao público
       const [erro, setErro] = useState('');
       const [carregando, setCarregando] = useState(false);
 
@@ -73,10 +79,8 @@
         try {
           let userCredential;
           if (modo === 'cadastro') {
-            // Cria usuário na aba de autenticação do Firebase
             userCredential = await window.fbAPI.createUserWithEmailAndPassword(window.auth, email, senha);
             
-            // Salva o cargo na tabela 'usuarios' do Banco de Dados
             await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "usuarios", userCredential.user.uid), {
               email: email,
               cargo: cargo,
@@ -85,18 +89,13 @@
             
             setUsuarioLogado({ ...userCredential.user, cargo: cargo });
           } else {
-            // Faz login
             userCredential = await window.fbAPI.signInWithEmailAndPassword(window.auth, email, senha);
-            
-            // Busca o cargo do cara no banco
             const userDoc = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", userCredential.user.uid));
-            const cargoBanco = userDoc.exists() ? userDoc.data().cargo : 'paciente'; // Se não tiver, assume paciente
-            
+            const cargoBanco = userDoc.exists() ? userDoc.data().cargo : 'paciente'; 
             setUsuarioLogado({ ...userCredential.user, cargo: cargoBanco });
           }
         } catch (error) {
-          setErro(modo === 'login' ? 'Dados inválidos.' : 'Erro ao criar conta. Senha fraca ou email em uso.');
-          console.error(error);
+          setErro(modo === 'login' ? 'E-mail ou senha inválidos.' : 'Erro ao criar conta. Tente uma senha maior.');
         }
         setCarregando(false);
       };
@@ -111,7 +110,7 @@
               <button onClick={() => setModo('cadastro')} className={`flex-1 text-center pb-2 ${modo === 'cadastro' ? 'text-optic-yellow border-b-2 border-optic-yellow font-bold' : 'text-slate-500'}`}>Criar Conta</button>
             </div>
 
-            {erro && <p className="text-red-500 text-sm mb-4 text-center">{erro}</p>}
+            {erro && <p className="text-red-500 text-sm mb-4 text-center bg-red-500/10 py-2 rounded">{erro}</p>}
             
             <form onSubmit={processarAuth} className="space-y-4">
               <div>
@@ -126,11 +125,11 @@
 
               {modo === 'cadastro' && (
                 <div>
-                  <label className="text-slate-400 text-sm">Nível de Acesso (Cargo)</label>
+                  <label className="text-slate-400 text-sm">Eu sou um(a):</label>
                   <select value={cargo} onChange={e => setCargo(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-white mt-1 outline-none focus:border-optic-yellow">
                     <option value="paciente">Atleta / Paciente</option>
-                    <option value="psicologo">Psicólogo</option>
-                    <option value="admin">Gestor Geral (Admin)</option>
+                    <option value="psicologo">Psicólogo(a)</option>
+                    {/* A OPÇÃO DE ADMIN FOI REMOVIDA DAQUI */}
                   </select>
                 </div>
               )}
@@ -230,11 +229,9 @@
 
       useEffect(() => {
         const buscarTudo = async () => {
-          // Busca todos os usuários cadastrados
           const userSnap = await window.fbAPI.getDocs(window.fbAPI.collection(window.db, "usuarios"));
           setUsuarios(userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
           
-          // Busca todos os checkins do sistema
           const checkinSnap = await window.fbAPI.getDocs(window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(20)));
           setCheckins(checkinSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         };
@@ -246,7 +243,6 @@
           <h2 className="text-3xl text-optic-yellow font-bold mb-8">Painel do Gestor (Visão Global)</h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Bloco 1: Gestão de Usuários */}
             <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl">
               <h3 className="text-xl font-light mb-4">Todos os Usuários Cadastrados ({usuarios.length})</h3>
               <ul className="space-y-3">
@@ -261,7 +257,6 @@
               </ul>
             </div>
 
-            {/* Bloco 2: Últimos Movimentos (Checkins) */}
             <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl">
               <h3 className="text-xl font-light mb-4">Fluxo Global de Check-ins</h3>
               <div className="space-y-3">
@@ -290,38 +285,67 @@
     const App = () => {
       const [usuarioLogado, setUsuarioLogado] = useState(null);
       const [carregandoSistema, setCarregandoSistema] = useState(true);
+      const [erroConexao, setErroConexao] = useState(false);
 
       useEffect(() => {
-        setTimeout(() => {
-          if (window.auth) {
+        // Nova lógica: Fica checando se o Firebase carregou a cada 100ms
+        const checarFirebase = setInterval(() => {
+          if (window.firebaseErro) {
+            clearInterval(checarFirebase);
+            setErroConexao(true);
+            setCarregandoSistema(false);
+          } else if (window.firebasePronto && window.auth) {
+            clearInterval(checarFirebase);
             window.fbAPI.onAuthStateChanged(window.auth, async (user) => {
               if (user) {
-                // Ao carregar a página, verifica no banco qual o cargo do cara
-                const userDoc = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", user.uid));
-                const cargoBanco = userDoc.exists() ? userDoc.data().cargo : 'paciente';
-                setUsuarioLogado({ ...user, cargo: cargoBanco });
+                try {
+                  const userDoc = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", user.uid));
+                  const cargoBanco = userDoc.exists() ? userDoc.data().cargo : 'paciente';
+                  setUsuarioLogado({ ...user, cargo: cargoBanco });
+                } catch(e) {
+                  setUsuarioLogado({ ...user, cargo: 'paciente' });
+                }
               } else {
                 setUsuarioLogado(null);
               }
               setCarregandoSistema(false);
             });
-          } else {
+          }
+        }, 100);
+
+        // Se passar 5 segundos e não carregar, desiste e mostra erro
+        const tempoLimite = setTimeout(() => {
+          clearInterval(checarFirebase);
+          if (carregandoSistema && !window.firebasePronto) {
+            setErroConexao(true);
             setCarregandoSistema(false);
           }
-        }, 1000);
-      }, []);
+        }, 5000);
+
+        return () => { clearInterval(checarFirebase); clearTimeout(tempoLimite); };
+      }, [carregandoSistema]);
 
       const fazerLogout = () => {
         window.fbAPI.signOut(window.auth);
         setUsuarioLogado(null);
       };
 
-      if (carregandoSistema) return <div className="min-h-screen flex items-center justify-center text-optic-yellow">Iniciando Servidor Seguro...</div>;
+      if (carregandoSistema) return <div className="min-h-screen flex items-center justify-center text-optic-yellow text-xl">Conectando ao banco de dados...</div>;
+      
+      if (erroConexao) return (
+        <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
+          <div className="bg-red-500/10 border border-red-500/50 p-8 rounded-xl max-w-lg">
+            <h2 className="text-red-500 text-2xl font-bold mb-4">Erro de Conexão com Firebase</h2>
+            <p className="text-slate-300">O sistema não conseguiu se conectar ao banco de dados.</p>
+            <p className="text-slate-400 text-sm mt-4">Verifique se você copiou e colou as chaves corretamente na variável <code className="bg-black px-2 py-1 rounded">firebaseConfig</code> no topo do arquivo.</p>
+          </div>
+        </div>
+      );
+
       if (!usuarioLogado) return <TelaAutenticacao setUsuarioLogado={setUsuarioLogado} />;
 
       return (
         <div>
-          {/* BARRA DE NAVEGAÇÃO DE TOPO */}
           <div className="bg-slate-900 p-4 flex justify-between items-center border-b border-white/10 text-sm">
             <div className="flex items-center gap-4">
               <span className="font-bold text-lg tracking-widest text-white">Ace<span className="text-optic-yellow">Mind</span></span>
@@ -335,7 +359,6 @@
             </div>
           </div>
 
-          {/* ROTEAMENTO: Exibe a tela correta baseada no Cargo */}
           {usuarioLogado.cargo === 'admin' && <DashboardAdmin />}
           {usuarioLogado.cargo === 'psicologo' && <DashboardPsicologo />}
           {usuarioLogado.cargo === 'paciente' && <MobileApp usuarioAtual={usuarioLogado} />}
