@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AceMind - Psicologia do Tênis</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { 'optic-yellow': '#ccff00' }
+        }
+      }
+    }
+  </script>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body { background-color: #020617; /* Fundo slate-950 */ }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-white">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    // ==========================================
+    // TELA 1: DASHBOARD GERAL
+    // ==========================================
+    const Dashboard = () => {
+      const [atletas] = useState([
+        { id: 1, nome: "Carlos Alcaraz", torneioAtual: "Roland Garros", status: "Estável", corRisco: "bg-green-500" },
+        { id: 2, nome: "João Silva", torneioAtual: "Challenger SP", status: "Alerta de Burnout", corRisco: "bg-red-500" },
+        { id: 3, nome: "Bia Haddad", torneioAtual: "WTA 1000", status: "Foco Alto", corRisco: "bg-[#ccff00]" }
+      ]);
+
+      return (
+        <div className="min-h-screen p-8 font-sans">
+          <header className="flex justify-between items-center mb-12">
+            <div>
+              <h1 className="text-4xl font-light tracking-wider">Ace<span className="text-optic-yellow font-bold">Mind</span></h1>
+              <p className="text-slate-400 mt-1 text-sm uppercase tracking-widest">Painel de Controle Psicológico</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="h-10 w-10 rounded-full border-2 border-optic-yellow overflow-hidden">
+                <img src="https://i.pravatar.cc/100" alt="Avatar Dr." />
+              </div>
+              <span className="text-slate-300">Dr. Almeida</span>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="col-span-2 space-y-6">
+              <h2 className="text-xl text-slate-200 font-light border-b border-white/10 pb-2">Radares de Atenção</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {atletas.map(atleta => (
+                  <div key={atleta.id} className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl hover:border-optic-yellow/50 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-lg font-medium">{atleta.nome}</h3>
+                      <span className={`h-3 w-3 rounded-full ${atleta.corRisco} shadow-[0_0_10px_rgba(204,255,0,0.5)]`}></span>
+                    </div>
+                    <p className="text-sm text-slate-400 mb-1">Torneio: <span className="text-white">{atleta.torneioAtual}</span></p>
+                    <p className="text-sm text-slate-400">Status Mental: <span className="text-white">{atleta.status}</span></p>
+                    <button className="mt-6 text-sm text-optic-yellow hover:text-white transition-colors flex items-center">
+                      Abrir Prontuário <span className="ml-2">→</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <h2 className="text-xl text-slate-200 font-light border-b border-white/10 pb-2">Métricas de Quadra</h2>
+              <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 p-6 rounded-2xl">
+                <h3 className="text-optic-yellow font-medium mb-2 flex items-center">Índice de "Choking" Global</h3>
+                <p className="text-sm text-slate-400 mb-4">Análise de tensão em Break Points</p>
+                <div className="w-full bg-slate-950 h-24 rounded-lg flex items-end p-2 space-x-2">
+                  <div className="w-1/5 bg-white/20 h-[30%] rounded-t-sm hover:bg-optic-yellow transition-colors"></div>
+                  <div className="w-1/5 bg-white/20 h-[50%] rounded-t-sm hover:bg-optic-yellow transition-colors"></div>
+                  <div className="w-1/5 bg-optic-yellow h-[90%] rounded-t-sm shadow-[0_0_15px_rgba(204,255,0,0.4)] relative"></div>
+                  <div className="w-1/5 bg-white/20 h-[40%] rounded-t-sm hover:bg-optic-yellow transition-colors"></div>
+                  <div className="w-1/5 bg-white/20 h-[20%] rounded-t-sm hover:bg-optic-yellow transition-colors"></div>
+                </div>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl">
+                <h3 className="text-white font-medium mb-3">Rotinas Pré-Saque</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-center text-sm text-slate-300"><span className="h-2 w-2 bg-optic-yellow rounded-full mr-3"></span>João S. - Ajustar respiração</li>
+                  <li className="flex items-center text-sm text-slate-300"><span className="h-2 w-2 bg-optic-yellow rounded-full mr-3"></span>Bia H. - Visualização</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // TELA 2: PRONTUÁRIO ESPECÍFICO
+    // ==========================================
+    const ProntuarioAtleta = () => {
+      return (
+        <div className="min-h-screen p-8 font-sans">
+          <div className="flex justify-between items-end mb-8 border-b border-white/10 pb-6">
+            <div className="flex items-center space-x-6">
+              <div className="h-24 w-24 rounded-full border-2 border-optic-yellow p-1">
+                <div className="w-full h-full rounded-full bg-slate-800 bg-[url('https://i.pravatar.cc/200?img=11')] bg-cover"></div>
+              </div>
+              <div>
+                <h1 className="text-4xl font-light tracking-wide">Carlos <span className="font-bold text-optic-yellow">Alcaraz</span></h1>
+                <p className="text-slate-400 mt-2 flex items-center gap-4">
+                  <span>🎾 Destro / Revés de 2 mãos</span>
+                  <span>🏆 Ranking ATP: #2</span>
+                </p>
+              </div>
+            </div>
+            <button className="bg-optic-yellow/10 text-optic-yellow border border-optic-yellow/30 hover:bg-optic-yellow hover:text-slate-950 px-6 py-2 rounded-full transition-all duration-300 font-medium">
+              + Nova Sessão
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="space-y-6">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl">
+                <h3 className="text-lg text-slate-200 font-light mb-4">Métricas de Pressão</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1"><span className="text-slate-400">Eficiência em Break Points</span><span className="text-optic-yellow">78%</span></div>
+                    <div className="w-full bg-slate-900 rounded-full h-2"><div className="bg-optic-yellow h-2 rounded-full shadow-[0_0_10px_rgba(204,255,0,0.5)]" style={{ width: '78%' }}></div></div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1"><span className="text-slate-400">Duplas Faltas Críticas</span><span className="text-red-400">Alto Risco</span></div>
+                    <div className="w-full bg-slate-900 rounded-full h-2"><div className="bg-red-500 h-2 rounded-full" style={{ width: '65%' }}></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-span-2 space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="bg-gradient-to-br from-optic-yellow/10 to-transparent border border-optic-yellow/20 p-6 rounded-2xl">
+                  <h3 className="text-optic-yellow font-medium mb-2">Foco Atual da Terapia</h3>
+                  <p className="text-sm text-slate-300 leading-relaxed">Trabalhando a frustração após erros não forçados no backhand. Acelerando tempo de recuperação.</p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl">
+                  <h3 className="text-white font-medium mb-2">Mapeamento de Rotinas</h3>
+                  <ul className="text-sm text-slate-400 space-y-2">
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-optic-yellow"></div> Pré-saque: 4 quiques na bola</li>
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div> Pós-erro: Evitar olhar pro box</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // TELA 3: APP MOBILE DO ATLETA
+    // ==========================================
+    const MobilePlayerApp = () => {
+      const [sliderValue, setSliderValue] = useState(5);
+
+      return (
+        <div className="flex items-center justify-center min-h-screen p-4">
+          <div className="w-full max-w-[375px] h-[750px] bg-slate-950 rounded-[2.5rem] border-[6px] border-slate-800 overflow-hidden relative shadow-2xl flex flex-col">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-xl z-20"></div>
+
+            <div className="pt-12 pb-6 px-6 bg-gradient-to-b from-optic-yellow/10 to-transparent">
+              <p className="text-optic-yellow text-sm font-medium tracking-wider uppercase mb-1">AceMind</p>
+              <h2 className="text-2xl text-white font-light">E aí, Carlos.</h2>
+              <p className="text-slate-400 text-sm">Como foi o treino hoje?</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6 custom-scrollbar">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5">
+                <h3 className="text-white font-medium mb-4">Diário de Bordo</h3>
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Desfocado</span><span>Foco Total</span></div>
+                    <input type="range" min="1" max="10" defaultValue="7" className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#ccff00]" />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Exausto</span><span>Energizado</span></div>
+                    <input type="range" min="1" max="10" value={sliderValue} onChange={(e) => setSliderValue(e.target.value)} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#ccff00]" />
+                  </div>
+                  <button className="w-full bg-optic-yellow text-slate-950 font-medium py-3 rounded-xl hover:bg-[#b3e600] transition-colors">
+                    Salvar Check-in
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-slate-200 text-sm font-medium mb-3 pl-1">Kit de Emergência</h3>
+                <div className="space-y-3">
+                  <div className="bg-slate-900 border border-white/5 p-4 rounded-xl flex items-center justify-between cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-optic-yellow/20 flex items-center justify-center text-optic-yellow">▶</div>
+                      <div><p className="text-white text-sm font-medium">Visualização de Saque</p><p className="text-slate-500 text-xs">3 min</p></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute bottom-0 w-full bg-slate-950/80 backdrop-blur-xl border-t border-white/10 px-6 py-4 flex justify-between items-center z-10">
+              <span className="text-[10px] font-medium text-optic-yellow">Início</span>
+              <span className="text-[10px] font-medium text-slate-500">Chat Psi</span>
+              <span className="text-[10px] font-medium text-slate-500">Perfil</span>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // MENU PRINCIPAL (Para você navegar)
+    // ==========================================
+    const App = () => {
+      const [telaAtual, setTelaAtual] = useState('dashboard');
+
+      return (
+        <div>
+          {/* Menu de navegação provisório no topo */}
+          <div className="bg-slate-900 p-4 flex justify-center gap-4 border-b border-white/10">
+            <button onClick={() => setTelaAtual('dashboard')} className={`px-4 py-2 rounded font-medium transition ${telaAtual === 'dashboard' ? 'bg-optic-yellow text-black' : 'text-white bg-slate-800 hover:bg-slate-700'}`}>Painel Geral</button>
+            <button onClick={() => setTelaAtual('prontuario')} className={`px-4 py-2 rounded font-medium transition ${telaAtual === 'prontuario' ? 'bg-optic-yellow text-black' : 'text-white bg-slate-800 hover:bg-slate-700'}`}>Visão do Atleta</button>
+            <button onClick={() => setTelaAtual('mobile')} className={`px-4 py-2 rounded font-medium transition ${telaAtual === 'mobile' ? 'bg-optic-yellow text-black' : 'text-white bg-slate-800 hover:bg-slate-700'}`}>App Mobile</button>
+          </div>
+
+          {/* Renderiza a tela escolhida */}
+          {telaAtual === 'dashboard' && <Dashboard />}
+          {telaAtual === 'prontuario' && <ProntuarioAtleta />}
+          {telaAtual === 'mobile' && <MobilePlayerApp />}
+        </div>
+      );
+    };
+
+    // Inicializa o React na tela
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
