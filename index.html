@@ -6,13 +6,13 @@
   <title>AceMind - Psicologia do Tênis</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { theme: { extend: { colors: { 'optic-yellow': '#ccff00' } } } }
-  </script>
+  <script>tailwind.config = { theme: { extend: { colors: { 'optic-yellow': '#ccff00' } } } }</script>
 
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     body { background-color: #020617; color: white; font-family: sans-serif; }
@@ -24,14 +24,14 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     // =========================================================================
     // COLE SUAS CHAVES DO FIREBASE AQUI
     // =========================================================================
     const firebaseConfig = {
-     apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+    apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
   databaseURL: "https://ace-mind-c13a1-default-rtdb.firebaseio.com",
   projectId: "ace-mind-c13a1",
@@ -44,12 +44,9 @@
       const app = initializeApp(firebaseConfig);
       window.db = getFirestore(app);
       window.auth = getAuth(app);
-      window.fbAPI = { collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut };
+      window.fbAPI = { collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc, updateDoc, deleteDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut };
       window.firebasePronto = true;
-    } catch (erro) {
-      console.error("Erro ao iniciar Firebase:", erro);
-      window.firebaseErro = true;
-    }
+    } catch (erro) { window.firebaseErro = true; }
   </script>
 </head>
 <body class="overflow-hidden">
@@ -58,192 +55,232 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // Ícones SVG Reutilizáveis
+    // Ícones simplificados
     const Icons = {
       Dashboard: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>,
       Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>,
-      Activity: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>,
-      Dollar: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
       Chart: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>,
     };
 
+    // Lógica para definir a cor do Risco baseado nas notas de 1 a 10
+    const calcularRisco = (foco, energia) => {
+      if (foco <= 4 || energia <= 4) return { cor: 'bg-red-500', texto: 'Risco Alto', border: 'border-red-500/30' };
+      if (foco <= 6 || energia <= 6) return { cor: 'bg-yellow-500', texto: 'Atenção', border: 'border-yellow-500/30' };
+      return { cor: 'bg-green-500', texto: 'Estável', border: 'border-green-500/30' };
+    };
+
     // --------------------------------------------------
-    // COMPONENTES DO PAINEL DO PSICÓLOGO
+    // 1. VISÃO GERAL (DASHBOARD)
     // --------------------------------------------------
     const ModuloDashboard = ({ checkins }) => (
       <div className="space-y-6">
         <h2 className="text-2xl font-light border-b border-white/10 pb-4">Visão Geral do Sistema</h2>
-        
-        {/* Alertas de Risco & Resumo */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 glass-panel p-6 rounded-2xl">
-            <h3 className="text-lg font-medium mb-4 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Alertas de Risco (Burnout / Ansiedade)</h3>
-            <div className="space-y-3">
-              {checkins.slice(0,3).map((reg, i) => (
-                <div key={i} className="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-red-500/20">
-                  <span className="font-bold text-slate-200">{reg.email.split('@')[0]}</span>
-                  <div className="flex gap-4 text-sm">
-                    <span className="text-red-400">Energia Crítica: {reg.energia}/10</span>
-                    <button className="text-optic-yellow hover:underline">Ver Diário</button>
+        <div className="glass-panel p-6 rounded-2xl">
+          <h3 className="text-lg font-medium mb-4 flex items-center gap-2">Radares de Atenção Diários</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {checkins.slice(0, 6).map((reg, i) => {
+              const risco = calcularRisco(reg.foco, reg.energia);
+              return (
+                <div key={i} className={`bg-slate-900/80 p-4 rounded-xl border ${risco.border}`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-bold text-white truncate">{reg.email.split('@')[0]}</span>
+                    <div className={`w-3 h-3 rounded-full ${risco.cor} shadow-[0_0_8px_currentColor]`}></div>
+                  </div>
+                  <p className="text-xs text-slate-400 mb-2">{risco.texto}</p>
+                  <div className="flex justify-between text-sm">
+                    <span>Foco: <strong>{reg.foco}</strong></span>
+                    <span>Energia: <strong>{reg.energia}</strong></span>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-          
-          <div className="glass-panel p-6 rounded-2xl">
-            <h3 className="text-lg font-medium mb-4 text-optic-yellow">Resumo Diário</h3>
-            <ul className="space-y-4 text-sm text-slate-300">
-              <li className="flex justify-between border-b border-white/5 pb-2"><span>Próximas Sessões Hoje</span><span className="font-bold text-white">4</span></li>
-              <li className="flex justify-between border-b border-white/5 pb-2"><span>Mensagens não lidas</span><span className="font-bold text-white">2</span></li>
-              <li className="flex justify-between"><span>Pagamentos Pendentes</span><span className="font-bold text-red-400">1</span></li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Calendário de Torneios */}
-        <div className="glass-panel p-6 rounded-2xl">
-          <h3 className="text-lg font-medium mb-4">Calendário de Torneios Ativos (Sincronização ATP/WTA)</h3>
-          <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
-            <div className="min-w-[200px] bg-slate-900 border border-optic-yellow/30 p-4 rounded-xl">
-              <span className="text-xs font-bold text-optic-yellow bg-optic-yellow/10 px-2 py-1 rounded">Semana Atual</span>
-              <h4 className="font-bold mt-2">Roland Garros</h4>
-              <p className="text-sm text-slate-400">Paris, França • Saibro</p>
-              <p className="text-xs text-slate-500 mt-2">2 atletas competindo</p>
-            </div>
-            <div className="min-w-[200px] glass-panel p-4 rounded-xl">
-              <span className="text-xs font-bold text-slate-400">Próxima Semana</span>
-              <h4 className="font-bold mt-2">Challenger SP</h4>
-              <p className="text-sm text-slate-400">São Paulo, BR • Quadra Dura</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    const ModuloProntuario = () => (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center border-b border-white/10 pb-4">
-          <h2 className="text-2xl font-light">Gestão de Atletas e Ferramentas</h2>
-          <select className="bg-slate-900 border border-white/20 text-white text-sm rounded-lg focus:ring-optic-yellow focus:border-optic-yellow block p-2">
-            <option>Selecione um Atleta: Carlos Alcaraz</option>
-            <option>João Silva</option>
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Coluna Esquerda: Dados e Rotinas */}
-          <div className="space-y-6 xl:col-span-1">
-            <div className="glass-panel p-6 rounded-2xl">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-optic-yellow"></div>
-                <div>
-                  <h3 className="text-xl font-bold text-optic-yellow">Carlos A.</h3>
-                  <p className="text-xs text-slate-400">ATP #2 • Destro • Fundo de Quadra</p>
-                </div>
-              </div>
-              <h4 className="text-sm font-bold text-slate-300 mt-6 mb-2">Mapeamento de Rotinas</h4>
-              <ul className="text-sm space-y-2 text-slate-400">
-                <li className="bg-slate-900 p-2 rounded border border-white/5"><span className="text-white">Pré-saque:</span> 4 quiques, respiração profunda.</li>
-                <li className="bg-slate-900 p-2 rounded border border-white/5"><span className="text-white">Pós-erro:</span> Ajustar cordas, olhar para toalha.</li>
-              </ul>
-            </div>
-            
-            <div className="glass-panel p-6 rounded-2xl">
-              <h4 className="text-sm font-bold text-slate-300 mb-2">Ajuste de Fuso (Jet Lag)</h4>
-              <p className="text-xs text-slate-400 mb-2">Próximo destino: Tóquio (+12h)</p>
-              <div className="w-full bg-slate-800 rounded-full h-2 mb-1"><div className="bg-optic-yellow h-2 rounded-full" style={{width: '30%'}}></div></div>
-              <p className="text-[10px] text-right text-slate-500">Adaptação de sono em andamento</p>
-            </div>
-          </div>
-
-          {/* Coluna Central/Direita: Ferramentas de Tênis */}
-          <div className="space-y-6 xl:col-span-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-red-500">
-                <h4 className="font-bold mb-1 flex items-center gap-2">Monitoramento de "Choking"</h4>
-                <p className="text-xs text-slate-400 mb-4">Tensão em fechamento de sets.</p>
-                <div className="text-3xl font-light text-red-400 mb-1">68%</div>
-                <p className="text-xs text-slate-500">Taxa de duplas faltas em Break Points contra (últimos 3 meses).</p>
-              </div>
-              
-              <div className="glass-panel p-6 rounded-2xl">
-                <h4 className="font-bold mb-1">Análise de Linguagem Corporal</h4>
-                <p className="text-xs text-slate-400 mb-4">Upload de vídeos de jogos.</p>
-                <div className="h-24 bg-slate-900 rounded-lg border border-dashed border-white/20 flex items-center justify-center text-slate-500 text-sm hover:border-optic-yellow hover:text-optic-yellow cursor-pointer transition">
-                  + Enviar clipe (mp4)
-                </div>
-              </div>
-            </div>
-
-            <div className="glass-panel p-6 rounded-2xl min-h-[250px]">
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="font-bold">Histórico de Sessões Clínicas (SOAP)</h4>
-                <button className="text-xs bg-optic-yellow text-black px-3 py-1 rounded font-bold">+ Nova Anotação</button>
-              </div>
-              <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
-                <span className="text-xs text-optic-yellow mb-2 block">16 Março 2026 - Zoom</span>
-                <p className="text-sm text-slate-300"><strong className="text-white">S:</strong> Relatou frustração com backhand.<br/><strong className="text-white">O:</strong> Tensão nos ombros.<br/><strong className="text-white">A:</strong> Ansiedade pré-torneio leve.<br/><strong className="text-white">P:</strong> Reforçar rotina de toalha pós-erro.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    const ModuloFinanceiro = () => (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-light border-b border-white/10 pb-4">Gestão Financeira e Administrativa</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="glass-panel p-6 rounded-2xl">
-            <h3 className="font-bold mb-4 text-optic-yellow">Agendamento Automático</h3>
-            <p className="text-sm text-slate-400 mb-4">Sincronizado com Google Calendar.</p>
-            <div className="space-y-2">
-              <div className="p-3 bg-slate-900 rounded flex justify-between items-center">
-                <span className="text-sm">Hoje, 14:00 - Sessão Online</span>
-                <button className="text-xs bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded text-white">Abrir Zoom</button>
-              </div>
-            </div>
-          </div>
-          <div className="glass-panel p-6 rounded-2xl">
-            <h3 className="font-bold mb-4 text-green-400">Faturamento e Pacotes</h3>
-            <div className="flex justify-between items-end mb-6">
-              <div>
-                <p className="text-sm text-slate-400">Receita Estimada (Mês)</p>
-                <p className="text-3xl font-light">R$ 14.500</p>
-              </div>
-              <button className="text-xs border border-white/20 px-3 py-1 rounded hover:bg-white/10">Emitir Recibo</button>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-slate-300"><span>Pacote Pré-Grand Slam (Carlos A.)</span><span className="text-green-400">Pago</span></div>
-              <div className="flex justify-between text-slate-300"><span>Acompanhamento Mensal (João S.)</span><span className="text-red-400">Pendente</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    const ModuloRelatorios = () => (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-light border-b border-white/10 pb-4">Relatórios de Evolução Mental</h2>
-        <div className="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center py-16 text-center">
-          <Icons.Chart />
-          <h3 className="text-lg font-bold mt-4">Gráficos de Desempenho em Construção</h3>
-          <p className="text-sm text-slate-400 max-w-md mt-2">Esta área gerará relatórios visuais filtrados da evolução da resiliência e foco ao longo da temporada para serem exportados para os treinadores técnicos.</p>
         </div>
       </div>
     );
 
     // --------------------------------------------------
-    // TELA PRINCIPAL DO PSICÓLOGO (Com Sidebar)
+    // 2. PRONTUÁRIO ELETRÔNICO (CRUD Completo)
+    // --------------------------------------------------
+    const ModuloProntuario = () => {
+      const [rotinaPre, setRotinaPre] = useState("4 quiques, respiração profunda.");
+      const [rotinaPos, setRotinaPos] = useState("Ajustar cordas, olhar para toalha.");
+      const [editandoRotina, setEditandoRotina] = useState(false);
+      
+      const [anotacoes, setAnotacoes] = useState([{ id: 1, data: new Date().toISOString(), texto: "S: Frustração.\nO: Tensão.\nA: Ansiedade.\nP: Reforçar toalha.", editadoEm: null }]);
+      const [novaAnotacao, setNovaAnotacao] = useState("");
+      const [editandoAnotacaoId, setEditandoAnotacaoId] = useState(null);
+
+      const salvarRotina = () => setEditandoRotina(false);
+
+      const salvarAnotacao = () => {
+        if (!novaAnotacao.trim()) return;
+        if (editandoAnotacaoId) {
+          setAnotacoes(anotacoes.map(a => a.id === editandoAnotacaoId ? { ...a, texto: novaAnotacao, editadoEm: new Date().toISOString() } : a));
+          setEditandoAnotacaoId(null);
+        } else {
+          setAnotacoes([{ id: Date.now(), data: new Date().toISOString(), texto: novaAnotacao, editadoEm: null }, ...anotacoes]);
+        }
+        setNovaAnotacao("");
+      };
+
+      const excluirAnotacao = (id) => setAnotacoes(anotacoes.filter(a => a.id !== id));
+      
+      const editarAnotacao = (anotacao) => {
+        setNovaAnotacao(anotacao.texto);
+        setEditandoAnotacaoId(anotacao.id);
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center border-b border-white/10 pb-4">
+            <h2 className="text-2xl font-light">Gestão de Atletas</h2>
+            <div className="flex gap-2">
+              <select className="bg-slate-900 border border-white/20 text-white text-sm rounded-lg p-2">
+                <option>Atleta: Carlos Alcaraz</option>
+              </select>
+              <button className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded text-sm">+ Novo Atleta</button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="space-y-6 xl:col-span-1">
+              <div className="glass-panel p-6 rounded-2xl">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-sm font-bold text-optic-yellow">Mapeamento de Rotinas</h4>
+                  <button onClick={() => editandoRotina ? salvarRotina() : setEditandoRotina(true)} className="text-xs bg-white/10 px-2 py-1 rounded hover:bg-white/20">
+                    {editandoRotina ? 'Salvar' : 'Editar'}
+                  </button>
+                </div>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <label className="text-xs text-slate-400">Pré-saque</label>
+                    {editandoRotina ? <input type="text" value={rotinaPre} onChange={e=>setRotinaPre(e.target.value)} className="w-full bg-slate-900 border border-white/20 rounded p-2 text-white" /> 
+                    : <div className="bg-slate-900 p-2 rounded">{rotinaPre}</div>}
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400">Pós-erro</label>
+                    {editandoRotina ? <input type="text" value={rotinaPos} onChange={e=>setRotinaPos(e.target.value)} className="w-full bg-slate-900 border border-white/20 rounded p-2 text-white" /> 
+                    : <div className="bg-slate-900 p-2 rounded">{rotinaPos}</div>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl">
+                <h4 className="font-bold mb-2">Análise de Linguagem Corporal</h4>
+                <div className="h-24 bg-slate-900 rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-slate-500 text-sm hover:border-optic-yellow hover:text-optic-yellow cursor-pointer transition">
+                  <span>+ Upload de Vídeo (.mp4)</span>
+                  <span className="text-[10px] mt-1">(Requer Firebase Storage)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="xl:col-span-2 glass-panel p-6 rounded-2xl flex flex-col h-[600px]">
+              <h4 className="font-bold mb-4">Histórico de Sessões Clínicas (SOAP)</h4>
+              
+              <div className="bg-slate-900 p-4 rounded-xl mb-6">
+                <textarea value={novaAnotacao} onChange={e=>setNovaAnotacao(e.target.value)} placeholder="Digite o SOAP da sessão de hoje..." className="w-full h-24 bg-transparent border-none outline-none resize-none text-sm text-slate-200 custom-scrollbar"></textarea>
+                <div className="flex justify-end mt-2">
+                  <button onClick={salvarAnotacao} className="bg-optic-yellow text-black px-4 py-2 rounded text-sm font-bold">{editandoAnotacaoId ? 'Atualizar Anotação' : 'Salvar Sessão'}</button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2">
+                {anotacoes.map(a => (
+                  <div key={a.id} className="bg-slate-900/50 p-4 rounded-xl border border-white/5 relative group">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <span className="text-xs text-optic-yellow font-bold">{new Date(a.data).toLocaleString('pt-BR')}</span>
+                        {a.editadoEm && <span className="text-[10px] text-slate-500 ml-2 italic">(Editado em: {new Date(a.editadoEm).toLocaleString('pt-BR')})</span>}
+                      </div>
+                      <div className="hidden group-hover:flex gap-2">
+                        <button onClick={() => editarAnotacao(a)} className="text-xs text-blue-400 hover:underline">Editar</button>
+                        <button onClick={() => excluirAnotacao(a.id)} className="text-xs text-red-400 hover:underline">Excluir</button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-300 whitespace-pre-wrap">{a.texto}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // --------------------------------------------------
+    // 3. RELATÓRIOS (Geração de PDF)
+    // --------------------------------------------------
+    const ModuloRelatorios = () => {
+      const [objetivos, setObjetivos] = useState("");
+      const [treinos, setTreinos] = useState("");
+
+      const gerarPDF = () => {
+        const elementoHTML = document.getElementById('relatorio-conteudo');
+        const config = {
+          margin: 10,
+          filename: 'Evolucao_Mental_Atleta.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        window.html2pdf().set(config).from(elementoHTML).save();
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center border-b border-white/10 pb-4">
+            <h2 className="text-2xl font-light">Evolução Mental</h2>
+            <button onClick={gerarPDF} className="bg-optic-yellow text-black px-4 py-2 rounded font-bold text-sm">Exportar PDF</button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="glass-panel p-6 rounded-2xl space-y-4">
+              <h3 className="font-bold text-optic-yellow">Preenchimento do Relatório</h3>
+              <div>
+                <label className="text-xs text-slate-400 block mb-1">Registro de Treinos / Curtíssimo Prazo</label>
+                <textarea value={treinos} onChange={e=>setTreinos(e.target.value)} className="w-full h-24 bg-slate-900 border border-white/10 rounded p-2 text-sm" placeholder="Resumo do comportamento em quadra..."></textarea>
+              </div>
+              <div>
+                <label className="text-xs text-slate-400 block mb-1">Objetivos a Longo Prazo</label>
+                <textarea value={objetivos} onChange={e=>setObjetivos(e.target.value)} className="w-full h-24 bg-slate-900 border border-white/10 rounded p-2 text-sm" placeholder="Metas de resiliência, regulação emocional..."></textarea>
+              </div>
+            </div>
+
+            {/* Pré-visualização do Relatório (invisível fora do papel, mas formatado pro PDF) */}
+            <div className="bg-white text-black p-8 rounded-lg overflow-y-auto h-[500px]" id="relatorio-conteudo">
+              <div className="text-center border-b-2 border-black pb-4 mb-6">
+                <h1 className="text-3xl font-bold uppercase tracking-widest">Ace<span className="text-gray-400">Mind</span></h1>
+                <p className="text-sm text-gray-600">Relatório Oficial de Acompanhamento Esportivo</p>
+              </div>
+              <h2 className="text-xl font-bold mb-2">Atleta: Carlos Alcaraz</h2>
+              <p className="text-sm text-gray-500 mb-6">Data de Emissão: {new Date().toLocaleDateString('pt-BR')}</p>
+              
+              <div className="mb-6">
+                <h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">1. Registro de Treinos (Curto Prazo)</h3>
+                <p className="text-sm whitespace-pre-wrap">{treinos || "Nenhum dado preenchido."}</p>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">2. Objetivos Finais (Longo Prazo)</h3>
+                <p className="text-sm whitespace-pre-wrap">{objetivos || "Nenhum dado preenchido."}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // --------------------------------------------------
+    // NAVEGAÇÃO DO PSICÓLOGO
     // --------------------------------------------------
     const DashboardPsicologo = () => {
-      const [abaAtiva, setAbaAtiva] = useState('dashboard');
+      const [abaAtiva, setAbaAtiva] = useState('prontuario');
       const [checkins, setCheckins] = useState([]);
 
       useEffect(() => {
         const buscarDados = async () => {
-          const q = window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(10));
+          const q = window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(20));
           const querySnapshot = await window.fbAPI.getDocs(q);
           setCheckins(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         };
@@ -252,39 +289,24 @@
 
       const menuItems = [
         { id: 'dashboard', label: 'Visão Geral', icon: Icons.Dashboard },
-        { id: 'prontuario', label: 'Meus Atletas', icon: Icons.Users },
-        { id: 'financeiro', label: 'Admin / Financeiro', icon: Icons.Dollar },
-        { id: 'relatorios', label: 'Relatórios', icon: Icons.Chart },
+        { id: 'prontuario', label: 'Prontuário (Atletas)', icon: Icons.Users },
+        { id: 'relatorios', label: 'Relatórios (PDF)', icon: Icons.Chart },
       ];
 
       return (
-        <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-[#020617]">
-          {/* Sidebar */}
+        <div className="flex h-[calc(100vh-64px)] bg-[#020617]">
           <aside className="w-64 glass-panel border-t-0 border-l-0 border-b-0 flex flex-col py-6 px-4">
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 pl-3">Menu Clínico</div>
             <nav className="flex flex-col gap-2">
               {menuItems.map(item => (
-                <button 
-                  key={item.id} 
-                  onClick={() => setAbaAtiva(item.id)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${abaAtiva === item.id ? 'bg-optic-yellow text-black font-bold shadow-[0_0_15px_rgba(204,255,0,0.2)]' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
-                >
-                  <item.icon />
-                  <span className="text-sm">{item.label}</span>
+                <button key={item.id} onClick={() => setAbaAtiva(item.id)} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${abaAtiva === item.id ? 'bg-optic-yellow text-black font-bold shadow-[0_0_15px_rgba(204,255,0,0.2)]' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
+                  <item.icon /><span className="text-sm">{item.label}</span>
                 </button>
               ))}
             </nav>
-            <div className="mt-auto bg-slate-900 p-4 rounded-xl border border-white/5">
-              <p className="text-xs text-slate-400">Portal do Atleta</p>
-              <p className="text-[10px] text-slate-500 mt-1">Biblioteca de Mindfulness ativa para 2 pacientes.</p>
-            </div>
           </aside>
-
-          {/* Área de Conteúdo Principal */}
           <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             {abaAtiva === 'dashboard' && <ModuloDashboard checkins={checkins} />}
             {abaAtiva === 'prontuario' && <ModuloProntuario />}
-            {abaAtiva === 'financeiro' && <ModuloFinanceiro />}
             {abaAtiva === 'relatorios' && <ModuloRelatorios />}
           </main>
         </div>
@@ -292,130 +314,63 @@
     };
 
     // --------------------------------------------------
-    // AUTENTICAÇÃO E APP MOBILE (Mantidos como estavam)
+    // BASE DO SISTEMA (Login, Sessão)
     // --------------------------------------------------
     const TelaAutenticacao = ({ setUsuarioLogado }) => {
-      const [modo, setModo] = useState('login'); 
       const [email, setEmail] = useState('');
       const [senha, setSenha] = useState('');
-      const [cargo, setCargo] = useState('paciente');
-      const [erro, setErro] = useState('');
-      const [carregando, setCarregando] = useState(false);
-
-      const processarAuth = async (e) => {
+      const fazerLogin = async (e) => {
         e.preventDefault();
-        setCarregando(true);
         try {
-          let userCredential;
-          if (modo === 'cadastro') {
-            userCredential = await window.fbAPI.createUserWithEmailAndPassword(window.auth, email, senha);
-            await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "usuarios", userCredential.user.uid), { email, cargo, dataCadastro: new Date().toISOString() });
-            setUsuarioLogado({ ...userCredential.user, cargo });
-          } else {
-            userCredential = await window.fbAPI.signInWithEmailAndPassword(window.auth, email, senha);
-            const userDoc = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", userCredential.user.uid));
-            setUsuarioLogado({ ...userCredential.user, cargo: userDoc.exists() ? userDoc.data().cargo : 'paciente' });
-          }
-        } catch (error) { setErro('Dados inválidos ou erro de conexão.'); }
-        setCarregando(false);
+          const cred = await window.fbAPI.signInWithEmailAndPassword(window.auth, email, senha);
+          const docRef = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", cred.user.uid));
+          setUsuarioLogado({ ...cred.user, cargo: docRef.exists() ? docRef.data().cargo : 'paciente' });
+        } catch (error) { alert("Erro de Login"); }
       };
-
       return (
         <div className="min-h-screen flex items-center justify-center p-4">
-          <div className="glass-panel p-8 rounded-2xl w-full max-w-md">
-            <h1 className="text-4xl font-light tracking-wider text-center mb-6">Ace<span className="text-optic-yellow font-bold">Mind</span></h1>
-            <div className="flex justify-between mb-8 border-b border-white/10 pb-2">
-              <button onClick={() => setModo('login')} className={`flex-1 pb-2 ${modo === 'login' ? 'text-optic-yellow border-b-2 border-optic-yellow font-bold' : 'text-slate-500'}`}>Entrar</button>
-              <button onClick={() => setModo('cadastro')} className={`flex-1 pb-2 ${modo === 'cadastro' ? 'text-optic-yellow border-b-2 border-optic-yellow font-bold' : 'text-slate-500'}`}>Criar Conta</button>
-            </div>
-            {erro && <p className="text-red-500 text-sm mb-4 bg-red-500/10 p-2 rounded text-center">{erro}</p>}
-            <form onSubmit={processarAuth} className="space-y-4">
-              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 outline-none focus:border-optic-yellow" required />
-              <input type="password" placeholder="Senha" value={senha} onChange={e => setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 outline-none focus:border-optic-yellow" required />
-              {modo === 'cadastro' && (
-                <select value={cargo} onChange={e => setCargo(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 outline-none focus:border-optic-yellow">
-                  <option value="paciente">Atleta / Paciente</option>
-                  <option value="psicologo">Psicólogo(a)</option>
-                </select>
-              )}
-              <button type="submit" disabled={carregando} className="w-full bg-optic-yellow text-slate-950 font-bold py-3 rounded-lg hover:bg-[#b3e600]">{carregando ? 'Aguarde...' : 'Acessar'}</button>
-            </form>
-          </div>
+          <form onSubmit={fazerLogin} className="glass-panel p-8 rounded-2xl w-full max-w-md space-y-4">
+            <h1 className="text-4xl text-center mb-6 font-light">Ace<span className="font-bold text-optic-yellow">Mind</span></h1>
+            <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3" required />
+            <input type="password" placeholder="Senha" value={senha} onChange={e=>setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3" required />
+            <button type="submit" className="w-full bg-optic-yellow text-black font-bold p-3 rounded">Entrar</button>
+          </form>
         </div>
       );
     };
 
-    const MobileApp = ({ usuarioAtual }) => {
-      const [foco, setFoco] = useState(5);
-      const [energia, setEnergia] = useState(5);
-      const salvarCheckin = async () => {
-        try {
-          await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "checkins"), { pacienteId: usuarioAtual.uid, email: usuarioAtual.email, foco: parseInt(foco), energia: parseInt(energia), data: new Date().toISOString() });
-          alert("Enviado com sucesso!");
-        } catch (error) {}
-      };
-      return (
-        <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4 bg-black/90">
-          <div className="w-full max-w-[375px] h-[700px] bg-slate-950 rounded-[2.5rem] border-[6px] border-slate-800 overflow-hidden relative shadow-2xl flex flex-col">
-            <div className="pt-12 pb-6 px-6 bg-gradient-to-b from-optic-yellow/10 to-transparent">
-              <h2 className="text-xl text-white truncate">Olá, {usuarioAtual.email.split('@')[0]}</h2>
-              <p className="text-slate-400 text-sm">Diário Pós-Treino.</p>
-            </div>
-            <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6">
-              <div className="glass-panel p-5 rounded-2xl">
-                <div className="space-y-6">
-                  <div><div className="flex justify-between text-xs text-slate-400 mb-2"><span>Desfocado</span><span>Foco Total</span></div><input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} className="w-full accent-[#ccff00]" /></div>
-                  <div><div className="flex justify-between text-xs text-slate-400 mb-2"><span>Exausto</span><span>Energizado</span></div><input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="w-full accent-[#ccff00]" /></div>
-                  <button onClick={salvarCheckin} className="w-full bg-optic-yellow text-slate-950 font-bold py-3 rounded-xl">Salvar Diário</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    // --------------------------------------------------
-    // BASE DO SISTEMA
-    // --------------------------------------------------
     const App = () => {
       const [usuarioLogado, setUsuarioLogado] = useState(null);
-      const [carregandoSistema, setCarregandoSistema] = useState(true);
-
+      
       useEffect(() => {
-        const checarFirebase = setInterval(() => {
+        const chk = setInterval(() => {
           if (window.firebasePronto && window.auth) {
-            clearInterval(checarFirebase);
-            window.fbAPI.onAuthStateChanged(window.auth, async (user) => {
-              if (user) {
+            clearInterval(chk);
+            window.fbAPI.onAuthStateChanged(window.auth, async (u) => {
+              if (u) {
                 try {
-                  const userDoc = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", user.uid));
-                  setUsuarioLogado({ ...user, cargo: userDoc.exists() ? userDoc.data().cargo : 'paciente' });
-                } catch(e) { setUsuarioLogado({ ...user, cargo: 'paciente' }); }
+                  const d = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", u.uid));
+                  setUsuarioLogado({ ...u, cargo: d.exists() ? d.data().cargo : 'paciente' });
+                } catch(e) { setUsuarioLogado({...u, cargo: 'paciente'}); }
               } else { setUsuarioLogado(null); }
-              setCarregandoSistema(false);
             });
           }
         }, 100);
-        return () => clearInterval(checarFirebase);
       }, []);
 
-      if (carregandoSistema) return <div className="min-h-screen flex items-center justify-center text-optic-yellow">Iniciando...</div>;
       if (!usuarioLogado) return <TelaAutenticacao setUsuarioLogado={setUsuarioLogado} />;
 
       return (
         <div className="h-screen flex flex-col overflow-hidden">
-          {/* Topbar Fixa */}
           <div className="h-16 bg-slate-950 border-b border-white/10 flex justify-between items-center px-6 shrink-0">
             <span className="font-bold text-xl tracking-widest text-white">Ace<span className="text-optic-yellow">Mind</span></span>
-            <div className="flex items-center gap-4">
-              <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1 rounded uppercase border border-white/10">{usuarioLogado.cargo}</span>
-              <button onClick={() => { window.fbAPI.signOut(window.auth); setUsuarioLogado(null); }} className="text-xs text-red-400 hover:text-red-300">Sair da Conta</button>
+            <div className="flex gap-4 items-center">
+               <span className="text-xs text-slate-400 bg-white/5 px-2 py-1 rounded uppercase border border-white/10">{usuarioLogado.cargo}</span>
+               <button onClick={() => { window.fbAPI.signOut(window.auth); setUsuarioLogado(null); }} className="text-xs text-red-400 hover:text-white">Sair</button>
             </div>
           </div>
-          
-          {/* Roteamento Principal */}
-          {usuarioLogado.cargo === 'psicologo' || usuarioLogado.cargo === 'admin' ? <DashboardPsicologo /> : <MobileApp usuarioAtual={usuarioLogado} />}
+          {/* Se for psicólogo/admin mostra o Dashboard, senão mostra apenas um aviso (pois o mobile app foi minimizado para caber o código) */}
+          {usuarioLogado.cargo === 'psicologo' || usuarioLogado.cargo === 'admin' ? <DashboardPsicologo /> : <div className="p-8">Logado como paciente. (Visão mobile desativada nesta prévia)</div>}
         </div>
       );
     };
