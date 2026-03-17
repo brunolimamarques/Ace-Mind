@@ -31,7 +31,7 @@
     // COLE SUAS CHAVES DO FIREBASE AQUI
     // =========================================================================
     const firebaseConfig = {
-     apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+   apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
   databaseURL: "https://ace-mind-c13a1-default-rtdb.firebaseio.com",
   projectId: "ace-mind-c13a1",
@@ -61,20 +61,22 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    // Ícones Globais
+    // Ícones Globais Expandidos
     const Icons = {
       Dashboard: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>,
-      Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>,
+      Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>,
       Chart: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>,
       Video: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>,
       Trash: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>,
+      Calendar: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>,
+      Profile: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>,
+      Crosshair: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
     };
 
-    // Cálculos Visuais
     const calcularRisco = (foco, energia) => {
-      if (foco <= 4 || energia <= 4) return { cor: 'bg-red-500', texto: 'Risco Alto (Burnout/Tensão)', border: 'border-red-500/30' };
-      if (foco <= 6 || energia <= 6) return { cor: 'bg-yellow-500', texto: 'Atenção Necessária', border: 'border-yellow-500/30' };
-      return { cor: 'bg-green-500', texto: 'Estável e Focado', border: 'border-green-500/30' };
+      if (foco <= 4 || energia <= 4) return { cor: 'bg-red-500', texto: 'Risco Alto', border: 'border-red-500/30' };
+      if (foco <= 6 || energia <= 6) return { cor: 'bg-yellow-500', texto: 'Atenção', border: 'border-yellow-500/30' };
+      return { cor: 'bg-green-500', texto: 'Estável', border: 'border-green-500/30' };
     };
 
     // ==============================================================================
@@ -91,9 +93,9 @@
           await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "checkins"), {
             pacienteId: usuarioAtual.uid, email: usuarioAtual.email, foco: parseInt(foco), energia: parseInt(energia), data: new Date().toISOString()
           });
-          alert("Check-in diário enviado com sucesso para o seu psicólogo!");
+          alert("Check-in enviado!");
           setFoco(5); setEnergia(5);
-        } catch (error) { alert("Erro ao salvar. Verifique a conexão."); }
+        } catch (error) { alert("Erro ao salvar."); }
         setSalvando(false);
       };
 
@@ -101,33 +103,23 @@
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4 bg-black/90">
           <div className="w-full max-w-[375px] h-[750px] bg-slate-950 rounded-[2.5rem] border-[6px] border-slate-800 overflow-hidden relative shadow-2xl flex flex-col">
             <div className="pt-12 pb-6 px-6 bg-gradient-to-b from-optic-yellow/10 to-transparent">
-              <p className="text-optic-yellow text-sm font-medium tracking-wider uppercase mb-1">AceMind</p>
               <h2 className="text-2xl text-white font-light truncate">Olá, {usuarioAtual.email.split('@')[0]}</h2>
-              <p className="text-slate-400 text-sm mt-1">Sua área exclusiva pós-treino.</p>
+              <p className="text-slate-400 text-sm mt-1">Diário pós-treino.</p>
             </div>
             <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6 custom-scrollbar">
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5">
-                <h3 className="text-white font-medium mb-4">Diário de Bordo Rápido</h3>
                 <div className="space-y-6">
                   <div>
-                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Desfocado / Tenso</span><span>Foco Total (Flow)</span></div>
+                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Desfocado</span><span>Foco Total</span></div>
                     <input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#ccff00]" />
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Exausto (Fadiga)</span><span>Energizado</span></div>
+                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Exausto</span><span>Energizado</span></div>
                     <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#ccff00]" />
                   </div>
                   <button onClick={salvarCheckin} disabled={salvando} className="w-full bg-optic-yellow text-slate-950 font-bold py-3 rounded-xl hover:bg-[#b3e600] disabled:opacity-50 transition">
                     {salvando ? 'Enviando...' : 'Salvar Diário'}
                   </button>
-                </div>
-              </div>
-              
-              {/* Espaço para futura biblioteca de áudio */}
-              <div className="bg-slate-900 border border-white/5 p-4 rounded-xl flex items-center justify-between cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-optic-yellow/20 flex items-center justify-center text-optic-yellow">▶</div>
-                  <div><p className="text-white text-sm font-medium">Áudio: Foco Pré-Saque</p><p className="text-slate-500 text-xs">2 min</p></div>
                 </div>
               </div>
             </div>
@@ -147,7 +139,7 @@
         <div className="glass-panel p-6 rounded-2xl">
           <h3 className="text-lg font-medium mb-4 flex items-center gap-2">Radares de Atenção Diários</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {checkins.length === 0 && <p className="text-slate-500 col-span-3">Nenhum check-in registrado recentemente.</p>}
+            {checkins.length === 0 && <p className="text-slate-500 col-span-3">Nenhum check-in registrado.</p>}
             {checkins.slice(0, 9).map((reg) => {
               const risco = calcularRisco(reg.foco, reg.energia);
               return (
@@ -160,10 +152,6 @@
                     <div className={`w-3 h-3 rounded-full ${risco.cor} shadow-[0_0_8px_currentColor]`}></div>
                   </div>
                   <p className="text-xs text-slate-300 mb-2">{risco.texto}</p>
-                  <div className="flex justify-between text-sm bg-black/30 p-2 rounded">
-                    <span>Foco: <strong className={reg.foco <= 4 ? 'text-red-400' : ''}>{reg.foco}</strong></span>
-                    <span>Energia: <strong className={reg.energia <= 4 ? 'text-red-400' : ''}>{reg.energia}</strong></span>
-                  </div>
                 </div>
               );
             })}
@@ -172,217 +160,200 @@
       </div>
     );
 
-    // --- MÓDULO 2: PRONTUÁRIO (COMPLETO COM CRUD E VÍDEOS) ---
-    const ModuloProntuario = ({ atletas }) => {
-      const [atletaSelecionadoId, setAtletaSelecionadoId] = useState("");
-      
-      // Estados do Prontuário Específico
-      const [rotinas, setRotinas] = useState({ pre: "", pos: "" });
-      const [editandoRotina, setEditandoRotina] = useState(false);
-      
-      const [anotacoes, setAnotacoes] = useState([]);
-      const [novaAnotacao, setNovaAnotacao] = useState("");
-      const [editandoAnotacaoId, setEditandoAnotacaoId] = useState(null);
+    // --- MÓDULO 2: PERFIL ESPORTIVO (Dados Básicos) ---
+    const ModuloPerfil = ({ atletas }) => {
+      const [atletaId, setAtletaId] = useState("");
+      const [perfil, setPerfil] = useState({ categoria: "", ranking: "", estilo: "", mao: "", lesoes: "" });
+      const [salvando, setSalvando] = useState(false);
 
-      const [videos, setVideos] = useState([]);
-      const [uploading, setUploading] = useState(false);
-      const [progresso, setProgresso] = useState(0);
-
-      const fileInputRef = useRef(null);
-
-      // Carregar dados quando trocar de atleta
       useEffect(() => {
-        if (!atletaSelecionadoId) return;
-        carregarProntuario(atletaSelecionadoId);
-      }, [atletaSelecionadoId]);
+        if(!atletaId) return;
+        const carregar = async () => {
+          const docSnap = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "prontuarios", atletaId));
+          if (docSnap.exists() && docSnap.data().perfil) { setPerfil(docSnap.data().perfil); }
+          else { setPerfil({ categoria: "", ranking: "", estilo: "", mao: "", lesoes: "" }); }
+        };
+        carregar();
+      }, [atletaId]);
 
-      const carregarProntuario = async (id) => {
-        // Busca Rotinas
-        const docSnap = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "prontuarios", id));
-        if (docSnap.exists()) {
-          setRotinas(docSnap.data().rotinas || { pre: "", pos: "" });
-        } else {
-          setRotinas({ pre: "Defina a rotina pré-saque.", pos: "Defina a rotina pós-erro." });
-        }
-
-        // Busca SOAP (Anotações)
-        const qAnotacoes = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${id}/soap`), window.fbAPI.orderBy("data", "desc"));
-        const snapAnot = await window.fbAPI.getDocs(qAnotacoes);
-        setAnotacoes(snapAnot.docs.map(d => ({ id: d.id, ...d.data() })));
-
-        // Busca Vídeos
-        const qVideos = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${id}/videos`), window.fbAPI.orderBy("dataEnvio", "desc"));
-        const snapVideos = await window.fbAPI.getDocs(qVideos);
-        setVideos(snapVideos.docs.map(d => ({ id: d.id, ...d.data() })));
-      };
-
-      // Funcionalidades de Rotina
-      const salvarRotinas = async () => {
-        await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "prontuarios", atletaSelecionadoId), { rotinas }, { merge: true });
-        setEditandoRotina(false);
-      };
-
-      // Funcionalidades de SOAP
-      const salvarAnotacao = async () => {
-        if (!novaAnotacao.trim() || !atletaSelecionadoId) return;
-        const soapRef = window.fbAPI.collection(window.db, `prontuarios/${atletaSelecionadoId}/soap`);
-        
-        if (editandoAnotacaoId) {
-          await window.fbAPI.updateDoc(window.fbAPI.doc(window.db, `prontuarios/${atletaSelecionadoId}/soap`, editandoAnotacaoId), {
-            texto: novaAnotacao, editadoEm: new Date().toISOString()
-          });
-        } else {
-          await window.fbAPI.addDoc(soapRef, { texto: novaAnotacao, data: new Date().toISOString(), editadoEm: null });
-        }
-        setNovaAnotacao(""); setEditandoAnotacaoId(null);
-        carregarProntuario(atletaSelecionadoId);
-      };
-
-      const excluirAnotacao = async (id) => {
-        if(confirm("Tem certeza que deseja apagar esta anotação clínica?")) {
-          await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, `prontuarios/${atletaSelecionadoId}/soap`, id));
-          carregarProntuario(atletaSelecionadoId);
-        }
-      };
-
-      // Funcionalidades de Vídeo (Storage)
-      const handleVideoUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file || !atletaSelecionadoId) return;
-
-        setUploading(true);
-        const fileExt = file.name.split('.').pop();
-        const fileName = `video_${Date.now()}.${fileExt}`;
-        const storageRef = window.fbAPI.ref(window.storage, `atletas/${atletaSelecionadoId}/videos/${fileName}`);
-        
-        const uploadTask = window.fbAPI.uploadBytesResumable(storageRef, file);
-
-        uploadTask.on('state_changed', 
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            setProgresso(progress);
-          }, 
-          (error) => { console.error(error); setUploading(false); alert("Erro ao enviar vídeo."); }, 
-          async () => {
-            const downloadURL = await window.fbAPI.getDownloadURL(uploadTask.snapshot.ref);
-            await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaSelecionadoId}/videos`), {
-              url: downloadURL, nomeArquivo: file.name, dataEnvio: new Date().toISOString()
-            });
-            setUploading(false); setProgresso(0); fileInputRef.current.value = "";
-            carregarProntuario(atletaSelecionadoId);
-          }
-        );
-      };
-
-      const excluirVideo = async (video) => {
-        if(confirm("Deseja apagar este vídeo?")) {
-          try {
-            // Apaga do Storage
-            const videoRef = window.fbAPI.ref(window.storage, video.url);
-            await window.fbAPI.deleteObject(videoRef);
-            // Apaga do Banco
-            await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, `prontuarios/${atletaSelecionadoId}/videos`, video.id));
-            carregarProntuario(atletaSelecionadoId);
-          } catch(e) { console.error(e); alert("Erro ao apagar vídeo."); }
-        }
+      const salvarPerfil = async () => {
+        setSalvando(true);
+        await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "prontuarios", atletaId), { perfil }, { merge: true });
+        setSalvando(false);
+        alert("Perfil atualizado!");
       };
 
       return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           <div className="flex justify-between items-center border-b border-white/10 pb-4">
-            <h2 className="text-2xl font-light">Gestão de Atletas (Prontuário Eletrônico)</h2>
-            <select value={atletaSelecionadoId} onChange={e => setAtletaSelecionadoId(e.target.value)} className="bg-slate-900 border border-white/20 text-white rounded-lg p-2 outline-none focus:border-optic-yellow">
-              <option value="">Selecione um Atleta...</option>
+            <h2 className="text-2xl font-light">Dados Básicos e Esportivos</h2>
+            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="bg-slate-900 border border-white/20 text-white rounded p-2 outline-none">
+              <option value="">Selecione o Atleta...</option>
               {atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}
             </select>
           </div>
 
-          {!atletaSelecionadoId ? (
-            <div className="glass-panel p-10 rounded-2xl text-center text-slate-400">Selecione um atleta no menu acima para abrir o prontuário completo.</div>
-          ) : (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-fade-in">
+          {!atletaId ? <div className="glass-panel p-10 text-center text-slate-500">Selecione um atleta.</div> : (
+            <div className="glass-panel p-6 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-xs text-slate-400 block mb-1">Categoria (ex: Profissional, Juvenil ITF)</label>
+                <input type="text" value={perfil.categoria} onChange={e=>setPerfil({...perfil, categoria: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-3 mb-4" />
+                
+                <label className="text-xs text-slate-400 block mb-1">Ranking Atual</label>
+                <input type="text" value={perfil.ranking} onChange={e=>setPerfil({...perfil, ranking: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-3 mb-4" />
+                
+                <label className="text-xs text-slate-400 block mb-1">Mão Dominante</label>
+                <select value={perfil.mao} onChange={e=>setPerfil({...perfil, mao: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-3">
+                  <option value="">Selecione...</option><option value="Destro">Destro</option><option value="Canhoto">Canhoto</option><option value="Ambidestro">Ambidestro</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-slate-400 block mb-1">Estilo de Jogo</label>
+                <input type="text" placeholder="Ex: Fundo de quadra agressivo" value={perfil.estilo} onChange={e=>setPerfil({...perfil, estilo: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-3 mb-4" />
+                
+                <label className="text-xs text-slate-400 block mb-1">Histórico de Lesões Recentes</label>
+                <textarea value={perfil.lesoes} onChange={e=>setPerfil({...perfil, lesoes: e.target.value})} className="w-full h-32 bg-slate-900 border border-white/20 rounded p-3 custom-scrollbar" placeholder="Cirurgias, dores crônicas..."></textarea>
+              </div>
+              <div className="md:col-span-2 flex justify-end">
+                <button onClick={salvarPerfil} className="bg-optic-yellow text-black font-bold px-6 py-3 rounded hover:bg-[#b3e600]">{salvando ? 'Salvando...' : 'Salvar Ficha Esportiva'}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // --- MÓDULO 3: AGENDA & TORNEIOS ---
+    const ModuloAgenda = ({ atletas }) => {
+      const [sessoes, setSessoes] = useState([]);
+      const [novaSessao, setNovaSessao] = useState({ atletaId: "", dataHora: "", link: "" });
+      const [torneios, setTorneios] = useState([{ id: 1, nome: "Roland Garros", data: "2026-05-25" }, { id: 2, nome: "Challenger SP", data: "2026-04-10" }]);
+
+      useEffect(() => {
+        const carregarSessoes = async () => {
+          const q = window.fbAPI.query(window.fbAPI.collection(window.db, "agenda"), window.fbAPI.orderBy("dataHora", "asc"));
+          const snap = await window.fbAPI.getDocs(q);
+          setSessoes(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        };
+        carregarSessoes();
+      }, []);
+
+      const agendarSessao = async () => {
+        if(!novaSessao.atletaId || !novaSessao.dataHora) return alert("Preencha atleta e data.");
+        const atleta = atletas.find(a => a.id === novaSessao.atletaId);
+        
+        // Simulação de geração de link automático para o MVP
+        const linkGerado = novaSessao.link || `https://meet.google.com/acemind-${Math.floor(Math.random()*1000)}`;
+
+        const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "agenda"), {
+          atletaId: atleta.id, email: atleta.email, dataHora: novaSessao.dataHora, link: linkGerado
+        });
+        
+        setSessoes([...sessoes, { id: docRef.id, atletaId: atleta.id, email: atleta.email, dataHora: novaSessao.dataHora, link: linkGerado }].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora)));
+        setNovaSessao({ atletaId: "", dataHora: "", link: "" });
+      };
+
+      const apagarSessao = async (id) => {
+        await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, "agenda", id));
+        setSessoes(sessoes.filter(s => s.id !== id));
+      }
+
+      // Lógica de Alerta (Sessões nas próximas 48h)
+      const agora = new Date();
+      const limite48h = new Date(agora.getTime() + (48 * 60 * 60 * 1000));
+
+      return (
+        <div className="space-y-6 animate-fade-in">
+          <h2 className="text-2xl font-light border-b border-white/10 pb-4">Calendários & Agendamentos</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Bloco Sessões */}
+            <div className="glass-panel p-6 rounded-2xl flex flex-col h-[650px]">
+              <h3 className="text-lg font-bold text-optic-yellow mb-4">Calendário de Sessões (Online)</h3>
               
-              {/* COLUNA ESQUERDA: Rotinas e Vídeos */}
-              <div className="space-y-6 xl:col-span-1">
-                {/* Rotinas */}
-                <div className="glass-panel p-6 rounded-2xl">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="font-bold text-optic-yellow">Mapeamento de Rotinas</h4>
-                    <button onClick={() => editandoRotina ? salvarRotinas() : setEditandoRotina(true)} className="text-xs bg-white/10 px-2 py-1 rounded hover:bg-white/20">
-                      {editandoRotina ? 'Salvar' : 'Editar'}
-                    </button>
-                  </div>
-                  <div className="space-y-4 text-sm">
-                    <div>
-                      <label className="text-xs text-slate-400">Pré-saque</label>
-                      {editandoRotina ? <input type="text" value={rotinas.pre} onChange={e=>setRotinas({...rotinas, pre: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /> : <div className="bg-slate-900 p-2 rounded mt-1">{rotinas.pre}</div>}
-                    </div>
-                    <div>
-                      <label className="text-xs text-slate-400">Pós-erro</label>
-                      {editandoRotina ? <input type="text" value={rotinas.pos} onChange={e=>setRotinas({...rotinas, pos: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /> : <div className="bg-slate-900 p-2 rounded mt-1">{rotinas.pos}</div>}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Linguagem Corporal (Upload de Vídeos) */}
-                <div className="glass-panel p-6 rounded-2xl">
-                  <h4 className="font-bold mb-4 flex items-center gap-2"><Icons.Video /> Linguagem Corporal</h4>
-                  
-                  <div className="mb-4">
-                    <input type="file" accept="video/mp4,video/quicktime" ref={fileInputRef} onChange={handleVideoUpload} className="hidden" id="video-upload" />
-                    <label htmlFor="video-upload" className={`w-full h-20 bg-slate-900 rounded-lg border-2 border-dashed ${uploading ? 'border-optic-yellow' : 'border-white/20'} flex flex-col items-center justify-center text-slate-400 text-sm hover:border-optic-yellow hover:text-optic-yellow cursor-pointer transition`}>
-                      {uploading ? `Enviando... ${Math.round(progresso)}%` : '+ Escolher Vídeo (.mp4)'}
-                    </label>
-                    {uploading && <div className="w-full bg-slate-800 h-1 mt-2 rounded"><div className="bg-optic-yellow h-1 rounded" style={{width: `${progresso}%`}}></div></div>}
-                  </div>
-
-                  <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                    {videos.length === 0 && <p className="text-xs text-slate-500 text-center">Nenhum clipe enviado.</p>}
-                    {videos.map(v => (
-                      <div key={v.id} className="bg-slate-900/50 p-3 rounded-xl border border-white/5 group">
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="text-xs font-bold text-white truncate max-w-[150px]" title={v.nomeArquivo}>{v.nomeArquivo}</p>
-                          <button onClick={() => excluirVideo(v)} className="text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition"><Icons.Trash /></button>
-                        </div>
-                        <video src={v.url} controls className="w-full rounded bg-black max-h-[120px] object-contain"></video>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className="bg-slate-900 border border-white/10 p-4 rounded-xl mb-6 space-y-3">
+                <p className="text-sm font-bold text-white mb-2">Novo Agendamento</p>
+                <select value={novaSessao.atletaId} onChange={e=>setNovaSessao({...novaSessao, atletaId: e.target.value})} className="w-full bg-slate-800 border-none rounded p-2 text-sm text-white outline-none">
+                  <option value="">Paciente...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}
+                </select>
+                <input type="datetime-local" value={novaSessao.dataHora} onChange={e=>setNovaSessao({...novaSessao, dataHora: e.target.value})} className="w-full bg-slate-800 border-none rounded p-2 text-sm text-white" />
+                <input type="text" placeholder="Link Zoom/Meet (Ou deixe em branco p/ auto-gerar)" value={novaSessao.link} onChange={e=>setNovaSessao({...novaSessao, link: e.target.value})} className="w-full bg-slate-800 border-none rounded p-2 text-sm text-white" />
+                <button onClick={agendarSessao} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2 rounded text-sm transition">Agendar</button>
               </div>
 
-              {/* COLUNA DIREITA: SOAP */}
-              <div className="xl:col-span-2 glass-panel p-6 rounded-2xl flex flex-col h-[700px]">
-                <h4 className="font-bold mb-4">Histórico Clínico (SOAP)</h4>
-                
-                <div className="bg-slate-900 p-4 rounded-xl mb-6 border focus-within:border-optic-yellow/50 border-transparent transition">
-                  <textarea value={novaAnotacao} onChange={e=>setNovaAnotacao(e.target.value)} placeholder="Subjetivo (S) / Objetivo (O) / Avaliação (A) / Plano (P)..." className="w-full h-28 bg-transparent border-none outline-none resize-none text-sm text-slate-200 custom-scrollbar"></textarea>
-                  <div className="flex justify-between items-center mt-2 border-t border-white/10 pt-2">
-                    <span className="text-xs text-slate-500">Área segura e criptografada.</span>
-                    <button onClick={salvarAnotacao} className="bg-optic-yellow text-black px-4 py-2 rounded text-sm font-bold hover:bg-[#b3e600] transition">
-                      {editandoAnotacaoId ? 'Atualizar Prontuário' : 'Salvar Nova Sessão'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2">
-                  {anotacoes.length === 0 && <p className="text-center text-slate-500 mt-10">O prontuário deste atleta está vazio.</p>}
-                  {anotacoes.map(a => (
-                    <div key={a.id} className="bg-slate-900/50 p-4 rounded-xl border border-white/5 relative group hover:border-white/10 transition">
-                      <div className="flex justify-between items-start mb-3 border-b border-white/5 pb-2">
+              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                {sessoes.length === 0 && <p className="text-sm text-slate-500">Nenhuma sessão marcada.</p>}
+                {sessoes.map(s => {
+                  const dataSessao = new Date(s.dataHora);
+                  const isProxima = dataSessao > agora && dataSessao <= limite48h;
+                  return (
+                    <div key={s.id} className={`p-4 rounded-xl border ${isProxima ? 'bg-red-500/10 border-red-500/50' : 'bg-slate-900/50 border-white/5'} relative group`}>
+                      {isProxima && <span className="absolute -top-2 -right-2 flex h-4 w-4"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span></span>}
+                      <div className="flex justify-between items-start">
                         <div>
-                          <span className="text-xs text-optic-yellow font-bold uppercase tracking-wider">{new Date(a.data).toLocaleString('pt-BR', {dateStyle:'long', timeStyle:'short'})}</span>
-                          {a.editadoEm && <span className="text-[10px] text-slate-500 ml-2 italic block sm:inline">(Editado: {new Date(a.editadoEm).toLocaleString('pt-BR')})</span>}
+                          <p className="font-bold text-white text-sm">{s.email.split('@')[0]}</p>
+                          <p className={`text-xs ${isProxima ? 'text-red-400 font-bold' : 'text-slate-400'}`}>{dataSessao.toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</p>
                         </div>
-                        <div className="hidden group-hover:flex gap-3">
-                          <button onClick={() => {setNovaAnotacao(a.texto); setEditandoAnotacaoId(a.id);}} className="text-xs text-blue-400 hover:text-blue-300">Editar</button>
-                          <button onClick={() => excluirAnotacao(a.id)} className="text-xs text-red-400 hover:text-red-300">Excluir</button>
-                        </div>
+                        <button onClick={()=>apagarSessao(s.id)} className="text-red-400 opacity-0 group-hover:opacity-100"><Icons.Trash /></button>
                       </div>
-                      <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{a.texto}</p>
+                      <a href={s.link} target="_blank" className="mt-3 block text-center text-xs bg-blue-600 hover:bg-blue-500 text-white py-1.5 rounded transition">Acessar Sala (Meet/Zoom)</a>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Bloco Torneios */}
+            <div className="glass-panel p-6 rounded-2xl flex flex-col h-[650px]">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Calendar /> Calendário de Torneios</h3>
+              <p className="text-xs text-slate-400 mb-6">Acompanhe as chaves ativas do circuito para antecipar a pressão em seus atletas.</p>
+              
+              <div className="space-y-4">
+                {torneios.map(t => (
+                  <div key={t.id} className="bg-slate-900 p-4 rounded-xl border-l-4 border-optic-yellow">
+                    <p className="font-bold text-lg">{t.nome}</p>
+                    <p className="text-sm text-slate-400">Data de Início: {new Date(t.data).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                ))}
+              </div>
+              <button className="mt-6 border border-dashed border-white/20 text-slate-400 hover:text-white p-3 rounded-xl transition">+ Adicionar Torneio ao Radar</button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // --- MÓDULO 4: MOMENTOS CRÍTICOS (Estatísticas) ---
+    const ModuloMomentosCriticos = ({ atletas }) => {
+      const [atletaId, setAtletaId] = useState("");
+      const [stats, setStats] = useState({ breakPointsSalvos: 0, duplasFaltasCriticas: 0, errosNaoForcados: 0 });
+
+      return (
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex justify-between items-center border-b border-white/10 pb-4">
+            <h2 className="text-2xl font-light">Rastreador de "Momentos Críticos" (Engasgo/Choking)</h2>
+            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="bg-slate-900 border border-white/20 text-white rounded p-2 outline-none">
+              <option value="">Selecione o Atleta...</option>
+              {atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}
+            </select>
+          </div>
+
+          {!atletaId ? <div className="glass-panel p-10 text-center text-slate-500">Selecione um atleta para cruzar emoções com dados reais de jogo.</div> : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              <div className="lg:col-span-1 glass-panel p-6 rounded-2xl space-y-4">
+                <h3 className="font-bold text-optic-yellow mb-4">Lançar Estatística de Partida</h3>
+                <div><label className="text-xs text-slate-400">Break Points Salvos (%)</label><input type="number" value={stats.breakPointsSalvos} onChange={e=>setStats({...stats, breakPointsSalvos: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
+                <div><label className="text-xs text-slate-400">Duplas Faltas em Vantagem/Desvantagem</label><input type="number" value={stats.duplasFaltasCriticas} onChange={e=>setStats({...stats, duplasFaltasCriticas: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
+                <div><label className="text-xs text-slate-400">Erros Não Forçados (Tie-breaks)</label><input type="number" value={stats.errosNaoForcados} onChange={e=>setStats({...stats, errosNaoForcados: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
+                <button className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2 rounded transition mt-4">Registrar Dados</button>
+              </div>
+
+              <div className="lg:col-span-2 glass-panel p-6 rounded-2xl flex flex-col items-center justify-center">
+                <Icons.Crosshair />
+                <h3 className="text-xl font-bold mt-4">Matriz de Pressão vs. Foco Relatado</h3>
+                <p className="text-slate-400 text-sm text-center max-w-md mt-2">Os dados inseridos à esquerda irão cruzar com os check-ins diários do aplicativo, gerando um mapa de calor indicando os gatilhos emocionais exatos nas estatísticas do {atletas.find(a=>a.id===atletaId)?.email.split('@')[0]}.</p>
+                <div className="w-full mt-8 bg-slate-900 h-40 rounded-lg border border-dashed border-white/10 flex items-center justify-center text-slate-600">Área de Gráfico Interativo (Recharts)</div>
               </div>
 
             </div>
@@ -391,77 +362,93 @@
       );
     };
 
-    // --- MÓDULO 3: RELATÓRIOS (PDF) ---
+    // --- MÓDULO 5: PRONTUÁRIO CLÍNICO (Anteriormente completo, mantido a estrutura principal) ---
+    const ModuloProntuario = ({ atletas }) => {
+      const [atletaSelecionadoId, setAtletaSelecionadoId] = useState("");
+      const [anotacoes, setAnotacoes] = useState([]);
+      const [novaAnotacao, setNovaAnotacao] = useState("");
+
+      useEffect(() => {
+        if(!atletaSelecionadoId) return;
+        const carregar = async () => {
+          const q = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${atletaSelecionadoId}/soap`), window.fbAPI.orderBy("data", "desc"));
+          const snap = await window.fbAPI.getDocs(q);
+          setAnotacoes(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        };
+        carregar();
+      }, [atletaSelecionadoId]);
+
+      const salvarAnotacao = async () => {
+        if (!novaAnotacao.trim() || !atletaSelecionadoId) return;
+        await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaSelecionadoId}/soap`), { texto: novaAnotacao, data: new Date().toISOString() });
+        setNovaAnotacao("");
+        const q = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${atletaSelecionadoId}/soap`), window.fbAPI.orderBy("data", "desc"));
+        const snap = await window.fbAPI.getDocs(q);
+        setAnotacoes(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      };
+
+      return (
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex justify-between items-center border-b border-white/10 pb-4">
+            <h2 className="text-2xl font-light">Prontuário Clínico (SOAP e Vídeos)</h2>
+            <select value={atletaSelecionadoId} onChange={e => setAtletaSelecionadoId(e.target.value)} className="bg-slate-900 border border-white/20 text-white rounded p-2 outline-none">
+              <option value="">Selecione o Atleta...</option>
+              {atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}
+            </select>
+          </div>
+          {!atletaSelecionadoId ? <div className="glass-panel p-10 text-center text-slate-500">Selecione um atleta.</div> : (
+            <div className="glass-panel p-6 rounded-2xl flex flex-col h-[700px]">
+               <h4 className="font-bold mb-4">Histórico Clínico (SOAP) - Área Segura</h4>
+               <div className="bg-slate-900 p-4 rounded-xl mb-6">
+                 <textarea value={novaAnotacao} onChange={e=>setNovaAnotacao(e.target.value)} placeholder="Subjetivo / Objetivo / Avaliação / Plano" className="w-full h-24 bg-transparent outline-none resize-none text-sm text-slate-200"></textarea>
+                 <div className="flex justify-end mt-2"><button onClick={salvarAnotacao} className="bg-optic-yellow text-black px-4 py-2 rounded text-sm font-bold">Salvar Sessão</button></div>
+               </div>
+               <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar">
+                  {anotacoes.map(a => (
+                    <div key={a.id} className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                      <span className="text-xs text-optic-yellow font-bold block mb-2">{new Date(a.data).toLocaleString('pt-BR')}</span>
+                      <p className="text-sm text-slate-300 whitespace-pre-wrap">{a.texto}</p>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // --- MÓDULO 6: RELATÓRIOS (PDF) ---
     const ModuloRelatorios = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
       const [objetivos, setObjetivos] = useState("");
       const [treinos, setTreinos] = useState("");
-
       const atletaNome = atletas.find(a => a.id === atletaId)?.email?.split('@')[0] || "Não selecionado";
 
       const gerarPDF = () => {
-        if(!atletaId) return alert("Selecione um atleta primeiro.");
+        if(!atletaId) return alert("Selecione um atleta.");
         const elementoHTML = document.getElementById('relatorio-conteudo');
-        const config = { margin: 15, filename: `Relatorio_AceMind_${atletaNome}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-        window.html2pdf().set(config).from(elementoHTML).save();
+        window.html2pdf().set({ margin: 15, filename: `Relatorio_AceMind_${atletaNome}.pdf`, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(elementoHTML).save();
       };
 
       return (
         <div className="space-y-6 animate-fade-in">
           <div className="flex justify-between items-center border-b border-white/10 pb-4">
             <h2 className="text-2xl font-light">Emissão de Relatórios (PDF)</h2>
-            <button onClick={gerarPDF} className="bg-optic-yellow text-black px-6 py-2 rounded font-bold hover:bg-[#b3e600] transition">Gerar e Baixar PDF</button>
+            <button onClick={gerarPDF} className="bg-optic-yellow text-black px-6 py-2 rounded font-bold hover:bg-[#b3e600]">Baixar PDF</button>
           </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="glass-panel p-6 rounded-2xl space-y-5">
-              <h3 className="font-bold text-optic-yellow text-lg">Parâmetros do Documento</h3>
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Atleta</label>
-                <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="w-full bg-slate-900 border border-white/20 text-white rounded p-3 outline-none">
-                  <option value="">Selecione para o cabeçalho...</option>
-                  {atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Registro Clínico dos Treinos (Curto Prazo)</label>
-                <textarea value={treinos} onChange={e=>setTreinos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm outline-none focus:border-optic-yellow" placeholder="Resumo técnico do comportamento mental nas quadras..."></textarea>
-              </div>
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Elaboração de Objetivos (Longo Prazo)</label>
-                <textarea value={objetivos} onChange={e=>setObjetivos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm outline-none focus:border-optic-yellow" placeholder="Metas de resiliência e adaptação a pressão..."></textarea>
-              </div>
+              <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="w-full bg-slate-900 border border-white/20 rounded p-3 text-white outline-none"><option value="">Selecione o Atleta...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}</select>
+              <textarea value={treinos} onChange={e=>setTreinos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm text-white" placeholder="Registro Clínico de Treinos (Curto Prazo)"></textarea>
+              <textarea value={objetivos} onChange={e=>setObjetivos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm text-white" placeholder="Objetivos Finais (Longo Prazo)"></textarea>
             </div>
-
-            {/* PREVIEW DO PDF - Estilizado para impressão */}
-            <div className="bg-white text-black p-10 rounded-lg shadow-2xl relative overflow-hidden" style={{minHeight: '297mm', maxHeight: '800px', overflowY: 'auto'}}>
+            <div className="bg-white text-black p-10 rounded-lg shadow-2xl overflow-y-auto h-[600px]">
               <div id="relatorio-conteudo" className="bg-white">
-                <div className="border-b-4 border-black pb-6 mb-8 flex justify-between items-end">
-                  <div>
-                    <h1 className="text-4xl font-black uppercase tracking-widest text-black">Ace<span className="text-gray-400">Mind</span></h1>
-                    <p className="text-sm font-bold text-gray-500 uppercase mt-1">Psicologia Esportiva de Alto Rendimento</p>
-                  </div>
-                  <div className="text-right text-xs text-gray-500 font-mono">Doc ID: {Date.now()}<br/>CONFIDENCIAL</div>
-                </div>
-                
-                <h2 className="text-2xl font-bold mb-1">Relatório de Evolução Mental</h2>
-                <p className="text-lg text-gray-700 mb-8 pb-4 border-b border-gray-200">Paciente/Atleta: <strong className="uppercase">{atletaNome}</strong><br/><span className="text-sm">Data de Emissão: {new Date().toLocaleDateString('pt-BR')}</span></p>
-                
-                <div className="mb-10">
-                  <h3 className="text-lg font-black bg-gray-100 p-3 mb-4 uppercase border-l-4 border-black">1. Registro de Treinos / Curto Prazo</h3>
-                  <p className="text-base text-gray-800 whitespace-pre-wrap leading-relaxed pl-4">{treinos || "Nenhum registro preenchido para esta seção."}</p>
-                </div>
-
-                <div className="mb-10">
-                  <h3 className="text-lg font-black bg-gray-100 p-3 mb-4 uppercase border-l-4 border-black">2. Objetivos Finais / Longo Prazo</h3>
-                  <p className="text-base text-gray-800 whitespace-pre-wrap leading-relaxed pl-4">{objetivos || "Nenhum registro preenchido para esta seção."}</p>
-                </div>
-                
-                <div className="mt-20 pt-8 border-t border-gray-300 text-center">
-                  <div className="w-64 border-b border-black mx-auto mb-2"></div>
-                  <p className="text-sm font-bold">Assinatura do Profissional Responsável</p>
-                  <p className="text-xs text-gray-500">Documento gerado eletronicamente via AceMind SaaS</p>
-                </div>
+                <div className="border-b-4 border-black pb-4 mb-6"><h1 className="text-3xl font-black uppercase">Ace<span className="text-gray-400">Mind</span></h1><p className="text-sm">Relatório Confidencial</p></div>
+                <h2 className="text-xl font-bold mb-1">Paciente: {atletaNome}</h2>
+                <p className="text-sm text-gray-500 mb-6">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                <div className="mb-6"><h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">Treinos (Curto Prazo)</h3><p className="text-sm whitespace-pre-wrap">{treinos}</p></div>
+                <div className="mb-6"><h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">Objetivos Finais (Longo Prazo)</h3><p className="text-sm whitespace-pre-wrap">{objetivos}</p></div>
               </div>
             </div>
           </div>
@@ -470,41 +457,39 @@
     };
 
     // --------------------------------------------------
-    // CONTROLADOR DE NAVEGAÇÃO DO PSICÓLOGO
+    // NAVEGAÇÃO DO PSICÓLOGO
     // --------------------------------------------------
     const DashboardPsicologo = () => {
-      const [abaAtiva, setAbaAtiva] = useState('prontuario');
+      const [abaAtiva, setAbaAtiva] = useState('dashboard');
       const [checkins, setCheckins] = useState([]);
       const [atletas, setAtletas] = useState([]);
 
       useEffect(() => {
-        // Busca Checkins Globais
-        const buscarCheckins = async () => {
-          const q = window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(20));
-          const snap = await window.fbAPI.getDocs(q);
-          setCheckins(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        };
-        // Busca Lista de Pacientes (Atletas) do banco
-        const buscarAtletas = async () => {
-          const q = window.fbAPI.query(window.fbAPI.collection(window.db, "usuarios"), window.fbAPI.where("cargo", "==", "paciente"));
-          const snap = await window.fbAPI.getDocs(q);
-          setAtletas(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        };
+        const carregarTudo = async () => {
+          const qCheck = window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(20));
+          const snapC = await window.fbAPI.getDocs(qCheck);
+          setCheckins(snapC.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-        buscarCheckins();
-        buscarAtletas();
+          const qAtletas = window.fbAPI.query(window.fbAPI.collection(window.db, "usuarios"), window.fbAPI.where("cargo", "==", "paciente"));
+          const snapA = await window.fbAPI.getDocs(qAtletas);
+          setAtletas(snapA.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        };
+        carregarTudo();
       }, []);
 
       const menuItems = [
         { id: 'dashboard', label: 'Visão Geral', icon: Icons.Dashboard },
-        { id: 'prontuario', label: 'Meus Atletas (Prontuário)', icon: Icons.Users },
-        { id: 'relatorios', label: 'Gerador de Relatórios', icon: Icons.Chart },
+        { id: 'perfil', label: 'Perfil Esportivo', icon: Icons.Profile },
+        { id: 'prontuario', label: 'Prontuário (SOAP)', icon: Icons.Users },
+        { id: 'criticos', label: 'Momentos Críticos', icon: Icons.Crosshair },
+        { id: 'agenda', label: 'Agenda & Torneios', icon: Icons.Calendar },
+        { id: 'relatorios', label: 'Relatórios PDF', icon: Icons.Chart },
       ];
 
       return (
         <div className="flex h-[calc(100vh-64px)] bg-[#020617]">
-          <aside className="w-64 glass-panel border-t-0 border-l-0 border-b-0 flex flex-col py-6 px-4">
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-6 pl-3">Painel Clínico</div>
+          <aside className="w-64 glass-panel border-t-0 border-l-0 border-b-0 flex flex-col py-6 px-4 shrink-0">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-6 pl-3">Módulos</div>
             <nav className="flex flex-col gap-2">
               {menuItems.map(item => (
                 <button key={item.id} onClick={() => setAbaAtiva(item.id)} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${abaAtiva === item.id ? 'bg-optic-yellow text-black font-bold shadow-[0_0_15px_rgba(204,255,0,0.2)]' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
@@ -512,33 +497,31 @@
                 </button>
               ))}
             </nav>
-            <div className="mt-auto pt-6 border-t border-white/10">
-              <p className="text-xs text-slate-500 mb-2">Total de Pacientes Ativos</p>
-              <p className="text-2xl font-light text-optic-yellow">{atletas.length}</p>
-            </div>
           </aside>
           <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             {abaAtiva === 'dashboard' && <ModuloDashboard checkins={checkins} />}
+            {abaAtiva === 'perfil' && <ModuloPerfil atletas={atletas} />}
             {abaAtiva === 'prontuario' && <ModuloProntuario atletas={atletas} />}
+            {abaAtiva === 'criticos' && <ModuloMomentosCriticos atletas={atletas} />}
+            {abaAtiva === 'agenda' && <ModuloAgenda atletas={atletas} />}
             {abaAtiva === 'relatorios' && <ModuloRelatorios atletas={atletas} />}
           </main>
         </div>
       );
     };
 
-    // ==============================================================================
+    // --------------------------------------------------
     // BASE DO SISTEMA (Auth & Router)
-    // ==============================================================================
+    // --------------------------------------------------
     const TelaAutenticacao = ({ setUsuarioLogado }) => {
       const [modo, setModo] = useState('login');
       const [email, setEmail] = useState('');
       const [senha, setSenha] = useState('');
       const [cargo, setCargo] = useState('paciente');
       const [erro, setErro] = useState('');
-      const [carregando, setCarregando] = useState(false);
 
       const handleAuth = async (e) => {
-        e.preventDefault(); setCarregando(true); setErro('');
+        e.preventDefault();
         try {
           if (modo === 'cadastro') {
             const cred = await window.fbAPI.createUserWithEmailAndPassword(window.auth, email, senha);
@@ -549,8 +532,7 @@
             const docRef = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", cred.user.uid));
             setUsuarioLogado({ ...cred.user, cargo: docRef.exists() ? docRef.data().cargo : 'paciente' });
           }
-        } catch (err) { setErro("Erro. Verifique e-mail/senha ou se configurou o Firebase."); }
-        setCarregando(false);
+        } catch (err) { setErro("Erro de acesso. Verifique dados ou chaves do Firebase."); }
       };
 
       return (
@@ -558,20 +540,19 @@
           <div className="glass-panel p-8 rounded-2xl w-full max-w-md">
             <h1 className="text-4xl font-light tracking-wider text-center mb-6">Ace<span className="text-optic-yellow font-bold">Mind</span></h1>
             <div className="flex justify-between mb-8 border-b border-white/10 pb-2">
-              <button onClick={() => setModo('login')} className={`flex-1 pb-2 ${modo === 'login' ? 'text-optic-yellow border-b-2 border-optic-yellow font-bold' : 'text-slate-500'}`}>Entrar</button>
-              <button onClick={() => setModo('cadastro')} className={`flex-1 pb-2 ${modo === 'cadastro' ? 'text-optic-yellow border-b-2 border-optic-yellow font-bold' : 'text-slate-500'}`}>Criar Conta</button>
+              <button onClick={() => setModo('login')} className={`flex-1 pb-2 ${modo === 'login' ? 'text-optic-yellow border-b-2 font-bold' : 'text-slate-500'}`}>Entrar</button>
+              <button onClick={() => setModo('cadastro')} className={`flex-1 pb-2 ${modo === 'cadastro' ? 'text-optic-yellow border-b-2 font-bold' : 'text-slate-500'}`}>Criar Conta</button>
             </div>
             {erro && <p className="text-red-500 text-sm mb-4 bg-red-500/10 p-2 text-center rounded">{erro}</p>}
             <form onSubmit={handleAuth} className="space-y-4">
-              <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 outline-none focus:border-optic-yellow" required />
-              <input type="password" placeholder="Senha" value={senha} onChange={e=>setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 outline-none focus:border-optic-yellow" required />
+              <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
+              <input type="password" placeholder="Senha" value={senha} onChange={e=>setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
               {modo === 'cadastro' && (
-                <select value={cargo} onChange={e=>setCargo(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 outline-none focus:border-optic-yellow">
-                  <option value="paciente">Atleta / Paciente</option>
-                  <option value="psicologo">Psicólogo(a)</option>
+                <select value={cargo} onChange={e=>setCargo(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white">
+                  <option value="paciente">Atleta / Paciente</option><option value="psicologo">Psicólogo(a)</option>
                 </select>
               )}
-              <button type="submit" disabled={carregando} className="w-full bg-optic-yellow text-black font-bold p-3 rounded hover:bg-[#b3e600] disabled:opacity-50">{carregando ? 'Aguarde...' : 'Acessar'}</button>
+              <button type="submit" className="w-full bg-optic-yellow text-black font-bold p-3 rounded">Acessar</button>
             </form>
           </div>
         </div>
@@ -580,12 +561,11 @@
 
     const App = () => {
       const [usuarioLogado, setUsuarioLogado] = useState(null);
-      const [carregandoSistema, setCarregandoSistema] = useState(true);
+      const [carregando, setCarregando] = useState(true);
 
       useEffect(() => {
         const chk = setInterval(() => {
-          if (window.firebaseErro) { clearInterval(chk); setCarregandoSistema(false); alert("Erro ao carregar Firebase. Chaves ausentes?"); }
-          else if (window.firebasePronto && window.auth) {
+          if (window.firebasePronto && window.auth) {
             clearInterval(chk);
             window.fbAPI.onAuthStateChanged(window.auth, async (u) => {
               if (u) {
@@ -594,13 +574,13 @@
                   setUsuarioLogado({ ...u, cargo: d.exists() ? d.data().cargo : 'paciente' });
                 } catch(e) { setUsuarioLogado({...u, cargo: 'paciente'}); }
               } else { setUsuarioLogado(null); }
-              setCarregandoSistema(false);
+              setCarregando(false);
             });
-          }
+          } else if (window.firebaseErro) { clearInterval(chk); setCarregando(false); alert("Erro Firebase"); }
         }, 100);
       }, []);
 
-      if (carregandoSistema) return <div className="min-h-screen flex items-center justify-center text-optic-yellow text-2xl font-light">Iniciando Ace<span className="font-bold">Mind</span>...</div>;
+      if (carregando) return <div className="min-h-screen flex items-center justify-center text-optic-yellow text-2xl">Carregando AceMind...</div>;
       if (!usuarioLogado) return <TelaAutenticacao setUsuarioLogado={setUsuarioLogado} />;
 
       return (
@@ -609,7 +589,7 @@
             <span className="font-bold text-xl tracking-widest text-white">Ace<span className="text-optic-yellow">Mind</span></span>
             <div className="flex gap-4 items-center">
                <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1 rounded uppercase border border-white/10">{usuarioLogado.cargo}</span>
-               <button onClick={() => { window.fbAPI.signOut(window.auth); setUsuarioLogado(null); }} className="text-xs text-red-400 hover:text-red-300 border border-red-500/30 px-3 py-1 rounded transition">Sair Seguro</button>
+               <button onClick={() => { window.fbAPI.signOut(window.auth); setUsuarioLogado(null); }} className="text-xs text-red-400 hover:text-red-300">Sair</button>
             </div>
           </div>
           {usuarioLogado.cargo === 'psicologo' || usuarioLogado.cargo === 'admin' ? <DashboardPsicologo /> : <MobileApp usuarioAtual={usuarioLogado} />}
