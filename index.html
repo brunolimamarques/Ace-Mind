@@ -16,14 +16,23 @@
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+  <style>
+    body { background-color: #020617; color: white; font-family: sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+  </style>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-    // VOCÊ PRECISA SUBSTITUIR ESTES DADOS PELOS DO SEU PROJETO FIREBASE
+    // =========================================================================
+    // ATENÇÃO BRUNÃO: COLE AQUI AS CHAVES DO SEU FIREBASE!
+    // =========================================================================
     const firebaseConfig = {
-     apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+      apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
   projectId: "ace-mind-c13a1",
   storageBucket: "ace-mind-c13a1.firebasestorage.app",
@@ -31,47 +40,45 @@
   appId: "1:22508213575:web:a7a38ac233b893f992e862"
     };
 
-    // Inicializando o sistema
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    // Deixando o Firebase acessível para o React
-    window.firebaseDB = db;
-    window.firebaseAuth = auth;
-    window.firebaseAPI = { collection, addDoc, getDocs, signInWithEmailAndPassword, onAuthStateChanged, signOut };
+    window.db = getFirestore(app);
+    window.auth = getAuth(app);
+    
+    // Exportando funções para o React usar
+    window.fbAPI = { 
+      collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, 
+      signInWithEmailAndPassword, onAuthStateChanged, signOut 
+    };
   </script>
-
-  <style>
-    body { background-color: #020617; }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-  </style>
 </head>
-<body class="bg-slate-950 text-white">
+<body>
 
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // ==========================================
-    // TELA DE LOGIN (Segurança)
-    // ==========================================
-    const TelaLogin = ({ onLogin }) => {
+    // --------------------------------------------------
+    // TELA 1: LOGIN
+    // --------------------------------------------------
+    const Login = ({ setUsuarioLogado }) => {
       const [email, setEmail] = useState('');
       const [senha, setSenha] = useState('');
       const [erro, setErro] = useState('');
+      const [carregando, setCarregando] = useState(false);
 
       const fazerLogin = async (e) => {
         e.preventDefault();
+        setCarregando(true);
+        setErro('');
         try {
-          // Tenta logar no Firebase
-          await window.firebaseAPI.signInWithEmailAndPassword(window.firebaseAuth, email, senha);
+          const credencial = await window.fbAPI.signInWithEmailAndPassword(window.auth, email, senha);
+          setUsuarioLogado(credencial.user);
         } catch (error) {
-          setErro("Falha no login. Verifique suas credenciais ou se já configurou o Firebase.");
+          setErro('E-mail ou senha incorretos. (Ou Firebase não configurado).');
+          console.error(error);
         }
+        setCarregando(false);
       };
 
       return (
@@ -82,14 +89,14 @@
             <form onSubmit={fazerLogin} className="space-y-4">
               <div>
                 <label className="text-slate-400 text-sm">Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-white mt-1" required />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-white mt-1 outline-none focus:border-optic-yellow" required />
               </div>
               <div>
                 <label className="text-slate-400 text-sm">Senha</label>
-                <input type="password" value={senha} onChange={e => setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-white mt-1" required />
+                <input type="password" value={senha} onChange={e => setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-white mt-1 outline-none focus:border-optic-yellow" required />
               </div>
-              <button type="submit" className="w-full bg-optic-yellow text-slate-950 font-bold py-3 rounded-lg hover:bg-[#b3e600] transition mt-6">
-                Entrar no Sistema
+              <button type="submit" disabled={carregando} className="w-full bg-optic-yellow text-slate-950 font-bold py-3 rounded-lg hover:bg-[#b3e600] transition mt-6 disabled:opacity-50">
+                {carregando ? 'Conectando...' : 'Entrar no Sistema'}
               </button>
             </form>
           </div>
@@ -97,38 +104,41 @@
       );
     };
 
-    // ==========================================
-    // APP MOBILE DO ATLETA (Envia dados pro Banco)
-    // ==========================================
-    const MobilePlayerApp = () => {
-      const [energia, setEnergia] = useState(5);
+    // --------------------------------------------------
+    // TELA 2: APP DO PACIENTE (Enviar Dados)
+    // --------------------------------------------------
+    const MobileApp = ({ usuarioAtual }) => {
       const [foco, setFoco] = useState(5);
+      const [energia, setEnergia] = useState(5);
       const [salvando, setSalvando] = useState(false);
 
       const salvarCheckin = async () => {
         setSalvando(true);
         try {
-          // Salva um documento real no Banco de Dados
-          await window.firebaseAPI.addDoc(window.firebaseAPI.collection(window.firebaseDB, "checkins"), {
-            atleta: "Carlos Alcaraz",
-            energia: energia,
-            foco: foco,
-            data: new Date().toISOString()
+          const checkinsRef = window.fbAPI.collection(window.db, "checkins");
+          await window.fbAPI.addDoc(checkinsRef, {
+            pacienteId: usuarioAtual.uid,
+            email: usuarioAtual.email,
+            foco: parseInt(foco),
+            energia: parseInt(energia),
+            data: new Date().toISOString() // Usando data local para evitar conflito de importação
           });
-          alert("Check-in salvo com sucesso no banco de dados!");
+          alert("Check-in enviado para o seu psicólogo!");
+          setFoco(5); setEnergia(5);
         } catch (error) {
-          alert("Erro ao salvar. Verifique se as chaves do Firebase estão configuradas.");
+          alert("Erro ao salvar. Verifique o console.");
           console.error(error);
         }
         setSalvando(false);
       };
 
       return (
-        <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="flex items-center justify-center min-h-screen p-4 bg-black/90">
           <div className="w-full max-w-[375px] h-[750px] bg-slate-950 rounded-[2.5rem] border-[6px] border-slate-800 overflow-hidden relative shadow-2xl flex flex-col">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-b-xl z-20"></div>
             <div className="pt-12 pb-6 px-6 bg-gradient-to-b from-optic-yellow/10 to-transparent">
-              <h2 className="text-2xl text-white font-light">E aí, Atleta.</h2>
+              <p className="text-optic-yellow text-sm font-medium tracking-wider uppercase mb-1">AceMind</p>
+              <h2 className="text-xl text-white font-light truncate">Olá, {usuarioAtual.email.split('@')[0]}</h2>
+              <p className="text-slate-400 text-sm mt-1">Como foi o treino hoje?</p>
             </div>
             <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6 custom-scrollbar">
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5">
@@ -143,7 +153,7 @@
                     <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#ccff00]" />
                   </div>
                   <button onClick={salvarCheckin} disabled={salvando} className="w-full bg-optic-yellow text-slate-950 font-medium py-3 rounded-xl hover:bg-[#b3e600] transition-colors disabled:opacity-50">
-                    {salvando ? 'Salvando...' : 'Salvar Check-in'}
+                    {salvando ? 'Enviando...' : 'Salvar Check-in'}
                   </button>
                 </div>
               </div>
@@ -153,49 +163,122 @@
       );
     };
 
-    // ==========================================
-    // MENU PRINCIPAL & CONTROLE DE ACESSO
-    // ==========================================
-    const App = () => {
-      const [usuarioLogado, setUsuarioLogado] = useState(null);
-      const [carregando, setCarregando] = useState(true);
-      const [telaAtual, setTelaAtual] = useState('mobile'); // Forçando abrir no mobile para teste
+    // --------------------------------------------------
+    // TELA 3: PAINEL DO PSICÓLOGO (Ler Dados)
+    // --------------------------------------------------
+    const DashboardPsicologo = () => {
+      const [checkins, setCheckins] = useState([]);
+      const [carregandoDados, setCarregandoDados] = useState(true);
+
+      const buscarDados = async () => {
+        try {
+          const q = window.fbAPI.query(
+            window.fbAPI.collection(window.db, "checkins"), 
+            window.fbAPI.orderBy("data", "desc"), 
+            window.fbAPI.limit(12)
+          );
+          const querySnapshot = await window.fbAPI.getDocs(q);
+          const dadosRetornados = querySnapshot.docs.map(doc => {
+            const dataObj = doc.data();
+            // Formata a data ISO para PT-BR
+            const dataFormatada = new Date(dataObj.data).toLocaleDateString('pt-BR') + ' às ' + new Date(dataObj.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            return { id: doc.id, ...dataObj, dataFormatada };
+          });
+          setCheckins(dadosRetornados);
+        } catch (error) {
+          console.error("Erro ao buscar do Firebase:", error);
+        }
+        setCarregandoDados(false);
+      };
 
       useEffect(() => {
-        // Monitora se tem alguém logado no sistema
+        buscarDados();
+      }, []);
+
+      return (
+        <div className="min-h-screen p-8">
+          <header className="flex justify-between items-center mb-12 border-b border-white/10 pb-6">
+            <div>
+              <h1 className="text-4xl font-light tracking-wider">Ace<span className="text-optic-yellow font-bold">Mind</span></h1>
+              <p className="text-slate-400 mt-1 text-sm uppercase tracking-widest">Controle Clínico</p>
+            </div>
+            <button onClick={buscarDados} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded transition">
+              Atualizar Dados
+            </button>
+          </header>
+
+          <h2 className="text-xl text-slate-200 font-light mb-6">Últimos Registros (Real-time)</h2>
+          
+          {carregandoDados ? (
+            <p className="text-optic-yellow">Buscando dados no servidor...</p>
+          ) : checkins.length === 0 ? (
+            <p className="text-slate-500">Nenhum check-in registrado pelos atletas ainda.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {checkins.map(registro => (
+                <div key={registro.id} className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl hover:border-optic-yellow/30 transition">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-medium truncate text-optic-yellow">{registro.email.split('@')[0]}</h3>
+                    <span className="text-xs text-slate-400">{registro.dataFormatada}</span>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-slate-300">Foco Relatado: <span className="text-white font-bold">{registro.foco}/10</span></p>
+                    <p className="text-sm text-slate-300">Energia Relatada: <span className="text-white font-bold">{registro.energia}/10</span></p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // --------------------------------------------------
+    // CONTROLADOR GERAL (Quem vê o quê)
+    // --------------------------------------------------
+    const App = () => {
+      const [usuarioLogado, setUsuarioLogado] = useState(null);
+      const [carregandoSistema, setCarregandoSistema] = useState(true);
+      const [verComoPsicologo, setVerComoPsicologo] = useState(false);
+
+      useEffect(() => {
+        // Aguarda meio segundo pro script do Firebase carregar na página
         setTimeout(() => {
-          if (window.firebaseAuth) {
-             window.firebaseAPI.onAuthStateChanged(window.firebaseAuth, (user) => {
+          if (window.auth) {
+            window.fbAPI.onAuthStateChanged(window.auth, (user) => {
               setUsuarioLogado(user);
-              setCarregando(false);
+              setCarregandoSistema(false);
             });
           } else {
-             setCarregando(false); // Para não travar se o Firebase não carregar
+            setCarregandoSistema(false);
           }
-        }, 1000);
+        }, 800);
       }, []);
 
       const fazerLogout = () => {
-        window.firebaseAPI.signOut(window.firebaseAuth);
+        window.fbAPI.signOut(window.auth);
+        setUsuarioLogado(null);
       };
 
-      if (carregando) return <div className="min-h-screen flex items-center justify-center text-optic-yellow">Conectando ao banco de dados...</div>;
+      if (carregandoSistema) return <div className="min-h-screen flex items-center justify-center text-optic-yellow">Iniciando Servidor...</div>;
 
-      // Se não tiver usuário logado e as chaves estiverem configuradas, mostra o Login
-      // MANTIVE UMA TRAVA DE SEGURANÇA: Se você ainda não colocou as chaves do Firebase, ele libera a tela para você ver o design.
-      if (!usuarioLogado && window.firebaseConfig && window.firebaseConfig.apiKey !== "SUA_CHAVE_AQUI") {
-        return <TelaLogin />;
-      }
+      if (!usuarioLogado) return <Login setUsuarioLogado={setUsuarioLogado} />;
 
+      // Se estiver logado, mostramos uma barra de navegação no topo e a tela escolhida
       return (
         <div>
-          <div className="bg-slate-900 p-4 flex justify-center items-center gap-4 border-b border-white/10">
-            <span className="text-slate-400 text-sm">Modo de Teste de Integração</span>
-            {usuarioLogado && (
-               <button onClick={fazerLogout} className="text-red-400 hover:text-red-300 text-sm ml-auto">Sair da Conta</button>
-            )}
+          <div className="bg-slate-900 p-4 flex justify-between items-center border-b border-white/10 text-sm">
+            <div className="flex gap-4">
+              <button onClick={() => setVerComoPsicologo(false)} className={`px-3 py-1 rounded ${!verComoPsicologo ? 'bg-optic-yellow text-black font-bold' : 'text-slate-400 hover:text-white'}`}>App do Paciente</button>
+              <button onClick={() => setVerComoPsicologo(true)} className={`px-3 py-1 rounded ${verComoPsicologo ? 'bg-optic-yellow text-black font-bold' : 'text-slate-400 hover:text-white'}`}>Painel do Psicólogo</button>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-slate-400 hidden sm:block">Logado como: {usuarioLogado.email}</span>
+              <button onClick={fazerLogout} className="text-red-400 hover:bg-red-500 hover:text-white px-3 py-1 rounded transition">Sair</button>
+            </div>
           </div>
-          <MobilePlayerApp />
+
+          {verComoPsicologo ? <DashboardPsicologo /> : <MobileApp usuarioAtual={usuarioLogado} />}
         </div>
       );
     };
