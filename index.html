@@ -19,6 +19,7 @@
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
   </style>
 
   <script type="module">
@@ -27,11 +28,12 @@
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     // =========================================================================
-    // ATENÇÃO: NÃO ESQUEÇA DE COLAR SUAS CHAVES AQUI ANTES DE SALVAR!
+    // COLE SUAS CHAVES DO FIREBASE AQUI
     // =========================================================================
     const firebaseConfig = {
-apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+     apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
+  databaseURL: "https://ace-mind-c13a1-default-rtdb.firebaseio.com",
   projectId: "ace-mind-c13a1",
   storageBucket: "ace-mind-c13a1.firebasestorage.app",
   messagingSenderId: "22508213575",
@@ -42,327 +44,378 @@ apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
       const app = initializeApp(firebaseConfig);
       window.db = getFirestore(app);
       window.auth = getAuth(app);
-      
-      window.fbAPI = { 
-        collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc,
-        signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut 
-      };
-      window.firebasePronto = true; // Avisa o React que o banco acordou
+      window.fbAPI = { collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut };
+      window.firebasePronto = true;
     } catch (erro) {
       console.error("Erro ao iniciar Firebase:", erro);
       window.firebaseErro = true;
     }
   </script>
 </head>
-<body>
+<body class="overflow-hidden">
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // --------------------------------------------------
-    // TELA 1: LOGIN E CADASTRO
-    // --------------------------------------------------
-    const TelaAutenticacao = ({ setUsuarioLogado }) => {
-      const [modo, setModo] = useState('login'); 
-      const [email, setEmail] = useState('');
-      const [senha, setSenha] = useState('');
-      const [cargo, setCargo] = useState('paciente'); // Agora só tem essas duas opções abertas ao público
-      const [erro, setErro] = useState('');
-      const [carregando, setCarregando] = useState(false);
+    // Ícones SVG Reutilizáveis
+    const Icons = {
+      Dashboard: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>,
+      Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>,
+      Activity: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>,
+      Dollar: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
+      Chart: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>,
+    };
 
-      const processarAuth = async (e) => {
-        e.preventDefault();
-        setCarregando(true);
-        setErro('');
+    // --------------------------------------------------
+    // COMPONENTES DO PAINEL DO PSICÓLOGO
+    // --------------------------------------------------
+    const ModuloDashboard = ({ checkins }) => (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-light border-b border-white/10 pb-4">Visão Geral do Sistema</h2>
         
-        try {
-          let userCredential;
-          if (modo === 'cadastro') {
-            userCredential = await window.fbAPI.createUserWithEmailAndPassword(window.auth, email, senha);
-            
-            await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "usuarios", userCredential.user.uid), {
-              email: email,
-              cargo: cargo,
-              dataCadastro: new Date().toISOString()
-            });
-            
-            setUsuarioLogado({ ...userCredential.user, cargo: cargo });
-          } else {
-            userCredential = await window.fbAPI.signInWithEmailAndPassword(window.auth, email, senha);
-            const userDoc = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", userCredential.user.uid));
-            const cargoBanco = userDoc.exists() ? userDoc.data().cargo : 'paciente'; 
-            setUsuarioLogado({ ...userCredential.user, cargo: cargoBanco });
-          }
-        } catch (error) {
-          setErro(modo === 'login' ? 'E-mail ou senha inválidos.' : 'Erro ao criar conta. Tente uma senha maior.');
-        }
-        setCarregando(false);
-      };
-
-      return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-2xl w-full max-w-md">
-            <h1 className="text-4xl font-light tracking-wider text-center mb-6">Ace<span className="text-optic-yellow font-bold">Mind</span></h1>
-            
-            <div className="flex justify-between mb-8 border-b border-white/10 pb-2">
-              <button onClick={() => setModo('login')} className={`flex-1 text-center pb-2 ${modo === 'login' ? 'text-optic-yellow border-b-2 border-optic-yellow font-bold' : 'text-slate-500'}`}>Entrar</button>
-              <button onClick={() => setModo('cadastro')} className={`flex-1 text-center pb-2 ${modo === 'cadastro' ? 'text-optic-yellow border-b-2 border-optic-yellow font-bold' : 'text-slate-500'}`}>Criar Conta</button>
+        {/* Alertas de Risco & Resumo */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 glass-panel p-6 rounded-2xl">
+            <h3 className="text-lg font-medium mb-4 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Alertas de Risco (Burnout / Ansiedade)</h3>
+            <div className="space-y-3">
+              {checkins.slice(0,3).map((reg, i) => (
+                <div key={i} className="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-red-500/20">
+                  <span className="font-bold text-slate-200">{reg.email.split('@')[0]}</span>
+                  <div className="flex gap-4 text-sm">
+                    <span className="text-red-400">Energia Crítica: {reg.energia}/10</span>
+                    <button className="text-optic-yellow hover:underline">Ver Diário</button>
+                  </div>
+                </div>
+              ))}
             </div>
+          </div>
+          
+          <div className="glass-panel p-6 rounded-2xl">
+            <h3 className="text-lg font-medium mb-4 text-optic-yellow">Resumo Diário</h3>
+            <ul className="space-y-4 text-sm text-slate-300">
+              <li className="flex justify-between border-b border-white/5 pb-2"><span>Próximas Sessões Hoje</span><span className="font-bold text-white">4</span></li>
+              <li className="flex justify-between border-b border-white/5 pb-2"><span>Mensagens não lidas</span><span className="font-bold text-white">2</span></li>
+              <li className="flex justify-between"><span>Pagamentos Pendentes</span><span className="font-bold text-red-400">1</span></li>
+            </ul>
+          </div>
+        </div>
 
-            {erro && <p className="text-red-500 text-sm mb-4 text-center bg-red-500/10 py-2 rounded">{erro}</p>}
+        {/* Calendário de Torneios */}
+        <div className="glass-panel p-6 rounded-2xl">
+          <h3 className="text-lg font-medium mb-4">Calendário de Torneios Ativos (Sincronização ATP/WTA)</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+            <div className="min-w-[200px] bg-slate-900 border border-optic-yellow/30 p-4 rounded-xl">
+              <span className="text-xs font-bold text-optic-yellow bg-optic-yellow/10 px-2 py-1 rounded">Semana Atual</span>
+              <h4 className="font-bold mt-2">Roland Garros</h4>
+              <p className="text-sm text-slate-400">Paris, França • Saibro</p>
+              <p className="text-xs text-slate-500 mt-2">2 atletas competindo</p>
+            </div>
+            <div className="min-w-[200px] glass-panel p-4 rounded-xl">
+              <span className="text-xs font-bold text-slate-400">Próxima Semana</span>
+              <h4 className="font-bold mt-2">Challenger SP</h4>
+              <p className="text-sm text-slate-400">São Paulo, BR • Quadra Dura</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const ModuloProntuario = () => (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center border-b border-white/10 pb-4">
+          <h2 className="text-2xl font-light">Gestão de Atletas e Ferramentas</h2>
+          <select className="bg-slate-900 border border-white/20 text-white text-sm rounded-lg focus:ring-optic-yellow focus:border-optic-yellow block p-2">
+            <option>Selecione um Atleta: Carlos Alcaraz</option>
+            <option>João Silva</option>
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Coluna Esquerda: Dados e Rotinas */}
+          <div className="space-y-6 xl:col-span-1">
+            <div className="glass-panel p-6 rounded-2xl">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-optic-yellow"></div>
+                <div>
+                  <h3 className="text-xl font-bold text-optic-yellow">Carlos A.</h3>
+                  <p className="text-xs text-slate-400">ATP #2 • Destro • Fundo de Quadra</p>
+                </div>
+              </div>
+              <h4 className="text-sm font-bold text-slate-300 mt-6 mb-2">Mapeamento de Rotinas</h4>
+              <ul className="text-sm space-y-2 text-slate-400">
+                <li className="bg-slate-900 p-2 rounded border border-white/5"><span className="text-white">Pré-saque:</span> 4 quiques, respiração profunda.</li>
+                <li className="bg-slate-900 p-2 rounded border border-white/5"><span className="text-white">Pós-erro:</span> Ajustar cordas, olhar para toalha.</li>
+              </ul>
+            </div>
             
-            <form onSubmit={processarAuth} className="space-y-4">
-              <div>
-                <label className="text-slate-400 text-sm">Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-white mt-1 outline-none focus:border-optic-yellow" required />
+            <div className="glass-panel p-6 rounded-2xl">
+              <h4 className="text-sm font-bold text-slate-300 mb-2">Ajuste de Fuso (Jet Lag)</h4>
+              <p className="text-xs text-slate-400 mb-2">Próximo destino: Tóquio (+12h)</p>
+              <div className="w-full bg-slate-800 rounded-full h-2 mb-1"><div className="bg-optic-yellow h-2 rounded-full" style={{width: '30%'}}></div></div>
+              <p className="text-[10px] text-right text-slate-500">Adaptação de sono em andamento</p>
+            </div>
+          </div>
+
+          {/* Coluna Central/Direita: Ferramentas de Tênis */}
+          <div className="space-y-6 xl:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-red-500">
+                <h4 className="font-bold mb-1 flex items-center gap-2">Monitoramento de "Choking"</h4>
+                <p className="text-xs text-slate-400 mb-4">Tensão em fechamento de sets.</p>
+                <div className="text-3xl font-light text-red-400 mb-1">68%</div>
+                <p className="text-xs text-slate-500">Taxa de duplas faltas em Break Points contra (últimos 3 meses).</p>
               </div>
               
+              <div className="glass-panel p-6 rounded-2xl">
+                <h4 className="font-bold mb-1">Análise de Linguagem Corporal</h4>
+                <p className="text-xs text-slate-400 mb-4">Upload de vídeos de jogos.</p>
+                <div className="h-24 bg-slate-900 rounded-lg border border-dashed border-white/20 flex items-center justify-center text-slate-500 text-sm hover:border-optic-yellow hover:text-optic-yellow cursor-pointer transition">
+                  + Enviar clipe (mp4)
+                </div>
+              </div>
+            </div>
+
+            <div className="glass-panel p-6 rounded-2xl min-h-[250px]">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="font-bold">Histórico de Sessões Clínicas (SOAP)</h4>
+                <button className="text-xs bg-optic-yellow text-black px-3 py-1 rounded font-bold">+ Nova Anotação</button>
+              </div>
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                <span className="text-xs text-optic-yellow mb-2 block">16 Março 2026 - Zoom</span>
+                <p className="text-sm text-slate-300"><strong className="text-white">S:</strong> Relatou frustração com backhand.<br/><strong className="text-white">O:</strong> Tensão nos ombros.<br/><strong className="text-white">A:</strong> Ansiedade pré-torneio leve.<br/><strong className="text-white">P:</strong> Reforçar rotina de toalha pós-erro.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const ModuloFinanceiro = () => (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-light border-b border-white/10 pb-4">Gestão Financeira e Administrativa</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="glass-panel p-6 rounded-2xl">
+            <h3 className="font-bold mb-4 text-optic-yellow">Agendamento Automático</h3>
+            <p className="text-sm text-slate-400 mb-4">Sincronizado com Google Calendar.</p>
+            <div className="space-y-2">
+              <div className="p-3 bg-slate-900 rounded flex justify-between items-center">
+                <span className="text-sm">Hoje, 14:00 - Sessão Online</span>
+                <button className="text-xs bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded text-white">Abrir Zoom</button>
+              </div>
+            </div>
+          </div>
+          <div className="glass-panel p-6 rounded-2xl">
+            <h3 className="font-bold mb-4 text-green-400">Faturamento e Pacotes</h3>
+            <div className="flex justify-between items-end mb-6">
               <div>
-                <label className="text-slate-400 text-sm">Senha</label>
-                <input type="password" value={senha} onChange={e => setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-white mt-1 outline-none focus:border-optic-yellow" required />
+                <p className="text-sm text-slate-400">Receita Estimada (Mês)</p>
+                <p className="text-3xl font-light">R$ 14.500</p>
               </div>
-
-              {modo === 'cadastro' && (
-                <div>
-                  <label className="text-slate-400 text-sm">Eu sou um(a):</label>
-                  <select value={cargo} onChange={e => setCargo(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-white mt-1 outline-none focus:border-optic-yellow">
-                    <option value="paciente">Atleta / Paciente</option>
-                    <option value="psicologo">Psicólogo(a)</option>
-                    {/* A OPÇÃO DE ADMIN FOI REMOVIDA DAQUI */}
-                  </select>
-                </div>
-              )}
-
-              <button type="submit" disabled={carregando} className="w-full bg-optic-yellow text-slate-950 font-bold py-3 rounded-lg hover:bg-[#b3e600] transition mt-6 disabled:opacity-50">
-                {carregando ? 'Processando...' : modo === 'login' ? 'Acessar Sistema' : 'Cadastrar'}
-              </button>
-            </form>
-          </div>
-        </div>
-      );
-    };
-
-    // --------------------------------------------------
-    // TELA 2: APP DO PACIENTE
-    // --------------------------------------------------
-    const MobileApp = ({ usuarioAtual }) => {
-      const [foco, setFoco] = useState(5);
-      const [energia, setEnergia] = useState(5);
-
-      const salvarCheckin = async () => {
-        try {
-          await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "checkins"), {
-            pacienteId: usuarioAtual.uid, email: usuarioAtual.email, foco: parseInt(foco), energia: parseInt(energia), data: new Date().toISOString()
-          });
-          alert("Check-in enviado com sucesso!");
-          setFoco(5); setEnergia(5);
-        } catch (error) { alert("Erro ao salvar."); }
-      };
-
-      return (
-        <div className="flex items-center justify-center min-h-[90vh] p-4 bg-black/90">
-          <div className="w-full max-w-[375px] h-[700px] bg-slate-950 rounded-[2.5rem] border-[6px] border-slate-800 overflow-hidden relative shadow-2xl flex flex-col">
-            <div className="pt-12 pb-6 px-6 bg-gradient-to-b from-optic-yellow/10 to-transparent">
-              <h2 className="text-xl text-white font-light truncate">Olá, {usuarioAtual.email.split('@')[0]}</h2>
-              <p className="text-slate-400 text-sm mt-1">Sua área exclusiva de check-in.</p>
+              <button className="text-xs border border-white/20 px-3 py-1 rounded hover:bg-white/10">Emitir Recibo</button>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6">
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5">
-                <h3 className="text-white font-medium mb-4">Diário de Bordo</h3>
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Desfocado</span><span>Foco Total</span></div>
-                    <input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} className="w-full h-2 bg-slate-800 rounded-lg appearance-none accent-[#ccff00]" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Exausto</span><span>Energizado</span></div>
-                    <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="w-full h-2 bg-slate-800 rounded-lg appearance-none accent-[#ccff00]" />
-                  </div>
-                  <button onClick={salvarCheckin} className="w-full bg-optic-yellow text-slate-950 font-medium py-3 rounded-xl hover:bg-[#b3e600]">Enviar Registro</button>
-                </div>
-              </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between text-slate-300"><span>Pacote Pré-Grand Slam (Carlos A.)</span><span className="text-green-400">Pago</span></div>
+              <div className="flex justify-between text-slate-300"><span>Acompanhamento Mensal (João S.)</span><span className="text-red-400">Pendente</span></div>
             </div>
           </div>
         </div>
-      );
-    };
+      </div>
+    );
+
+    const ModuloRelatorios = () => (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-light border-b border-white/10 pb-4">Relatórios de Evolução Mental</h2>
+        <div className="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center py-16 text-center">
+          <Icons.Chart />
+          <h3 className="text-lg font-bold mt-4">Gráficos de Desempenho em Construção</h3>
+          <p className="text-sm text-slate-400 max-w-md mt-2">Esta área gerará relatórios visuais filtrados da evolução da resiliência e foco ao longo da temporada para serem exportados para os treinadores técnicos.</p>
+        </div>
+      </div>
+    );
 
     // --------------------------------------------------
-    // TELA 3: PAINEL DO PSICÓLOGO
+    // TELA PRINCIPAL DO PSICÓLOGO (Com Sidebar)
     // --------------------------------------------------
     const DashboardPsicologo = () => {
+      const [abaAtiva, setAbaAtiva] = useState('dashboard');
       const [checkins, setCheckins] = useState([]);
 
       useEffect(() => {
         const buscarDados = async () => {
           const q = window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(10));
           const querySnapshot = await window.fbAPI.getDocs(q);
-          setCheckins(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), dataFormatada: new Date(doc.data().data).toLocaleDateString('pt-BR') })));
+          setCheckins(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         };
         buscarDados();
       }, []);
 
+      const menuItems = [
+        { id: 'dashboard', label: 'Visão Geral', icon: Icons.Dashboard },
+        { id: 'prontuario', label: 'Meus Atletas', icon: Icons.Users },
+        { id: 'financeiro', label: 'Admin / Financeiro', icon: Icons.Dollar },
+        { id: 'relatorios', label: 'Relatórios', icon: Icons.Chart },
+      ];
+
       return (
-        <div className="p-8">
-          <h2 className="text-2xl font-light mb-6 border-b border-white/10 pb-4">Visão Clínica: Diários dos Pacientes</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {checkins.map(reg => (
-              <div key={reg.id} className="bg-white/5 border border-white/10 p-6 rounded-2xl">
-                <h3 className="text-optic-yellow font-bold truncate">{reg.email}</h3>
-                <p className="text-xs text-slate-400 mb-4">{reg.dataFormatada}</p>
-                <p>Foco: <span className="text-white font-bold">{reg.foco}/10</span></p>
-                <p>Energia: <span className="text-white font-bold">{reg.energia}/10</span></p>
+        <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-[#020617]">
+          {/* Sidebar */}
+          <aside className="w-64 glass-panel border-t-0 border-l-0 border-b-0 flex flex-col py-6 px-4">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 pl-3">Menu Clínico</div>
+            <nav className="flex flex-col gap-2">
+              {menuItems.map(item => (
+                <button 
+                  key={item.id} 
+                  onClick={() => setAbaAtiva(item.id)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${abaAtiva === item.id ? 'bg-optic-yellow text-black font-bold shadow-[0_0_15px_rgba(204,255,0,0.2)]' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                >
+                  <item.icon />
+                  <span className="text-sm">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+            <div className="mt-auto bg-slate-900 p-4 rounded-xl border border-white/5">
+              <p className="text-xs text-slate-400">Portal do Atleta</p>
+              <p className="text-[10px] text-slate-500 mt-1">Biblioteca de Mindfulness ativa para 2 pacientes.</p>
+            </div>
+          </aside>
+
+          {/* Área de Conteúdo Principal */}
+          <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            {abaAtiva === 'dashboard' && <ModuloDashboard checkins={checkins} />}
+            {abaAtiva === 'prontuario' && <ModuloProntuario />}
+            {abaAtiva === 'financeiro' && <ModuloFinanceiro />}
+            {abaAtiva === 'relatorios' && <ModuloRelatorios />}
+          </main>
+        </div>
+      );
+    };
+
+    // --------------------------------------------------
+    // AUTENTICAÇÃO E APP MOBILE (Mantidos como estavam)
+    // --------------------------------------------------
+    const TelaAutenticacao = ({ setUsuarioLogado }) => {
+      const [modo, setModo] = useState('login'); 
+      const [email, setEmail] = useState('');
+      const [senha, setSenha] = useState('');
+      const [cargo, setCargo] = useState('paciente');
+      const [erro, setErro] = useState('');
+      const [carregando, setCarregando] = useState(false);
+
+      const processarAuth = async (e) => {
+        e.preventDefault();
+        setCarregando(true);
+        try {
+          let userCredential;
+          if (modo === 'cadastro') {
+            userCredential = await window.fbAPI.createUserWithEmailAndPassword(window.auth, email, senha);
+            await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "usuarios", userCredential.user.uid), { email, cargo, dataCadastro: new Date().toISOString() });
+            setUsuarioLogado({ ...userCredential.user, cargo });
+          } else {
+            userCredential = await window.fbAPI.signInWithEmailAndPassword(window.auth, email, senha);
+            const userDoc = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", userCredential.user.uid));
+            setUsuarioLogado({ ...userCredential.user, cargo: userDoc.exists() ? userDoc.data().cargo : 'paciente' });
+          }
+        } catch (error) { setErro('Dados inválidos ou erro de conexão.'); }
+        setCarregando(false);
+      };
+
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="glass-panel p-8 rounded-2xl w-full max-w-md">
+            <h1 className="text-4xl font-light tracking-wider text-center mb-6">Ace<span className="text-optic-yellow font-bold">Mind</span></h1>
+            <div className="flex justify-between mb-8 border-b border-white/10 pb-2">
+              <button onClick={() => setModo('login')} className={`flex-1 pb-2 ${modo === 'login' ? 'text-optic-yellow border-b-2 border-optic-yellow font-bold' : 'text-slate-500'}`}>Entrar</button>
+              <button onClick={() => setModo('cadastro')} className={`flex-1 pb-2 ${modo === 'cadastro' ? 'text-optic-yellow border-b-2 border-optic-yellow font-bold' : 'text-slate-500'}`}>Criar Conta</button>
+            </div>
+            {erro && <p className="text-red-500 text-sm mb-4 bg-red-500/10 p-2 rounded text-center">{erro}</p>}
+            <form onSubmit={processarAuth} className="space-y-4">
+              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 outline-none focus:border-optic-yellow" required />
+              <input type="password" placeholder="Senha" value={senha} onChange={e => setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 outline-none focus:border-optic-yellow" required />
+              {modo === 'cadastro' && (
+                <select value={cargo} onChange={e => setCargo(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-3 outline-none focus:border-optic-yellow">
+                  <option value="paciente">Atleta / Paciente</option>
+                  <option value="psicologo">Psicólogo(a)</option>
+                </select>
+              )}
+              <button type="submit" disabled={carregando} className="w-full bg-optic-yellow text-slate-950 font-bold py-3 rounded-lg hover:bg-[#b3e600]">{carregando ? 'Aguarde...' : 'Acessar'}</button>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+    const MobileApp = ({ usuarioAtual }) => {
+      const [foco, setFoco] = useState(5);
+      const [energia, setEnergia] = useState(5);
+      const salvarCheckin = async () => {
+        try {
+          await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "checkins"), { pacienteId: usuarioAtual.uid, email: usuarioAtual.email, foco: parseInt(foco), energia: parseInt(energia), data: new Date().toISOString() });
+          alert("Enviado com sucesso!");
+        } catch (error) {}
+      };
+      return (
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4 bg-black/90">
+          <div className="w-full max-w-[375px] h-[700px] bg-slate-950 rounded-[2.5rem] border-[6px] border-slate-800 overflow-hidden relative shadow-2xl flex flex-col">
+            <div className="pt-12 pb-6 px-6 bg-gradient-to-b from-optic-yellow/10 to-transparent">
+              <h2 className="text-xl text-white truncate">Olá, {usuarioAtual.email.split('@')[0]}</h2>
+              <p className="text-slate-400 text-sm">Diário Pós-Treino.</p>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6">
+              <div className="glass-panel p-5 rounded-2xl">
+                <div className="space-y-6">
+                  <div><div className="flex justify-between text-xs text-slate-400 mb-2"><span>Desfocado</span><span>Foco Total</span></div><input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} className="w-full accent-[#ccff00]" /></div>
+                  <div><div className="flex justify-between text-xs text-slate-400 mb-2"><span>Exausto</span><span>Energizado</span></div><input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="w-full accent-[#ccff00]" /></div>
+                  <button onClick={salvarCheckin} className="w-full bg-optic-yellow text-slate-950 font-bold py-3 rounded-xl">Salvar Diário</button>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       );
     };
 
     // --------------------------------------------------
-    // TELA 4: PAINEL DO GESTOR (ADMIN) - VÊ TUDO
-    // --------------------------------------------------
-    const DashboardAdmin = () => {
-      const [usuarios, setUsuarios] = useState([]);
-      const [checkins, setCheckins] = useState([]);
-
-      useEffect(() => {
-        const buscarTudo = async () => {
-          const userSnap = await window.fbAPI.getDocs(window.fbAPI.collection(window.db, "usuarios"));
-          setUsuarios(userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-          
-          const checkinSnap = await window.fbAPI.getDocs(window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(20)));
-          setCheckins(checkinSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        };
-        buscarTudo();
-      }, []);
-
-      return (
-        <div className="p-8">
-          <h2 className="text-3xl text-optic-yellow font-bold mb-8">Painel do Gestor (Visão Global)</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl">
-              <h3 className="text-xl font-light mb-4">Todos os Usuários Cadastrados ({usuarios.length})</h3>
-              <ul className="space-y-3">
-                {usuarios.map(u => (
-                  <li key={u.id} className="flex justify-between items-center bg-black/50 p-3 rounded">
-                    <span>{u.email}</span>
-                    <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${u.cargo === 'admin' ? 'bg-red-500/20 text-red-400' : u.cargo === 'psicologo' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
-                      {u.cargo}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl">
-              <h3 className="text-xl font-light mb-4">Fluxo Global de Check-ins</h3>
-              <div className="space-y-3">
-                {checkins.map(reg => (
-                  <div key={reg.id} className="bg-black/50 p-3 rounded flex justify-between">
-                    <div>
-                      <p className="text-sm font-bold text-optic-yellow">{reg.email}</p>
-                      <p className="text-xs text-slate-400">Data: {new Date(reg.data).toLocaleString('pt-BR')}</p>
-                    </div>
-                    <div className="text-right text-sm">
-                      <p>Foco: {reg.foco}</p>
-                      <p>Eng: {reg.energia}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    // --------------------------------------------------
-    // CONTROLADOR PRINCIPAL DO SISTEMA
+    // BASE DO SISTEMA
     // --------------------------------------------------
     const App = () => {
       const [usuarioLogado, setUsuarioLogado] = useState(null);
       const [carregandoSistema, setCarregandoSistema] = useState(true);
-      const [erroConexao, setErroConexao] = useState(false);
 
       useEffect(() => {
-        // Nova lógica: Fica checando se o Firebase carregou a cada 100ms
         const checarFirebase = setInterval(() => {
-          if (window.firebaseErro) {
-            clearInterval(checarFirebase);
-            setErroConexao(true);
-            setCarregandoSistema(false);
-          } else if (window.firebasePronto && window.auth) {
+          if (window.firebasePronto && window.auth) {
             clearInterval(checarFirebase);
             window.fbAPI.onAuthStateChanged(window.auth, async (user) => {
               if (user) {
                 try {
                   const userDoc = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", user.uid));
-                  const cargoBanco = userDoc.exists() ? userDoc.data().cargo : 'paciente';
-                  setUsuarioLogado({ ...user, cargo: cargoBanco });
-                } catch(e) {
-                  setUsuarioLogado({ ...user, cargo: 'paciente' });
-                }
-              } else {
-                setUsuarioLogado(null);
-              }
+                  setUsuarioLogado({ ...user, cargo: userDoc.exists() ? userDoc.data().cargo : 'paciente' });
+                } catch(e) { setUsuarioLogado({ ...user, cargo: 'paciente' }); }
+              } else { setUsuarioLogado(null); }
               setCarregandoSistema(false);
             });
           }
         }, 100);
+        return () => clearInterval(checarFirebase);
+      }, []);
 
-        // Se passar 5 segundos e não carregar, desiste e mostra erro
-        const tempoLimite = setTimeout(() => {
-          clearInterval(checarFirebase);
-          if (carregandoSistema && !window.firebasePronto) {
-            setErroConexao(true);
-            setCarregandoSistema(false);
-          }
-        }, 5000);
-
-        return () => { clearInterval(checarFirebase); clearTimeout(tempoLimite); };
-      }, [carregandoSistema]);
-
-      const fazerLogout = () => {
-        window.fbAPI.signOut(window.auth);
-        setUsuarioLogado(null);
-      };
-
-      if (carregandoSistema) return <div className="min-h-screen flex items-center justify-center text-optic-yellow text-xl">Conectando ao banco de dados...</div>;
-      
-      if (erroConexao) return (
-        <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
-          <div className="bg-red-500/10 border border-red-500/50 p-8 rounded-xl max-w-lg">
-            <h2 className="text-red-500 text-2xl font-bold mb-4">Erro de Conexão com Firebase</h2>
-            <p className="text-slate-300">O sistema não conseguiu se conectar ao banco de dados.</p>
-            <p className="text-slate-400 text-sm mt-4">Verifique se você copiou e colou as chaves corretamente na variável <code className="bg-black px-2 py-1 rounded">firebaseConfig</code> no topo do arquivo.</p>
-          </div>
-        </div>
-      );
-
+      if (carregandoSistema) return <div className="min-h-screen flex items-center justify-center text-optic-yellow">Iniciando...</div>;
       if (!usuarioLogado) return <TelaAutenticacao setUsuarioLogado={setUsuarioLogado} />;
 
       return (
-        <div>
-          <div className="bg-slate-900 p-4 flex justify-between items-center border-b border-white/10 text-sm">
+        <div className="h-screen flex flex-col overflow-hidden">
+          {/* Topbar Fixa */}
+          <div className="h-16 bg-slate-950 border-b border-white/10 flex justify-between items-center px-6 shrink-0">
+            <span className="font-bold text-xl tracking-widest text-white">Ace<span className="text-optic-yellow">Mind</span></span>
             <div className="flex items-center gap-4">
-              <span className="font-bold text-lg tracking-widest text-white">Ace<span className="text-optic-yellow">Mind</span></span>
-              <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${usuarioLogado.cargo === 'admin' ? 'bg-red-500/20 text-red-400' : usuarioLogado.cargo === 'psicologo' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>
-                Sessão: {usuarioLogado.cargo}
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-slate-400 hidden sm:block">{usuarioLogado.email}</span>
-              <button onClick={fazerLogout} className="text-red-400 hover:bg-red-500 hover:text-white px-3 py-1 rounded border border-red-500/30 transition">Sair</button>
+              <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1 rounded uppercase border border-white/10">{usuarioLogado.cargo}</span>
+              <button onClick={() => { window.fbAPI.signOut(window.auth); setUsuarioLogado(null); }} className="text-xs text-red-400 hover:text-red-300">Sair da Conta</button>
             </div>
           </div>
-
-          {usuarioLogado.cargo === 'admin' && <DashboardAdmin />}
-          {usuarioLogado.cargo === 'psicologo' && <DashboardPsicologo />}
-          {usuarioLogado.cargo === 'paciente' && <MobileApp usuarioAtual={usuarioLogado} />}
           
+          {/* Roteamento Principal */}
+          {usuarioLogado.cargo === 'psicologo' || usuarioLogado.cargo === 'admin' ? <DashboardPsicologo /> : <MobileApp usuarioAtual={usuarioLogado} />}
         </div>
       );
     };
