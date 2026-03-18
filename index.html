@@ -19,7 +19,6 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-    /* Animação suave para o menu mobile */
     .menu-transition { transition: transform 0.3s ease-in-out; }
   </style>
 
@@ -33,7 +32,7 @@
     // COLE SUAS CHAVES AQUI
     // =========================================================================
     const firebaseConfig = {
-     apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+ apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
   databaseURL: "https://ace-mind-c13a1-default-rtdb.firebaseio.com",
   projectId: "ace-mind-c13a1",
@@ -83,7 +82,7 @@
     };
 
     // ==============================================================================
-    // APP DO PACIENTE (TOTALMENTE RESPONSIVO)
+    // APP DO PACIENTE
     // ==============================================================================
     const MobileApp = ({ usuarioAtual }) => {
       const [foco, setFoco] = useState(5);
@@ -94,7 +93,7 @@
         setSalvando(true);
         try {
           await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "checkins"), {
-            pacienteId: usuarioAtual.uid, email: usuarioAtual.email, foco: parseInt(foco), energia: parseInt(energia), data: new Date().toISOString()
+            pacienteId: usuarioAtual.uid, nome: usuarioAtual.nome, email: usuarioAtual.email, foco: parseInt(foco), energia: parseInt(energia), data: new Date().toISOString()
           });
           alert("Check-in enviado com sucesso!");
           setFoco(5); setEnergia(5);
@@ -103,11 +102,10 @@
       };
 
       return (
-        // No mobile (sm), tira o padding e ocupa 100%. No PC, mantém centralizado como um mockup de celular.
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-0 sm:p-4 bg-black/90">
           <div className="w-full h-full sm:max-w-[375px] sm:h-[750px] bg-slate-950 sm:rounded-[2.5rem] sm:border-[6px] sm:border-slate-800 overflow-hidden relative sm:shadow-2xl flex flex-col">
             <div className="pt-8 pb-6 px-6 bg-gradient-to-b from-optic-yellow/10 to-transparent shrink-0">
-              <h2 className="text-2xl text-white font-light truncate">Olá, {usuarioAtual.email.split('@')[0]}</h2>
+              <h2 className="text-2xl text-white font-light truncate">Olá, {usuarioAtual.nome}</h2>
               <p className="text-slate-400 text-sm mt-1">Diário pós-treino.</p>
             </div>
             <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6 custom-scrollbar">
@@ -150,7 +148,7 @@
                 <div key={reg.id} className={`bg-slate-900/80 p-4 rounded-xl border ${risco.border}`}>
                   <div className="flex justify-between items-start mb-2">
                     <div className="w-4/5">
-                      <span className="font-bold text-white truncate block">{reg.email.split('@')[0]}</span>
+                      <span className="font-bold text-white truncate block">{reg.nome || reg.email.split('@')[0]}</span>
                       <span className="text-[10px] text-slate-500">{new Date(reg.data).toLocaleString('pt-BR')}</span>
                     </div>
                     <div className={`w-3 h-3 rounded-full shrink-0 ${risco.cor} shadow-[0_0_8px_currentColor]`}></div>
@@ -163,6 +161,7 @@
         </div>
       </div>
     );
+
     // --- MÓDULO 2: PERFIL ESPORTIVO ---
     const ModuloPerfil = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
@@ -192,7 +191,7 @@
             <h2 className="text-xl md:text-2xl font-light">Dados Básicos e Esportivos</h2>
             <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="w-full sm:w-auto bg-slate-900 border border-white/20 text-white rounded p-2 outline-none">
               <option value="">Selecione o Atleta...</option>
-              {atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}
+              {atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
             </select>
           </div>
 
@@ -226,14 +225,11 @@
     // --- MÓDULO 3: PRONTUÁRIO CLÍNICO ---
     const ModuloProntuario = ({ atletas }) => {
       const [atletaSelecionadoId, setAtletaSelecionadoId] = useState("");
-      
       const [rotinas, setRotinas] = useState({ pre: "", pos: "" });
       const [editandoRotina, setEditandoRotina] = useState(false);
-      
       const [anotacoes, setAnotacoes] = useState([]);
       const [novaAnotacao, setNovaAnotacao] = useState("");
       const [editandoAnotacaoId, setEditandoAnotacaoId] = useState(null);
-
       const [videos, setVideos] = useState([]);
       const [uploading, setUploading] = useState(false);
       const [progresso, setProgresso] = useState(0);
@@ -318,7 +314,7 @@
             <h2 className="text-xl md:text-2xl font-light">Prontuário Clínico (SOAP)</h2>
             <select value={atletaSelecionadoId} onChange={e => setAtletaSelecionadoId(e.target.value)} className="w-full sm:w-auto bg-slate-900 border border-white/20 text-white rounded p-2 outline-none">
               <option value="">Selecione o Atleta...</option>
-              {atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}
+              {atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
             </select>
           </div>
 
@@ -379,33 +375,104 @@
         </div>
       );
     };
-
-    // --- MÓDULO 4: MOMENTOS CRÍTICOS ---
+    // --- MÓDULO 4: MOMENTOS CRÍTICOS (Estatísticas de Partida Real) ---
     const ModuloMomentosCriticos = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
-      const [stats, setStats] = useState({ breakPointsSalvos: 0, duplasFaltasCriticas: 0, errosNaoForcados: 0 });
+      const [partidas, setPartidas] = useState([]);
+      const [novaPartida, setNovaPartida] = useState({
+        torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: ""
+      });
+      const [salvando, setSalvando] = useState(false);
+
+      useEffect(() => {
+        if (!atletaId) return;
+        const carregarPartidas = async () => {
+          const q = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${atletaId}/partidas`), window.fbAPI.orderBy("data", "desc"));
+          const snap = await window.fbAPI.getDocs(q);
+          setPartidas(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        };
+        carregarPartidas();
+      }, [atletaId]);
+
+      const registrarPartida = async () => {
+        if (!novaPartida.torneio || !novaPartida.data) return alert("Preencha Torneio e Data.");
+        setSalvando(true);
+        try {
+          const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaId}/partidas`), {
+            ...novaPartida, dataRegistro: new Date().toISOString()
+          });
+          setPartidas([{ id: docRef.id, ...novaPartida }, ...partidas].sort((a,b) => new Date(b.data) - new Date(a.data)));
+          setNovaPartida({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "" });
+        } catch (e) { alert("Erro ao salvar."); }
+        setSalvando(false);
+      };
+
+      const apagarPartida = async (id) => {
+        if(confirm("Apagar este registro de partida?")) {
+          await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, `prontuarios/${atletaId}/partidas`, id));
+          setPartidas(partidas.filter(p => p.id !== id));
+        }
+      };
 
       return (
         <div className="space-y-6 animate-fade-in pb-10">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-white/10 pb-4 gap-4">
-            <h2 className="text-xl md:text-2xl font-light">Momentos Críticos</h2>
+            <h2 className="text-xl md:text-2xl font-light">Estatísticas de Partidas (Choking)</h2>
             <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="w-full sm:w-auto bg-slate-900 border border-white/20 text-white rounded p-2 outline-none">
-              <option value="">Selecione o Atleta...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}
+              <option value="">Selecione o Atleta...</option>
+              {atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
             </select>
           </div>
-          {!atletaId ? <div className="glass-panel p-6 text-center text-slate-500">Selecione um atleta.</div> : (
+          
+          {!atletaId ? <div className="glass-panel p-6 text-center text-slate-500">Selecione um atleta para registrar dados de jogo.</div> : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 glass-panel p-4 md:p-6 rounded-2xl space-y-4">
-                <h3 className="font-bold text-optic-yellow mb-4">Estatística de Partida</h3>
-                <div><label className="text-xs text-slate-400">Break Points Salvos (%)</label><input type="number" value={stats.breakPointsSalvos} onChange={e=>setStats({...stats, breakPointsSalvos: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
-                <div><label className="text-xs text-slate-400">Duplas Faltas em Vantagem</label><input type="number" value={stats.duplasFaltasCriticas} onChange={e=>setStats({...stats, duplasFaltasCriticas: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
-                <button className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded transition mt-4">Registrar</button>
+                <h3 className="font-bold text-optic-yellow mb-4">Lançar Nova Partida</h3>
+                
+                <div><label className="text-xs text-slate-400">Torneio / Fase</label><input type="text" placeholder="Ex: Roland Garros - 1ª Rodada" value={novaPartida.torneio} onChange={e=>setNovaPartida({...novaPartida, torneio: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
+                <div><label className="text-xs text-slate-400">Data do Jogo</label><input type="date" value={novaPartida.data} onChange={e=>setNovaPartida({...novaPartida, data: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1 text-white" /></div>
+                <div><label className="text-xs text-slate-400">Resultado</label><select value={novaPartida.resultado} onChange={e=>setNovaPartida({...novaPartida, resultado: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1"><option value="Vitória">Vitória</option><option value="Derrota">Derrota</option></select></div>
+                
+                <div className="pt-4 border-t border-white/10 mt-4">
+                  <h4 className="text-xs font-bold text-slate-300 mb-3">Métricas de Pressão</h4>
+                  <div className="space-y-3">
+                    <div><label className="text-xs text-slate-400">Break Points Salvos (%)</label><input type="number" placeholder="Ex: 65" value={novaPartida.breakPointsSalvos} onChange={e=>setNovaPartida({...novaPartida, breakPointsSalvos: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
+                    <div><label className="text-xs text-slate-400">Duplas Faltas Críticas</label><input type="number" placeholder="Quantas ocorreram em BP ou vantagens" value={novaPartida.duplasFaltas} onChange={e=>setNovaPartida({...novaPartida, duplasFaltas: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
+                    <div><label className="text-xs text-slate-400">Erros Não Forçados (Tie-breaks)</label><input type="number" value={novaPartida.errosNaoForcados} onChange={e=>setNovaPartida({...novaPartida, errosNaoForcados: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
+                  </div>
+                </div>
+
+                <button onClick={registrarPartida} disabled={salvando} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded transition mt-4 disabled:opacity-50">{salvando ? 'Salvando...' : 'Registrar Estatística'}</button>
               </div>
-              <div className="lg:col-span-2 glass-panel p-4 md:p-6 rounded-2xl flex flex-col items-center justify-center py-10">
-                <Icons.Crosshair />
-                <h3 className="text-xl font-bold mt-4 text-center">Matriz de Pressão</h3>
-                <p className="text-slate-400 text-sm text-center max-w-md mt-2 px-4">Dados inseridos à esquerda geram mapa de calor com gatilhos emocionais (Módulo de gráficos a implementar).</p>
-                <div className="w-full mt-8 bg-slate-900 h-40 rounded-lg border border-dashed border-white/10 flex items-center justify-center text-slate-600 text-sm">Área Gráfica</div>
+              
+              <div className="lg:col-span-2 glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[650px]">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Crosshair /> Histórico de Desempenho</h3>
+                
+                <div className="grid grid-cols-3 gap-4 mb-6 shrink-0">
+                  <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center"><p className="text-xs text-slate-400">Total de Jogos</p><p className="text-2xl font-bold text-white">{partidas.length}</p></div>
+                  <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center"><p className="text-xs text-slate-400">Vitórias</p><p className="text-2xl font-bold text-green-400">{partidas.filter(p=>p.resultado==='Vitória').length}</p></div>
+                  <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center"><p className="text-xs text-slate-400">Derrotas</p><p className="text-2xl font-bold text-red-400">{partidas.filter(p=>p.resultado==='Derrota').length}</p></div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
+                  {partidas.length === 0 && <p className="text-center text-slate-500 mt-10">Nenhuma partida registrada.</p>}
+                  {partidas.map(p => (
+                    <div key={p.id} className="bg-slate-900/50 p-4 rounded-xl border border-white/5 relative group hover:border-white/10 transition">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-bold text-optic-yellow">{p.torneio}</p>
+                          <p className="text-xs text-slate-400">{new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR')} • <span className={p.resultado === 'Vitória' ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>{p.resultado}</span></p>
+                        </div>
+                        <button onClick={() => apagarPartida(p.id)} className="text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100"><Icons.Trash /></button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mt-4 text-xs bg-black/30 p-2 rounded">
+                        <div><span className="text-slate-500 block">BP Salvos:</span> <strong className="text-white">{p.breakPointsSalvos}%</strong></div>
+                        <div><span className="text-slate-500 block">Duplas Faltas:</span> <strong className="text-white">{p.duplasFaltas}</strong></div>
+                        <div><span className="text-slate-500 block">Erros (TB):</span> <strong className="text-white">{p.errosNaoForcados}</strong></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -434,8 +501,8 @@
         if(!novaSessao.atletaId || !novaSessao.dataHora) return;
         const atleta = atletas.find(a => a.id === novaSessao.atletaId);
         const linkGerado = novaSessao.link || `https://meet.google.com/acemind-${Math.floor(Math.random()*1000)}`;
-        const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "agenda"), { atletaId: atleta.id, email: atleta.email, dataHora: novaSessao.dataHora, link: linkGerado });
-        setSessoes([...sessoes, { id: docRef.id, atletaId: atleta.id, email: atleta.email, dataHora: novaSessao.dataHora, link: linkGerado }].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora)));
+        const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "agenda"), { atletaId: atleta.id, nome: atleta.nome, email: atleta.email, dataHora: novaSessao.dataHora, link: linkGerado });
+        setSessoes([...sessoes, { id: docRef.id, atletaId: atleta.id, nome: atleta.nome, email: atleta.email, dataHora: novaSessao.dataHora, link: linkGerado }].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora)));
         setNovaSessao({ atletaId: "", dataHora: "", link: "" });
       };
 
@@ -451,7 +518,7 @@
             <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[600px] md:h-[650px]">
               <h3 className="text-lg font-bold text-optic-yellow mb-4">Sessões Clínicas</h3>
               <div className="bg-slate-900 border border-white/10 p-4 rounded-xl mb-6 space-y-3 shrink-0">
-                <select value={novaSessao.atletaId} onChange={e=>setNovaSessao({...novaSessao, atletaId: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm outline-none"><option value="">Paciente...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}</select>
+                <select value={novaSessao.atletaId} onChange={e=>setNovaSessao({...novaSessao, atletaId: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm outline-none"><option value="">Paciente...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}</select>
                 <input type="datetime-local" value={novaSessao.dataHora} onChange={e=>setNovaSessao({...novaSessao, dataHora: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm text-white" />
                 <input type="text" placeholder="Link Zoom/Meet" value={novaSessao.link} onChange={e=>setNovaSessao({...novaSessao, link: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm" />
                 <button onClick={agendarSessao} className="w-full bg-white/10 py-3 rounded text-sm font-bold">Agendar</button>
@@ -463,7 +530,7 @@
                   return (
                     <div key={s.id} className={`p-4 rounded-xl border ${prox ? 'bg-red-500/10 border-red-500/50' : 'bg-slate-900/50 border-white/5'} group relative`}>
                       {prox && <span className="absolute -top-2 -right-2 flex h-4 w-4"><span className="animate-ping absolute h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative rounded-full h-4 w-4 bg-red-500"></span></span>}
-                      <div className="flex justify-between"><p className="font-bold text-sm truncate pr-2">{s.email.split('@')[0]}</p><button onClick={()=>apagarSessao(s.id)} className="text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 shrink-0"><Icons.Trash /></button></div>
+                      <div className="flex justify-between"><p className="font-bold text-sm truncate pr-2">{s.nome || s.email.split('@')[0]}</p><button onClick={()=>apagarSessao(s.id)} className="text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 shrink-0"><Icons.Trash /></button></div>
                       <p className={`text-xs ${prox ? 'text-red-400 font-bold' : 'text-slate-400'}`}>{dS.toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</p>
                       <a href={s.link} target="_blank" className="mt-3 block text-center text-xs bg-blue-600 py-2 rounded">Acessar Sala</a>
                     </div>
@@ -472,7 +539,7 @@
               </div>
             </div>
             <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-auto lg:h-[650px]">
-              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Calendar /> Torneios</h3>
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Calendar /> Torneios Atuais</h3>
               <div className="space-y-4">{torneios.map(t => (<div key={t.id} className="bg-slate-900 p-4 rounded-xl border-l-4 border-optic-yellow"><p className="font-bold text-lg">{t.nome}</p><p className="text-sm text-slate-400">{new Date(t.data).toLocaleDateString('pt-BR')}</p></div>))}</div>
             </div>
           </div>
@@ -485,7 +552,8 @@
       const [atletaId, setAtletaId] = useState("");
       const [objetivos, setObjetivos] = useState("");
       const [treinos, setTreinos] = useState("");
-      const atletaNome = atletas.find(a => a.id === atletaId)?.email?.split('@')[0] || "Não selecionado";
+      const atletaObj = atletas.find(a => a.id === atletaId);
+      const atletaNome = atletaObj?.nome || atletaObj?.email?.split('@')[0] || "Não selecionado";
 
       const gerarPDF = () => {
         if(!atletaId) return alert("Selecione um atleta.");
@@ -501,21 +569,22 @@
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="glass-panel p-4 md:p-6 rounded-2xl space-y-5">
-              <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="w-full bg-slate-900 border border-white/20 rounded p-3 text-white outline-none"><option value="">Selecione o Atleta...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.email}</option>)}</select>
+              <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="w-full bg-slate-900 border border-white/20 rounded p-3 text-white outline-none"><option value="">Selecione o Atleta...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}</select>
               <textarea value={treinos} onChange={e=>setTreinos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm text-white" placeholder="Registro Clínico de Treinos (Curto Prazo)"></textarea>
               <textarea value={objetivos} onChange={e=>setObjetivos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm text-white" placeholder="Objetivos Finais (Longo Prazo)"></textarea>
             </div>
-            {/* Esconde a caixa de PDF no mobile para não poluir a tela, gerando o PDF por baixo dos panos */}
+            
             <div className="hidden lg:block bg-white text-black p-10 rounded-lg shadow-2xl overflow-y-auto h-[600px]">
               <div id="relatorio-conteudo" className="bg-white">
-                <div className="border-b-4 border-black pb-4 mb-6"><h1 className="text-3xl font-black uppercase">Ace<span className="text-gray-400">Mind</span></h1><p className="text-sm">Relatório Confidencial</p></div>
+                <div className="border-b-4 border-black pb-4 mb-6"><h1 className="text-3xl font-black uppercase">Ace<span className="text-gray-400">Mind</span></h1><p className="text-sm">Relatório Clínico e Esportivo</p></div>
                 <h2 className="text-xl font-bold mb-1">Paciente: {atletaNome}</h2>
                 <p className="text-sm text-gray-500 mb-6">Data: {new Date().toLocaleDateString('pt-BR')}</p>
                 <div className="mb-6"><h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">Treinos (Curto Prazo)</h3><p className="text-sm whitespace-pre-wrap">{treinos}</p></div>
                 <div className="mb-6"><h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">Objetivos Finais (Longo Prazo)</h3><p className="text-sm whitespace-pre-wrap">{objetivos}</p></div>
               </div>
             </div>
-            {/* Container invisível para o mobile gerar o PDF */}
+
+            {/* Container invisível para gerar PDF em mobile */}
             <div className="lg:hidden absolute top-[-9999px] left-[-9999px]">
                <div id="relatorio-conteudo-mobile" className="bg-white text-black p-10 w-[800px]">
                 <div className="border-b-4 border-black pb-4 mb-6"><h1 className="text-3xl font-black uppercase">Ace<span className="text-gray-400">Mind</span></h1><p className="text-sm">Relatório Confidencial</p></div>
@@ -531,19 +600,20 @@
     };
 
     // --------------------------------------------------
-    // ROTEADOR DO PSICÓLOGO (COM MENU RESPONSIVO)
+    // ROTEADOR DO PSICÓLOGO (MENU RESPONSIVO)
     // --------------------------------------------------
     const DashboardPsicologo = () => {
       const [abaAtiva, setAbaAtiva] = useState('dashboard');
       const [checkins, setCheckins] = useState([]);
       const [atletas, setAtletas] = useState([]);
-      const [menuAberto, setMenuAberto] = useState(false); // Controle do menu mobile
+      const [menuAberto, setMenuAberto] = useState(false);
 
       useEffect(() => {
         const carregarTudo = async () => {
           const qC = window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(20));
           const snapC = await window.fbAPI.getDocs(qC);
           setCheckins(snapC.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          
           const qA = window.fbAPI.query(window.fbAPI.collection(window.db, "usuarios"), window.fbAPI.where("cargo", "==", "paciente"));
           const snapA = await window.fbAPI.getDocs(qA);
           setAtletas(snapA.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -555,23 +625,19 @@
         { id: 'dashboard', label: 'Visão Geral', icon: Icons.Dashboard },
         { id: 'perfil', label: 'Perfil Esportivo', icon: Icons.Profile },
         { id: 'prontuario', label: 'Prontuário (SOAP)', icon: Icons.Users },
-        { id: 'criticos', label: 'Momentos Críticos', icon: Icons.Crosshair },
+        { id: 'criticos', label: 'Estatísticas do Jogo', icon: Icons.Crosshair },
         { id: 'agenda', label: 'Agenda & Torneios', icon: Icons.Calendar },
         { id: 'relatorios', label: 'Relatórios PDF', icon: Icons.Chart },
       ];
 
       const trocarAba = (id) => {
         setAbaAtiva(id);
-        setMenuAberto(false); // Fecha o menu no celular ao clicar
+        setMenuAberto(false);
       }
 
       return (
         <div className="flex h-[calc(100vh-64px)] bg-[#020617] relative w-full overflow-hidden">
-          
-          {/* Overlay escuro pro menu mobile */}
           {menuAberto && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setMenuAberto(false)}></div>}
-
-          {/* Sidebar - Fixa no PC, flutuante no Mobile */}
           <aside className={`absolute lg:relative z-40 w-64 h-full glass-panel border-t-0 border-l-0 border-b-0 flex flex-col py-6 px-4 shrink-0 menu-transition bg-slate-950/95 lg:bg-transparent ${menuAberto ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
             <div className="flex justify-between items-center mb-6 pl-3">
               <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Módulos</div>
@@ -585,14 +651,10 @@
               ))}
             </nav>
           </aside>
-
-          {/* Área Principal */}
           <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar relative w-full">
-            {/* Botão Hambúrguer Mobile */}
             <button onClick={() => setMenuAberto(true)} className="lg:hidden mb-6 bg-white/5 p-2 rounded-lg text-white flex items-center gap-2 border border-white/10 hover:bg-white/10 transition">
               <Icons.Menu /> <span className="text-sm font-medium">Menu</span>
             </button>
-
             {abaAtiva === 'dashboard' && <ModuloDashboard checkins={checkins} />}
             {abaAtiva === 'perfil' && <ModuloPerfil atletas={atletas} />}
             {abaAtiva === 'prontuario' && <ModuloProntuario atletas={atletas} />}
@@ -605,10 +667,11 @@
     };
 
     // --------------------------------------------------
-    // AUTENTICAÇÃO E BASE
+    // AUTENTICAÇÃO COM NOME OBRIGATÓRIO
     // --------------------------------------------------
     const TelaAutenticacao = ({ setUsuarioLogado }) => {
       const [modo, setModo] = useState('login');
+      const [nome, setNome] = useState('');
       const [email, setEmail] = useState('');
       const [senha, setSenha] = useState('');
       const [cargo, setCargo] = useState('paciente');
@@ -618,12 +681,13 @@
         try {
           if (modo === 'cadastro') {
             const cred = await window.fbAPI.createUserWithEmailAndPassword(window.auth, email, senha);
-            await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "usuarios", cred.user.uid), { email, cargo, dataCadastro: new Date().toISOString() });
-            setUsuarioLogado({ ...cred.user, cargo });
+            await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "usuarios", cred.user.uid), { nome, email, cargo, dataCadastro: new Date().toISOString() });
+            setUsuarioLogado({ ...cred.user, nome, cargo });
           } else {
             const cred = await window.fbAPI.signInWithEmailAndPassword(window.auth, email, senha);
             const docRef = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", cred.user.uid));
-            setUsuarioLogado({ ...cred.user, cargo: docRef.exists() ? docRef.data().cargo : 'paciente' });
+            const data = docRef.exists() ? docRef.data() : {};
+            setUsuarioLogado({ ...cred.user, nome: data.nome || email.split('@')[0], cargo: data.cargo || 'paciente' });
           }
         } catch (err) { alert("Erro de acesso. Verifique dados ou chaves do Firebase."); }
       };
@@ -637,6 +701,9 @@
               <button onClick={() => setModo('cadastro')} className={`flex-1 pb-2 ${modo === 'cadastro' ? 'text-optic-yellow border-b-2 font-bold' : 'text-slate-500'}`}>Criar Conta</button>
             </div>
             <form onSubmit={handleAuth} className="space-y-4">
+              {modo === 'cadastro' && (
+                <input type="text" placeholder="Nome Completo" value={nome} onChange={e=>setNome(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
+              )}
               <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
               <input type="password" placeholder="Senha" value={senha} onChange={e=>setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
               {modo === 'cadastro' && (
@@ -644,7 +711,7 @@
                   <option value="paciente">Atleta / Paciente</option><option value="psicologo">Psicólogo(a)</option>
                 </select>
               )}
-              <button type="submit" className="w-full bg-optic-yellow text-black font-bold p-3 rounded">Acessar</button>
+              <button type="submit" className="w-full bg-optic-yellow text-black font-bold p-3 rounded">Acessar Sistema</button>
             </form>
           </div>
         </div>
@@ -663,8 +730,9 @@
               if (u) {
                 try {
                   const d = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "usuarios", u.uid));
-                  setUsuarioLogado({ ...u, cargo: d.exists() ? d.data().cargo : 'paciente' });
-                } catch(e) { setUsuarioLogado({...u, cargo: 'paciente'}); }
+                  const data = d.exists() ? d.data() : {};
+                  setUsuarioLogado({ ...u, nome: data.nome || u.email.split('@')[0], cargo: data.cargo || 'paciente' });
+                } catch(e) { setUsuarioLogado({...u, nome: u.email.split('@')[0], cargo: 'paciente'}); }
               } else { setUsuarioLogado(null); }
               setCarregando(false);
             });
@@ -679,8 +747,10 @@
         <div className="h-screen flex flex-col overflow-hidden w-full">
           <div className="h-16 bg-slate-950 border-b border-white/10 flex justify-between items-center px-4 sm:px-6 shrink-0 z-50">
             <span className="font-bold text-lg sm:text-xl tracking-widest text-white">Ace<span className="text-optic-yellow">Mind</span></span>
-            <div className="flex gap-2 sm:gap-4 items-center">
-               <span className="text-[10px] sm:text-xs font-bold text-slate-400 bg-white/5 px-2 py-1 rounded uppercase border border-white/10 truncate max-w-[80px] sm:max-w-none">{usuarioLogado.cargo}</span>
+            <div className="flex gap-4 items-center">
+               {/* Usando o Nome no Topo */}
+               <span className="text-sm font-medium text-slate-300 hidden sm:block">{usuarioLogado.nome}</span>
+               <span className="text-[10px] sm:text-xs font-bold text-slate-400 bg-white/5 px-2 py-1 rounded uppercase border border-white/10">{usuarioLogado.cargo}</span>
                <button onClick={() => { window.fbAPI.signOut(window.auth); setUsuarioLogado(null); }} className="text-xs text-red-400 hover:text-red-300">Sair</button>
             </div>
           </div>
