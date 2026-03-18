@@ -35,13 +35,14 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-  <style>
+  <style type="text/tailwindcss">
     body { 
       background-color: #020617; 
       color: white; 
       -webkit-tap-highlight-color: transparent; 
       background: radial-gradient(circle at top right, #0f172a, #020617);
       background-attachment: fixed;
+      color-scheme: dark; /* Força os ícones de calendário e inputs do navegador para Dark Mode */
     }
     
     .tennis-grid {
@@ -90,19 +91,20 @@
       @apply bg-red-950/80 border border-red-500/50 text-red-400 font-bold uppercase tracking-wider rounded-xl py-3 px-6 hover:bg-red-600 hover:text-white hover:border-red-400 hover:shadow-glow-red transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 shadow-lg;
     }
     
-    /* ESTILIZAÇÃO GLOBAL DE INPUTS - Resolve caixas brancas 'bugadas' */
-    input[type="text"], input[type="email"], input[type="password"], input[type="date"], input[type="datetime-local"], select, textarea {
+    /* CORREÇÃO DO BUG DAS CAIXAS BRANCAS */
+    .input-premium, input[type="text"], input[type="email"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="number"], select, textarea {
       @apply w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-optic-yellow focus:ring-1 focus:ring-optic-yellow/50 transition-all duration-300 shadow-inner;
+      color-scheme: dark;
     }
     
-    /* Ajuste específico para seletores - Garante ícone visível */
+    /* Ajuste de seletor */
     select {
       appearance: none;
       background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23AAAAAA%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.3c0%203%201.1%205.9%203.3%208.7l126.2%20126a17.6%2017.6%200%200%200%2012.6%205.3%2017.6%2017.6%200%200%200%2012.6-5.3l126.2-126a17.6%2017.6%200%200%200%203.3-8.8c0-4.9-1.8-9.2-5.3-12.8z%22%2F%3E%3C%2Fsvg%3E');
       background-repeat: no-repeat, repeat;
-      background-position: right .7em top 50%, 0 0;
+      background-position: right 1rem top 50%, 0 0;
       background-size: .65em auto, 100%;
-      padding-right: 2rem;
+      padding-right: 2.5rem;
     }
 
     .menu-transition { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -120,7 +122,7 @@
     // COLE SUAS CHAVES AQUI
     // =========================================================================
     const firebaseConfig = {
-    apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+      apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
   databaseURL: "https://ace-mind-c13a1-default-rtdb.firebaseio.com",
   projectId: "ace-mind-c13a1",
@@ -174,7 +176,7 @@
     };
 
     // ==============================================================================
-    // APP DO PACIENTE (Com Inputs Estilizados Globais e Botões Premium)
+    // APP DO PACIENTE 
     // ==============================================================================
     const MobileApp = ({ usuarioAtual }) => {
       const [foco, setFoco] = useState(5);
@@ -251,8 +253,8 @@
       );
     };
 
-    // ================= =============================================================
-    // MÓDULOS DO PSICÓLOGO (Com Inputs Globais Estilizados e Alinhamento de Texto)
+    // ==============================================================================
+    // MÓDULOS DO PSICÓLOGO 
     // ==============================================================================
 
     const ModuloDashboard = ({ checkins }) => (
@@ -906,7 +908,7 @@
     };
 
     // --------------------------------------------------
-    // ROTEADOR DO PSICÓLOGO E MESTRE
+    // ROTEADOR DO PSICÓLOGO
     // --------------------------------------------------
     const DashboardPsicologo = () => {
       const [abaAtiva, setAbaAtiva] = useState('dashboard');
@@ -996,6 +998,9 @@
       );
     };
 
+    // --------------------------------------------------
+    // AUTENTICAÇÃO
+    // --------------------------------------------------
     const TelaAutenticacao = ({ setUsuarioLogado }) => {
       const [modo, setModo] = useState('login');
       const [nome, setNome] = useState('');
