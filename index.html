@@ -3,10 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AceMind - Psicologia do Tênis</title>
+  <title>AceMind - Alta Performance Mental no Tênis</title>
   
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind.config = { theme: { extend: { colors: { 'optic-yellow': '#ccff00' } } } }</script>
+  <script>
+    tailwind.config = { 
+      theme: { 
+        extend: { 
+          fontFamily: { sans: ['Outfit', 'sans-serif'] },
+          colors: { 
+            'optic-yellow': '#ccff00',
+            'court-blue': '#1e3a8a',
+            'clay-red': '#c25e28'
+          },
+          boxShadow: {
+            'glow-yellow': '0 0 20px rgba(204, 255, 0, 0.4)',
+            'glow-red': '0 0 20px rgba(239, 68, 68, 0.5)',
+            'panel': '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+          }
+        } 
+      } 
+    }
+  </script>
 
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -14,13 +36,67 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
-    body { background-color: #020617; color: white; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-    .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-    .menu-transition { transition: transform 0.3s ease-in-out; }
-    @keyframes pulse-red { 0%, 100% { background-color: rgba(239, 68, 68, 0.1); } 50% { background-color: rgba(239, 68, 68, 0.3); } }
+    body { 
+      background-color: #020617; 
+      color: white; 
+      -webkit-tap-highlight-color: transparent; 
+      /* Gradiente de fundo escuro premium */
+      background: radial-gradient(circle at top right, #0f172a, #020617);
+      background-attachment: fixed;
+    }
+    
+    /* Textura sutil de rede de tênis no fundo */
+    .tennis-grid {
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 30px 30px;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1;
+      pointer-events: none;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(204,255,0,0.3); border-radius: 10px; transition: all 0.3s; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(204,255,0,0.8); }
+    
+    .glass-panel { 
+      background: rgba(15, 23, 42, 0.6); 
+      backdrop-filter: blur(16px); 
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    /* Sliders customizados para o Paciente */
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+      background: #ccff00; cursor: pointer; margin-top: -10px;
+      box-shadow: 0 0 15px rgba(204, 255, 0, 0.6);
+      border: 3px solid #020617; transition: transform 0.2s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 6px; cursor: pointer; background: rgba(255,255,255,0.1);
+      border-radius: 999px; border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* Classes utilitárias reutilizáveis do Design System */
+    .btn-primary {
+      @apply bg-optic-yellow text-slate-950 font-black uppercase tracking-wider rounded-xl py-3 px-6 hover:bg-[#b3e600] hover:shadow-glow-yellow transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2;
+    }
+    .btn-secondary {
+      @apply bg-white/5 border border-white/10 text-white font-bold py-3 px-6 rounded-xl hover:bg-white/10 transition-all duration-300 active:scale-95;
+    }
+    .input-premium {
+      @apply w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-optic-yellow focus:ring-1 focus:ring-optic-yellow/50 transition-all duration-300;
+    }
+
+    .menu-transition { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } }
     .sos-alert { animation: pulse-red 2s infinite; border: 1px solid #ef4444; }
   </style>
 
@@ -34,7 +110,7 @@
     // COLE SUAS CHAVES AQUI
     // =========================================================================
     const firebaseConfig = {
- apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+     apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
   databaseURL: "https://ace-mind-c13a1-default-rtdb.firebaseio.com",
   projectId: "ace-mind-c13a1",
@@ -59,6 +135,7 @@
   </script>
 </head>
 <body class="overflow-hidden">
+  <div class="tennis-grid"></div>
   <div id="root"></div>
 
   <script type="text/babel">
@@ -68,7 +145,7 @@
       Menu: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>,
       Close: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>,
       Dashboard: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>,
-      Users: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>,
+      Users: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>,
       Chart: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>,
       Video: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>,
       Trash: () => <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>,
@@ -76,17 +153,18 @@
       Calendar: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>,
       Profile: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>,
       Crosshair: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>,
-      Warning: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      Warning: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>,
+      TennisBall: () => <svg className="w-6 h-6 shrink-0 text-optic-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" strokeWidth="2"/><path strokeLinecap="round" strokeWidth="2" d="M7.5 4.2A8 8 0 0110 10a8 8 0 01-5.8 2.5M16.5 19.8A8 8 0 0114 14a8 8 0 015.8-2.5"/></svg>
     };
 
     const calcularRisco = (foco, energia) => {
-      if (foco <= 4 || energia <= 4) return { cor: 'bg-red-500', texto: 'Risco Alto', border: 'border-red-500/30' };
-      if (foco <= 6 || energia <= 6) return { cor: 'bg-yellow-500', texto: 'Atenção', border: 'border-yellow-500/30' };
-      return { cor: 'bg-green-500', texto: 'Estável', border: 'border-green-500/30' };
+      if (foco <= 4 || energia <= 4) return { cor: 'bg-red-500', texto: 'Risco Alto', border: 'border-red-500/30', glow: 'shadow-glow-red' };
+      if (foco <= 6 || energia <= 6) return { cor: 'bg-yellow-500', texto: 'Atenção', border: 'border-yellow-500/30', glow: 'shadow-[0_0_15px_rgba(234,179,8,0.5)]' };
+      return { cor: 'bg-green-500', texto: 'Flow / Estável', border: 'border-green-500/30', glow: 'shadow-[0_0_15px_rgba(34,197,94,0.5)]' };
     };
 
     // ==============================================================================
-    // APP DO PACIENTE (Com Botão S.O.S)
+    // APP DO PACIENTE (Premium Mobile UI)
     // ==============================================================================
     const MobileApp = ({ usuarioAtual }) => {
       const [foco, setFoco] = useState(5);
@@ -100,62 +178,66 @@
           await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "checkins"), {
             pacienteId: usuarioAtual.uid, nome: usuarioAtual.nome, email: usuarioAtual.email, foco: parseInt(foco), energia: parseInt(energia), data: new Date().toISOString()
           });
-          alert("Check-in enviado com sucesso!");
+          alert("Diário enviado! Excelente treino.");
           setFoco(5); setEnergia(5);
         } catch (error) { alert("Erro ao salvar."); }
         setSalvando(false);
       };
 
       const enviarSOS = async () => {
-        if(confirm("Isso enviará um alerta imediato de crise para o painel do seu psicólogo. Confirmar?")) {
+        if(confirm("ACIONAR S.O.S: Seu psicólogo será notificado imediatamente. Confirmar?")) {
           try {
             await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "sos_alertas"), {
               pacienteId: usuarioAtual.uid, nome: usuarioAtual.nome, email: usuarioAtual.email, data: new Date().toISOString(), status: 'pendente'
             });
             setSosEnviado(true);
-            setTimeout(() => setSosEnviado(false), 5000);
+            setTimeout(() => setSosEnviado(false), 8000);
           } catch(e) { alert("Erro ao enviar SOS."); }
         }
       };
 
       return (
-        <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-0 sm:p-4 bg-black/90">
-          <div className="w-full h-full sm:max-w-[375px] sm:h-[750px] bg-slate-950 sm:rounded-[2.5rem] sm:border-[6px] sm:border-slate-800 overflow-hidden relative sm:shadow-2xl flex flex-col">
-            <div className="pt-8 pb-6 px-6 bg-gradient-to-b from-optic-yellow/10 to-transparent shrink-0">
-              <h2 className="text-2xl text-white font-light truncate">Olá, {usuarioAtual.nome}</h2>
-              <p className="text-slate-400 text-sm mt-1">Diário pós-treino.</p>
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-0 sm:p-4 bg-black/40">
+          <div className="w-full h-full sm:max-w-[400px] sm:h-[800px] glass-panel sm:rounded-[2.5rem] overflow-hidden relative flex flex-col sm:border-[8px] sm:border-slate-900 shadow-2xl">
+            
+            {/* Header com fundo de quadra */}
+            <div className="pt-10 pb-8 px-8 bg-gradient-to-br from-court-blue to-slate-900 shrink-0 relative overflow-hidden">
+              <div className="absolute top-0 right-0 opacity-10"><Icons.TennisBall /></div>
+              <h2 className="text-3xl text-white font-black tracking-tight truncate">Olá, {usuarioAtual.nome.split(' ')[0]}</h2>
+              <p className="text-optic-yellow text-sm mt-1 font-medium tracking-wide uppercase">Diário Pós-Treino</p>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6 custom-scrollbar">
-              
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5">
-                <div className="space-y-6">
+
+            <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 custom-scrollbar relative z-10">
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-panel hover:border-white/20 transition-all duration-300">
+                <div className="space-y-8">
                   <div>
-                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Desfocado</span><span>Foco Total</span></div>
-                    <input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#ccff00]" />
+                    <div className="flex justify-between text-xs text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Desfocado</span><span className="text-optic-yellow">Flow Total</span></div>
+                    <input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} />
+                    <div className="text-center mt-2 font-black text-2xl text-white/80">{foco}</div>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-xs text-slate-400 mb-2"><span>Exausto</span><span>Energizado</span></div>
-                    <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#ccff00]" />
+                  <div className="border-t border-white/5 pt-6">
+                    <div className="flex justify-between text-xs text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Exausto</span><span className="text-optic-yellow">Energizado</span></div>
+                    <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} />
+                    <div className="text-center mt-2 font-black text-2xl text-white/80">{energia}</div>
                   </div>
-                  <button onClick={salvarCheckin} disabled={salvando} className="w-full bg-optic-yellow text-slate-950 font-bold py-3 rounded-xl hover:bg-[#b3e600] disabled:opacity-50 transition">
-                    {salvando ? 'Enviando...' : 'Salvar Diário'}
+                  <button onClick={salvarCheckin} disabled={salvando} className="btn-primary w-full mt-4">
+                    {salvando ? 'Registrando...' : 'Salvar Desempenho'}
                   </button>
                 </div>
               </div>
 
-              {/* Botão S.O.S Surpresa */}
-              <button onClick={enviarSOS} disabled={sosEnviado} className={`w-full py-4 rounded-xl flex flex-col items-center justify-center border-2 transition ${sosEnviado ? 'bg-green-600 border-green-500' : 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20'}`}>
+              {/* Botão S.O.S Premium */}
+              <button onClick={enviarSOS} disabled={sosEnviado} className={`w-full py-5 rounded-3xl flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 ${sosEnviado ? 'bg-green-500/20 border border-green-500 shadow-glow-green' : 'bg-red-500/10 border border-red-500/50 hover:bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]'}`}>
                 {sosEnviado ? (
-                   <span className="font-bold text-white">Alerta Enviado!</span>
+                   <span className="font-bold text-green-400 text-lg uppercase tracking-widest">Apoio a caminho!</span>
                 ) : (
                   <>
-                    <Icons.Warning className="text-red-500 w-8 h-8 mb-1" />
-                    <span className="font-bold text-red-400 uppercase tracking-widest text-sm">Botão S.O.S Mental</span>
-                    <span className="text-xs text-red-500/70 mt-1">Apenas emergências / crise</span>
+                    <Icons.Warning className="text-red-500 w-10 h-10 mb-2 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+                    <span className="font-black text-red-400 uppercase tracking-[0.2em] text-sm">S.O.S Mental</span>
+                    <span className="text-xs text-red-500/60 mt-1 font-medium">Toque para emergência</span>
                   </>
                 )}
               </button>
-
             </div>
           </div>
         </div>
@@ -163,29 +245,43 @@
     };
 
     // ==============================================================================
-    // MÓDULOS DO PSICÓLOGO
+    // MÓDULOS DO PSICÓLOGO (World-Class Design)
     // ==============================================================================
 
     // --- MÓDULO 1: VISÃO GERAL ---
     const ModuloDashboard = ({ checkins }) => (
-      <div className="space-y-6 animate-fade-in pb-10">
-        <h2 className="text-xl md:text-2xl font-light border-b border-white/10 pb-4">Visão Geral & Alertas</h2>
-        <div className="glass-panel p-4 md:p-6 rounded-2xl">
-          <h3 className="text-base md:text-lg font-medium mb-4 flex items-center gap-2">Radares de Atenção Diários</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-8 animate-fade-in pb-10">
+        <header className="border-b border-white/10 pb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-black tracking-tight text-white">Radar do Circuito</h2>
+            <p className="text-slate-400 text-sm mt-1">Visão geral do estado mental dos atletas nas últimas 24h.</p>
+          </div>
+          <Icons.Dashboard className="w-10 h-10 text-white/10" />
+        </header>
+
+        <div className="glass-panel p-6 md:p-8 rounded-[2rem]">
+          <h3 className="text-lg font-bold mb-6 flex items-center gap-3 text-white"><span className="w-2 h-8 bg-optic-yellow rounded-full"></span> Radares de Atenção</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {checkins.length === 0 && <p className="text-slate-500 col-span-full">Nenhum check-in registrado.</p>}
             {checkins.slice(0, 9).map((reg) => {
               const risco = calcularRisco(reg.foco, reg.energia);
               return (
-                <div key={reg.id} className={`bg-slate-900/80 p-4 rounded-xl border ${risco.border}`}>
-                  <div className="flex justify-between items-start mb-2">
+                <div key={reg.id} className={`group bg-slate-900/40 p-5 rounded-2xl border ${risco.border} hover:-translate-y-1 hover:${risco.glow} transition-all duration-300 backdrop-blur-sm relative overflow-hidden`}>
+                  <div className={`absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-${risco.cor.replace('bg-', '')} opacity-10 rounded-bl-full`}></div>
+                  <div className="flex justify-between items-start mb-3">
                     <div className="w-4/5">
-                      <span className="font-bold text-white truncate block">{reg.nome || reg.email.split('@')[0]}</span>
-                      <span className="text-[10px] text-slate-500">{new Date(reg.data).toLocaleString('pt-BR')}</span>
+                      <span className="font-bold text-lg text-white truncate block group-hover:text-optic-yellow transition-colors">{reg.nome || reg.email.split('@')[0]}</span>
+                      <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">{new Date(reg.data).toLocaleString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <div className={`w-3 h-3 rounded-full shrink-0 ${risco.cor} shadow-[0_0_8px_currentColor]`}></div>
+                    <div className={`w-3 h-3 rounded-full shrink-0 ${risco.cor} ${risco.glow} mt-1`}></div>
                   </div>
-                  <p className="text-xs text-slate-300 mb-2">{risco.texto}</p>
+                  <p className="text-xs text-white/70 bg-black/20 px-3 py-1.5 rounded-lg inline-block font-medium border border-white/5">{risco.texto}</p>
+                  
+                  <div className="mt-4 flex gap-4 text-sm border-t border-white/5 pt-3">
+                     <div className="flex-1 text-center"><span className="text-slate-500 block text-[10px] uppercase font-bold">Foco</span><strong className={`text-lg ${reg.foco <= 4 ? 'text-red-400' : 'text-white'}`}>{reg.foco}</strong></div>
+                     <div className="w-[1px] bg-white/5"></div>
+                     <div className="flex-1 text-center"><span className="text-slate-500 block text-[10px] uppercase font-bold">Energia</span><strong className={`text-lg ${reg.energia <= 4 ? 'text-red-400' : 'text-white'}`}>{reg.energia}</strong></div>
+                  </div>
                 </div>
               );
             })}
@@ -193,7 +289,6 @@
         </div>
       </div>
     );
-
     // --- MÓDULO 2: PERFIL ESPORTIVO ---
     const ModuloPerfil = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
@@ -214,39 +309,56 @@
         setSalvando(true);
         await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "prontuarios", atletaId), { perfil }, { merge: true });
         setSalvando(false);
-        alert("Perfil atualizado!");
+        alert("Ficha Esportiva atualizada com sucesso!");
       };
 
       return (
-        <div className="space-y-6 animate-fade-in pb-10">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-white/10 pb-4 gap-4">
-            <h2 className="text-xl md:text-2xl font-light">Dados Básicos e Esportivos</h2>
-            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="w-full sm:w-auto bg-slate-900 border border-white/20 text-white rounded p-2 outline-none">
+        <div className="space-y-8 animate-fade-in pb-10">
+          <header className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3"><Icons.Profile /> Perfil Esportivo</h2>
+              <p className="text-slate-400 text-sm mt-1">Dados técnicos e biológicos do tenista.</p>
+            </div>
+            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="input-premium sm:w-64 font-medium">
               <option value="">Selecione o Atleta...</option>
               {atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
             </select>
-          </div>
+          </header>
 
-          {!atletaId ? <div className="glass-panel p-6 text-center text-slate-500">Selecione um atleta.</div> : (
-            <div className="glass-panel p-4 md:p-6 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Categoria</label>
-                <input type="text" value={perfil.categoria} onChange={e=>setPerfil({...perfil, categoria: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-3 mb-4" />
-                <label className="text-xs text-slate-400 block mb-1">Ranking Atual</label>
-                <input type="text" value={perfil.ranking} onChange={e=>setPerfil({...perfil, ranking: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-3 mb-4" />
-                <label className="text-xs text-slate-400 block mb-1">Mão Dominante</label>
-                <select value={perfil.mao} onChange={e=>setPerfil({...perfil, mao: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-3">
-                  <option value="">Selecione...</option><option value="Destro">Destro</option><option value="Canhoto">Canhoto</option><option value="Ambidestro">Ambidestro</option>
-                </select>
+          {!atletaId ? <div className="glass-panel p-12 text-center text-slate-500 rounded-[2rem] font-medium text-lg border-dashed border-white/20">Selecione um atleta no menu acima.</div> : (
+            <div className="glass-panel p-6 md:p-10 rounded-[2rem] grid grid-cols-1 md:grid-cols-2 gap-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-optic-yellow opacity-5 blur-[100px]"></div>
+              
+              <div className="space-y-5 z-10">
+                <div>
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Categoria</label>
+                  <input type="text" value={perfil.categoria} onChange={e=>setPerfil({...perfil, categoria: e.target.value})} className="input-premium" placeholder="Ex: ATP, ITF, Juvenil" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Ranking Atual</label>
+                  <input type="text" value={perfil.ranking} onChange={e=>setPerfil({...perfil, ranking: e.target.value})} className="input-premium font-bold text-optic-yellow" placeholder="Ex: #124 ATP" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Mão Dominante</label>
+                  <select value={perfil.mao} onChange={e=>setPerfil({...perfil, mao: e.target.value})} className="input-premium">
+                    <option value="">Selecione...</option><option value="Destro">Destro</option><option value="Canhoto">Canhoto</option><option value="Ambidestro">Ambidestro</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Estilo de Jogo</label>
-                <input type="text" placeholder="Ex: Fundo de quadra agressivo" value={perfil.estilo} onChange={e=>setPerfil({...perfil, estilo: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-3 mb-4" />
-                <label className="text-xs text-slate-400 block mb-1">Histórico de Lesões Recentes</label>
-                <textarea value={perfil.lesoes} onChange={e=>setPerfil({...perfil, lesoes: e.target.value})} className="w-full h-32 bg-slate-900 border border-white/20 rounded p-3 custom-scrollbar text-sm"></textarea>
+              
+              <div className="space-y-5 z-10">
+                <div>
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Estilo de Jogo</label>
+                  <input type="text" placeholder="Ex: Agressivo de Fundo, Saque e Voleio" value={perfil.estilo} onChange={e=>setPerfil({...perfil, estilo: e.target.value})} className="input-premium" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Histórico de Lesões Recentes</label>
+                  <textarea value={perfil.lesoes} onChange={e=>setPerfil({...perfil, lesoes: e.target.value})} className="input-premium h-32 custom-scrollbar resize-none" placeholder="Relate cirurgias, dores crônicas, tendinites..."></textarea>
+                </div>
               </div>
-              <div className="md:col-span-2 flex justify-end">
-                <button onClick={salvarPerfil} className="w-full md:w-auto bg-optic-yellow text-black font-bold px-6 py-3 rounded">{salvando ? 'Salvando...' : 'Salvar Ficha'}</button>
+              
+              <div className="md:col-span-2 flex justify-end mt-4 z-10 border-t border-white/10 pt-6">
+                <button onClick={salvarPerfil} className="btn-primary w-full md:w-auto text-sm">{salvando ? 'Processando...' : 'Salvar Ficha Técnica'}</button>
               </div>
             </div>
           )}
@@ -254,7 +366,7 @@
       );
     };
 
-    // --- MÓDULO 3: PRONTUÁRIO CLÍNICO ---
+    // --- MÓDULO 3: PRONTUÁRIO CLÍNICO (SOAP PREMIUM) ---
     const ModuloProntuario = ({ atletas }) => {
       const [atletaSelecionadoId, setAtletaSelecionadoId] = useState("");
       const [rotinas, setRotinas] = useState({ pre: "", pos: "" });
@@ -269,22 +381,21 @@
 
       useEffect(() => {
         if (!atletaSelecionadoId) return;
+        const carregarProntuario = async (id) => {
+          const docSnap = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "prontuarios", id));
+          if (docSnap.exists()) { setRotinas(docSnap.data().rotinas || { pre: "", pos: "" }); } 
+          else { setRotinas({ pre: "Definir rotina pré-saque.", pos: "Definir rotina pós-erro." }); }
+
+          const qAnotacoes = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${id}/soap`), window.fbAPI.orderBy("data", "desc"));
+          const snapAnot = await window.fbAPI.getDocs(qAnotacoes);
+          setAnotacoes(snapAnot.docs.map(d => ({ id: d.id, ...d.data() })));
+
+          const qVideos = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${id}/videos`), window.fbAPI.orderBy("dataEnvio", "desc"));
+          const snapVideos = await window.fbAPI.getDocs(qVideos);
+          setVideos(snapVideos.docs.map(d => ({ id: d.id, ...d.data() })));
+        };
         carregarProntuario(atletaSelecionadoId);
       }, [atletaSelecionadoId]);
-
-      const carregarProntuario = async (id) => {
-        const docSnap = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "prontuarios", id));
-        if (docSnap.exists()) { setRotinas(docSnap.data().rotinas || { pre: "", pos: "" }); } 
-        else { setRotinas({ pre: "Defina rotina pré-saque.", pos: "Defina rotina pós-erro." }); }
-
-        const qAnotacoes = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${id}/soap`), window.fbAPI.orderBy("data", "desc"));
-        const snapAnot = await window.fbAPI.getDocs(qAnotacoes);
-        setAnotacoes(snapAnot.docs.map(d => ({ id: d.id, ...d.data() })));
-
-        const qVideos = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${id}/videos`), window.fbAPI.orderBy("dataEnvio", "desc"));
-        const snapVideos = await window.fbAPI.getDocs(qVideos);
-        setVideos(snapVideos.docs.map(d => ({ id: d.id, ...d.data() })));
-      };
 
       const salvarRotinas = async () => {
         await window.fbAPI.setDoc(window.fbAPI.doc(window.db, "prontuarios", atletaSelecionadoId), { rotinas }, { merge: true });
@@ -300,13 +411,16 @@
           await window.fbAPI.addDoc(soapRef, { texto: novaAnotacao, data: new Date().toISOString(), editadoEm: null });
         }
         setNovaAnotacao(""); setEditandoAnotacaoId(null);
-        carregarProntuario(atletaSelecionadoId);
+        
+        const qAnotacoes = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${atletaSelecionadoId}/soap`), window.fbAPI.orderBy("data", "desc"));
+        const snapAnot = await window.fbAPI.getDocs(qAnotacoes);
+        setAnotacoes(snapAnot.docs.map(d => ({ id: d.id, ...d.data() })));
       };
 
       const excluirAnotacao = async (id) => {
-        if(confirm("Apagar esta anotação?")) {
+        if(confirm("Apagar permanentemente este registro SOAP?")) {
           await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, `prontuarios/${atletaSelecionadoId}/soap`, id));
-          carregarProntuario(atletaSelecionadoId);
+          setAnotacoes(anotacoes.filter(a => a.id !== id));
         }
       };
 
@@ -323,9 +437,9 @@
           (err) => { setUploading(false); alert("Erro ao enviar vídeo."); }, 
           async () => {
             const url = await window.fbAPI.getDownloadURL(uploadTask.snapshot.ref);
-            await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaSelecionadoId}/videos`), { url, nomeArquivo: file.name, dataEnvio: new Date().toISOString() });
+            const newDoc = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaSelecionadoId}/videos`), { url, nomeArquivo: file.name, dataEnvio: new Date().toISOString() });
+            setVideos([{ id: newDoc.id, url, nomeArquivo: file.name, dataEnvio: new Date().toISOString() }, ...videos]);
             setUploading(false); setProgresso(0); fileInputRef.current.value = "";
-            carregarProntuario(atletaSelecionadoId);
           }
         );
       };
@@ -335,80 +449,113 @@
           try {
             await window.fbAPI.deleteObject(window.fbAPI.ref(window.storage, video.url));
             await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, `prontuarios/${atletaSelecionadoId}/videos`, video.id));
-            carregarProntuario(atletaSelecionadoId);
+            setVideos(videos.filter(v => v.id !== video.id));
           } catch(e) { alert("Erro ao apagar vídeo."); }
         }
       };
 
       return (
-        <div className="space-y-6 animate-fade-in pb-10">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-white/10 pb-4 gap-4">
-            <h2 className="text-xl md:text-2xl font-light">Prontuário Clínico (SOAP)</h2>
-            <select value={atletaSelecionadoId} onChange={e => setAtletaSelecionadoId(e.target.value)} className="w-full sm:w-auto bg-slate-900 border border-white/20 text-white rounded p-2 outline-none">
+        <div className="space-y-8 animate-fade-in pb-10">
+          <header className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3"><Icons.Users /> Prontuário Clínico</h2>
+              <p className="text-slate-400 text-sm mt-1">Registros SOAP, Rotinas e Linguagem Corporal.</p>
+            </div>
+            <select value={atletaSelecionadoId} onChange={e => setAtletaSelecionadoId(e.target.value)} className="input-premium sm:w-64 font-medium">
               <option value="">Selecione o Atleta...</option>
               {atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
             </select>
-          </div>
+          </header>
 
-          {!atletaSelecionadoId ? <div className="glass-panel p-6 text-center text-slate-500">Selecione um atleta.</div> : (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="space-y-6 xl:col-span-1">
-                <div className="glass-panel p-4 md:p-6 rounded-2xl">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="font-bold text-optic-yellow">Mapeamento de Rotinas</h4>
-                    <button onClick={() => editandoRotina ? salvarRotinas() : setEditandoRotina(true)} className="text-xs bg-white/10 px-2 py-1 rounded">{editandoRotina ? 'Salvar' : 'Editar'}</button>
+          {!atletaSelecionadoId ? <div className="glass-panel p-12 text-center text-slate-500 rounded-[2rem] font-medium text-lg border-dashed border-white/20">Selecione um atleta.</div> : (
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+              
+              {/* Coluna Lateral: Rotinas e Vídeos */}
+              <div className="space-y-8 xl:col-span-1">
+                <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-t-optic-yellow">
+                  <div className="flex justify-between items-center mb-6">
+                    <h4 className="font-bold text-lg text-white">Rotinas de Quadra</h4>
+                    <button onClick={() => editandoRotina ? salvarRotinas() : setEditandoRotina(true)} className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-optic-yellow transition">
+                      {editandoRotina ? 'SALVAR' : 'EDITAR'}
+                    </button>
                   </div>
-                  <div className="space-y-4 text-sm">
-                    <div><label className="text-xs text-slate-400">Pré-saque</label>{editandoRotina ? <input type="text" value={rotinas.pre} onChange={e=>setRotinas({...rotinas, pre: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /> : <div className="bg-slate-900 p-2 rounded mt-1 break-words">{rotinas.pre}</div>}</div>
-                    <div><label className="text-xs text-slate-400">Pós-erro</label>{editandoRotina ? <input type="text" value={rotinas.pos} onChange={e=>setRotinas({...rotinas, pos: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /> : <div className="bg-slate-900 p-2 rounded mt-1 break-words">{rotinas.pos}</div>}</div>
+                  <div className="space-y-5">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-2">Rotina Pré-Saque</label>
+                      {editandoRotina ? <input type="text" value={rotinas.pre} onChange={e=>setRotinas({...rotinas, pre: e.target.value})} className="input-premium py-2" /> : <div className="bg-slate-900/50 p-3 rounded-xl border border-white/5 text-sm font-medium text-slate-300 break-words">{rotinas.pre}</div>}
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-2">Rotina Pós-Erro</label>
+                      {editandoRotina ? <input type="text" value={rotinas.pos} onChange={e=>setRotinas({...rotinas, pos: e.target.value})} className="input-premium py-2" /> : <div className="bg-slate-900/50 p-3 rounded-xl border border-white/5 text-sm font-medium text-slate-300 break-words">{rotinas.pos}</div>}
+                    </div>
                   </div>
                 </div>
 
-                <div className="glass-panel p-4 md:p-6 rounded-2xl">
-                  <h4 className="font-bold mb-4 flex items-center gap-2"><Icons.Video /> Linguagem Corporal</h4>
-                  <div className="mb-4">
+                <div className="glass-panel p-6 rounded-[2rem]">
+                  <h4 className="font-bold text-lg text-white mb-6 flex items-center gap-2"><Icons.Video /> Linguagem Corporal</h4>
+                  <div className="mb-6">
                     <input type="file" accept="video/mp4,video/quicktime" ref={fileInputRef} onChange={handleVideoUpload} className="hidden" id="video-upload" />
-                    <label htmlFor="video-upload" className={`w-full h-20 bg-slate-900 rounded-lg border-2 border-dashed ${uploading ? 'border-optic-yellow' : 'border-white/20'} flex flex-col items-center justify-center text-slate-400 text-sm hover:border-optic-yellow cursor-pointer text-center px-2`}>
-                      {uploading ? `Enviando... ${Math.round(progresso)}%` : '+ Escolher Vídeo (.mp4)'}
+                    <label htmlFor="video-upload" className={`w-full h-24 rounded-2xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center cursor-pointer text-sm font-medium ${uploading ? 'border-optic-yellow bg-optic-yellow/5' : 'border-white/20 hover:border-optic-yellow hover:bg-white/5 text-slate-400 hover:text-white'}`}>
+                      {uploading ? <span className="text-optic-yellow">Enviando... {Math.round(progresso)}%</span> : '+ Anexar Vídeo do Jogo'}
                     </label>
-                    {uploading && <div className="w-full bg-slate-800 h-1 mt-2 rounded"><div className="bg-optic-yellow h-1" style={{width: `${progresso}%`}}></div></div>}
+                    {uploading && <div className="w-full bg-slate-800 h-1 mt-3 rounded-full overflow-hidden"><div className="bg-optic-yellow h-full transition-all duration-300" style={{width: `${progresso}%`}}></div></div>}
                   </div>
-                  <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                  <div className="space-y-4 max-h-[350px] overflow-y-auto custom-scrollbar pr-2">
                     {videos.map(v => (
-                      <div key={v.id} className="bg-slate-900/50 p-3 rounded-xl border border-white/5 group">
-                        <div className="flex justify-between items-start mb-2"><p className="text-xs font-bold truncate max-w-[150px]">{v.nomeArquivo}</p><button onClick={() => excluirVideo(v)} className="text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100"><Icons.Trash /></button></div>
-                        <video src={v.url} controls className="w-full rounded bg-black max-h-[120px] object-contain"></video>
+                      <div key={v.id} className="bg-slate-900/40 p-3 rounded-2xl border border-white/5 group hover:border-white/20 transition-all">
+                        <div className="flex justify-between items-start mb-3">
+                          <p className="text-xs font-medium text-slate-300 truncate max-w-[150px]">{v.nomeArquivo}</p>
+                          <button onClick={() => excluirVideo(v)} className="text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"><Icons.Trash /></button>
+                        </div>
+                        <video src={v.url} controls className="w-full rounded-xl bg-black border border-white/10 max-h-[140px] object-cover"></video>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
 
-              <div className="xl:col-span-2 glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[600px] md:h-[700px]">
-                <h4 className="font-bold mb-4">Histórico Clínico (SOAP)</h4>
-                <div className="bg-slate-900 p-4 rounded-xl mb-6 flex-shrink-0">
-                  <textarea value={novaAnotacao} onChange={e=>setNovaAnotacao(e.target.value)} placeholder="Subjetivo / Objetivo / Avaliação / Plano..." className="w-full h-24 bg-transparent outline-none resize-none text-sm text-slate-200"></textarea>
-                  <div className="flex justify-end mt-2 border-t border-white/5 pt-2"><button onClick={salvarAnotacao} className="bg-optic-yellow text-black px-4 py-2 rounded text-sm font-bold w-full sm:w-auto">{editandoAnotacaoId ? 'Atualizar' : 'Salvar Nova Sessão'}</button></div>
+              {/* Coluna Principal: SOAP */}
+              <div className="xl:col-span-2 glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col h-[700px] md:h-[800px]">
+                <h4 className="font-bold text-lg text-white mb-6">Registro Evolutivo (SOAP)</h4>
+                
+                <div className="bg-slate-900/60 p-5 rounded-2xl mb-8 flex-shrink-0 border border-white/5 focus-within:border-optic-yellow/50 transition-colors shadow-inner">
+                  <textarea value={novaAnotacao} onChange={e=>setNovaAnotacao(e.target.value)} placeholder="S: Subjetivo (O que o atleta relata)&#10;O: Objetivo (O que foi observado)&#10;A: Avaliação (Sua análise)&#10;P: Plano (Próximos passos)" className="w-full h-32 bg-transparent outline-none resize-none text-sm text-slate-200 placeholder:text-slate-600 custom-scrollbar"></textarea>
+                  <div className="flex justify-between items-center mt-4 border-t border-white/5 pt-4">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{editandoAnotacaoId ? 'Modo de Edição' : 'Novo Registro'}</span>
+                    <div className="flex gap-3">
+                       {editandoAnotacaoId && <button onClick={() => {setNovaAnotacao(''); setEditandoAnotacaoId(null);}} className="text-xs text-slate-400 font-bold uppercase hover:text-white transition">Cancelar</button>}
+                       <button onClick={salvarAnotacao} className="btn-primary py-2 px-6 text-xs">{editandoAnotacaoId ? 'Atualizar SOAP' : 'Salvar Registro'}</button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2">
+
+                <div className="flex-1 overflow-y-auto space-y-5 custom-scrollbar pr-3">
+                  {anotacoes.length === 0 && <p className="text-center text-slate-500 font-medium mt-10">Nenhum registro clínico.</p>}
                   {anotacoes.map(a => (
-                    <div key={a.id} className="bg-slate-900/50 p-4 rounded-xl border border-white/5 group hover:border-white/10">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 border-b border-white/5 pb-2 gap-2">
-                        <div><span className="text-xs text-optic-yellow font-bold uppercase">{new Date(a.data).toLocaleString('pt-BR', {dateStyle:'long', timeStyle:'short'})}</span>{a.editadoEm && <span className="text-[10px] text-slate-500 sm:ml-2 block sm:inline">(Editado: {new Date(a.editadoEm).toLocaleString('pt-BR')})</span>}</div>
-                        <div className="flex gap-4 sm:gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100"><button onClick={() => {setNovaAnotacao(a.texto); setEditandoAnotacaoId(a.id);}} className="text-xs text-blue-400 uppercase font-bold sm:normal-case sm:font-normal">Editar</button><button onClick={() => excluirAnotacao(a.id)} className="text-xs text-red-400 uppercase font-bold sm:normal-case sm:font-normal">Excluir</button></div>
+                    <div key={a.id} className="bg-slate-900/40 p-6 rounded-2xl border border-white/5 group hover:border-white/10 hover:-translate-y-1 transition-all duration-300">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 border-b border-white/5 pb-3 gap-2">
+                        <div>
+                          <span className="text-xs text-optic-yellow font-black uppercase tracking-wider bg-optic-yellow/10 px-3 py-1 rounded-lg">{new Date(a.data).toLocaleString('pt-BR', {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'})}</span>
+                          {a.editadoEm && <span className="text-[10px] text-slate-500 sm:ml-3 block sm:inline mt-2 sm:mt-0 font-medium">(Editado: {new Date(a.editadoEm).toLocaleString('pt-BR')})</span>}
+                        </div>
+                        <div className="flex gap-4 sm:gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => {setNovaAnotacao(a.texto); setEditandoAnotacaoId(a.id);}} className="text-blue-400 hover:text-blue-300 transition" title="Editar"><Icons.Edit /></button>
+                          <button onClick={() => excluirAnotacao(a.id)} className="text-red-400 hover:text-red-300 transition" title="Excluir"><Icons.Trash /></button>
+                        </div>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{a.texto}</p>
+                      <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{a.texto}</p>
                     </div>
                   ))}
                 </div>
               </div>
+
             </div>
           )}
         </div>
       );
     };
 
-    // --- MÓDULO 4: MOMENTOS CRÍTICOS (Estatísticas de Partida) ---
+    // --- MÓDULO 4: MOMENTOS CRÍTICOS (PLACAR ATP STYLE) ---
     const ModuloMomentosCriticos = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
       const [partidas, setPartidas] = useState([]);
@@ -437,59 +584,103 @@
       };
 
       const apagarPartida = async (id) => {
-        if(confirm("Apagar este registro de partida?")) {
+        if(confirm("Apagar estatística da partida?")) {
           await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, `prontuarios/${atletaId}/partidas`, id));
           setPartidas(partidas.filter(p => p.id !== id));
         }
       };
 
       return (
-        <div className="space-y-6 animate-fade-in pb-10">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-white/10 pb-4 gap-4">
-            <h2 className="text-xl md:text-2xl font-light">Estatísticas de Partidas (Choking)</h2>
-            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="w-full sm:w-auto bg-slate-900 border border-white/20 text-white rounded p-2 outline-none">
+        <div className="space-y-8 animate-fade-in pb-10">
+          <header className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3"><Icons.Crosshair /> Pressão em Jogo</h2>
+              <p className="text-slate-400 text-sm mt-1">Análise de *Choking* e métricas de momentos críticos.</p>
+            </div>
+            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="input-premium sm:w-64 font-medium">
               <option value="">Selecione o Atleta...</option>
               {atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
             </select>
-          </div>
+          </header>
           
-          {!atletaId ? <div className="glass-panel p-6 text-center text-slate-500">Selecione um atleta para registrar dados de jogo.</div> : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1 glass-panel p-4 md:p-6 rounded-2xl space-y-4">
-                <h3 className="font-bold text-optic-yellow mb-4">Lançar Nova Partida</h3>
-                <div><label className="text-xs text-slate-400">Torneio / Fase</label><input type="text" placeholder="Ex: Roland Garros - 1ª Rodada" value={novaPartida.torneio} onChange={e=>setNovaPartida({...novaPartida, torneio: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
-                <div><label className="text-xs text-slate-400">Data do Jogo</label><input type="date" value={novaPartida.data} onChange={e=>setNovaPartida({...novaPartida, data: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1 text-white" /></div>
-                <div><label className="text-xs text-slate-400">Resultado</label><select value={novaPartida.resultado} onChange={e=>setNovaPartida({...novaPartida, resultado: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1"><option value="Vitória">Vitória</option><option value="Derrota">Derrota</option></select></div>
-                <div className="pt-4 border-t border-white/10 mt-4">
-                  <h4 className="text-xs font-bold text-slate-300 mb-3">Métricas de Pressão</h4>
-                  <div className="space-y-3">
-                    <div><label className="text-xs text-slate-400">Break Points Salvos (%)</label><input type="number" placeholder="Ex: 65" value={novaPartida.breakPointsSalvos} onChange={e=>setNovaPartida({...novaPartida, breakPointsSalvos: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
-                    <div><label className="text-xs text-slate-400">Duplas Faltas Críticas</label><input type="number" placeholder="Ocorreram em BP/Vantagens" value={novaPartida.duplasFaltas} onChange={e=>setNovaPartida({...novaPartida, duplasFaltas: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
-                    <div><label className="text-xs text-slate-400">Erros Não Forçados (TB)</label><input type="number" value={novaPartida.errosNaoForcados} onChange={e=>setNovaPartida({...novaPartida, errosNaoForcados: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
-                  </div>
+          {!atletaId ? <div className="glass-panel p-12 text-center text-slate-500 rounded-[2rem] font-medium text-lg border-dashed border-white/20">Selecione um atleta.</div> : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Formulário de Registro */}
+              <div className="lg:col-span-1 glass-panel p-6 md:p-8 rounded-[2rem] space-y-6 h-fit border-t-4 border-t-optic-yellow shadow-panel">
+                <h3 className="font-black text-xl text-white uppercase tracking-wider mb-2">Lançar Partida</h3>
+                
+                <div className="space-y-4">
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Torneio / Fase</label><input type="text" placeholder="Ex: US Open - QF" value={novaPartida.torneio} onChange={e=>setNovaPartida({...novaPartida, torneio: e.target.value})} className="input-premium" /></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Data</label><input type="date" value={novaPartida.data} onChange={e=>setNovaPartida({...novaPartida, data: e.target.value})} className="input-premium" /></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Desfecho</label><select value={novaPartida.resultado} onChange={e=>setNovaPartida({...novaPartida, resultado: e.target.value})} className="input-premium font-bold"><option value="Vitória">🏆 Vitória</option><option value="Derrota">❌ Derrota</option></select></div>
                 </div>
-                <button onClick={registrarPartida} disabled={salvando} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded transition mt-4 disabled:opacity-50">{salvando ? 'Salvando...' : 'Registrar Estatística'}</button>
+
+                <div className="pt-6 border-t border-white/10 mt-6 space-y-4">
+                  <h4 className="text-[11px] font-black text-optic-yellow uppercase tracking-widest bg-optic-yellow/10 p-2 rounded text-center">Métricas Sob Pressão</h4>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Break Points Salvos (%)</label><input type="number" placeholder="0 a 100" value={novaPartida.breakPointsSalvos} onChange={e=>setNovaPartida({...novaPartida, breakPointsSalvos: e.target.value})} className="input-premium" /></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Duplas Faltas (Em BP/Vant)</label><input type="number" placeholder="Quantidade" value={novaPartida.duplasFaltas} onChange={e=>setNovaPartida({...novaPartida, duplasFaltas: e.target.value})} className="input-premium" /></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Erros Não Forçados (Tie-Break)</label><input type="number" placeholder="Quantidade" value={novaPartida.errosNaoForcados} onChange={e=>setNovaPartida({...novaPartida, errosNaoForcados: e.target.value})} className="input-premium" /></div>
+                </div>
+
+                <button onClick={registrarPartida} disabled={salvando} className="btn-primary w-full mt-6 text-sm">{salvando ? 'Computando...' : 'Gravar Estatística'}</button>
               </div>
               
-              <div className="lg:col-span-2 glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[650px]">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Crosshair /> Histórico de Desempenho</h3>
-                <div className="grid grid-cols-3 gap-4 mb-6 shrink-0">
-                  <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center"><p className="text-xs text-slate-400">Total de Jogos</p><p className="text-2xl font-bold text-white">{partidas.length}</p></div>
-                  <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center"><p className="text-xs text-slate-400">Vitórias</p><p className="text-2xl font-bold text-green-400">{partidas.filter(p=>p.resultado==='Vitória').length}</p></div>
-                  <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center"><p className="text-xs text-slate-400">Derrotas</p><p className="text-2xl font-bold text-red-400">{partidas.filter(p=>p.resultado==='Derrota').length}</p></div>
+              {/* Placar / Scoreboard ATP Style */}
+              <div className="lg:col-span-2 glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col h-[700px] md:h-[800px] bg-slate-950/80 border-slate-800 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-court-blue opacity-10 rounded-full blur-[120px] pointer-events-none"></div>
+
+                <h3 className="text-xl font-black mb-6 text-white uppercase tracking-wider flex items-center gap-2"><span className="w-2 h-6 bg-optic-yellow inline-block rounded"></span> Match History</h3>
+                
+                {/* Resumo Global */}
+                <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8 shrink-0">
+                  <div className="bg-slate-900 border border-slate-700 p-4 rounded-2xl text-center shadow-inner relative overflow-hidden">
+                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
+                     <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-widest relative z-10">Jogos</p>
+                     <p className="text-3xl md:text-5xl font-black text-white mt-1 relative z-10 font-mono tracking-tighter">{partidas.length}</p>
+                  </div>
+                  <div className="bg-slate-900 border border-green-900/50 p-4 rounded-2xl text-center shadow-inner relative overflow-hidden group hover:border-green-500/50 transition-colors">
+                     <div className="absolute inset-0 bg-gradient-to-b from-green-500/10 to-transparent"></div>
+                     <p className="text-[10px] md:text-xs text-green-500/70 font-bold uppercase tracking-widest relative z-10">Vitórias</p>
+                     <p className="text-3xl md:text-5xl font-black text-green-400 mt-1 relative z-10 font-mono tracking-tighter drop-shadow-[0_0_10px_rgba(74,222,128,0.5)] group-hover:drop-shadow-[0_0_20px_rgba(74,222,128,0.8)] transition-all">{partidas.filter(p=>p.resultado==='Vitória').length}</p>
+                  </div>
+                  <div className="bg-slate-900 border border-red-900/50 p-4 rounded-2xl text-center shadow-inner relative overflow-hidden group hover:border-red-500/50 transition-colors">
+                     <div className="absolute inset-0 bg-gradient-to-b from-red-500/10 to-transparent"></div>
+                     <p className="text-[10px] md:text-xs text-red-500/70 font-bold uppercase tracking-widest relative z-10">Derrotas</p>
+                     <p className="text-3xl md:text-5xl font-black text-red-500 mt-1 relative z-10 font-mono tracking-tighter drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] group-hover:drop-shadow-[0_0_20px_rgba(239,68,68,0.8)] transition-all">{partidas.filter(p=>p.resultado==='Derrota').length}</p>
+                  </div>
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
-                  {partidas.length === 0 && <p className="text-center text-slate-500 mt-10">Nenhuma partida registrada.</p>}
+
+                {/* Lista de Partidas Estilo Broadcast */}
+                <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2 relative z-10">
+                  {partidas.length === 0 && <p className="text-center text-slate-600 font-medium mt-10">Aguardando dados da primeira partida.</p>}
                   {partidas.map(p => (
-                    <div key={p.id} className="bg-slate-900/50 p-4 rounded-xl border border-white/5 relative group hover:border-white/10 transition">
-                      <div className="flex justify-between items-start mb-2">
-                        <div><p className="font-bold text-optic-yellow">{p.torneio}</p><p className="text-xs text-slate-400">{new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR')} • <span className={p.resultado === 'Vitória' ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>{p.resultado}</span></p></div>
-                        <button onClick={() => apagarPartida(p.id)} className="text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100"><Icons.Trash /></button>
+                    <div key={p.id} className="bg-black/40 p-5 rounded-2xl border border-white/5 relative group hover:bg-slate-900/80 transition-all duration-300">
+                      
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-3">
+                           <div className={`w-1.5 h-10 rounded-full ${p.resultado === 'Vitória' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]'}`}></div>
+                           <div>
+                             <p className="font-black text-lg text-white tracking-wide">{p.torneio}</p>
+                             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                           </div>
+                        </div>
+                        <button onClick={() => apagarPartida(p.id)} className="text-slate-600 hover:text-red-500 transition-colors p-2"><Icons.Trash /></button>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 mt-4 text-xs bg-black/30 p-2 rounded">
-                        <div><span className="text-slate-500 block">BP Salvos:</span> <strong className="text-white">{p.breakPointsSalvos}%</strong></div>
-                        <div><span className="text-slate-500 block">Duplas Faltas:</span> <strong className="text-white">{p.duplasFaltas}</strong></div>
-                        <div><span className="text-slate-500 block">Erros (TB):</span> <strong className="text-white">{p.errosNaoForcados}</strong></div>
+
+                      <div className="grid grid-cols-3 gap-1 bg-slate-900/50 rounded-xl overflow-hidden border border-white/5">
+                        <div className="p-3 text-center border-r border-white/5">
+                           <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block mb-1">BP Salvos</span> 
+                           <strong className="text-xl font-mono text-white">{p.breakPointsSalvos || '-'}%</strong>
+                        </div>
+                        <div className="p-3 text-center border-r border-white/5">
+                           <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Duplas Faltas</span> 
+                           <strong className="text-xl font-mono text-white">{p.duplasFaltas || '-'}</strong>
+                        </div>
+                        <div className="p-3 text-center">
+                           <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Erros Não Forçados</span> 
+                           <strong className="text-xl font-mono text-white">{p.errosNaoForcados || '-'}</strong>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -501,14 +692,12 @@
       );
     };
 
-    // --- MÓDULO 5: AGENDA & TORNEIOS (COM CRUD COMPLETO E EDIÇÃO) ---
+    // --- MÓDULO 5: AGENDA & TORNEIOS ---
     const ModuloAgenda = ({ atletas }) => {
-      // Sessoes
       const [sessoes, setSessoes] = useState([]);
       const [novaSessao, setNovaSessao] = useState({ atletaId: "", dataHora: "", link: "" });
       const [sessaoEditandoId, setSessaoEditandoId] = useState(null);
       
-      // Torneios (CRUD Completo no Firebase)
       const [torneios, setTorneios] = useState([]);
       const [novoTorneio, setNovoTorneio] = useState({ nome: "", data: "" });
       const [torneioEditandoId, setTorneioEditandoId] = useState(null);
@@ -529,7 +718,6 @@
         carregar();
       }, []);
 
-      // Lógica de Sessões
       const salvarSessao = async () => {
         if(!novaSessao.atletaId || !novaSessao.dataHora) return alert("Preencha Paciente e Data.");
         const atleta = atletas.find(a => a.id === novaSessao.atletaId);
@@ -547,21 +735,11 @@
         setNovaSessao({ atletaId: "", dataHora: "", link: "" });
       };
 
-      const editarSessao = (sessao) => {
-        setNovaSessao({ atletaId: sessao.atletaId, dataHora: sessao.dataHora, link: sessao.link });
-        setSessaoEditandoId(sessao.id);
-      };
+      const editarSessao = (sessao) => { setNovaSessao({ atletaId: sessao.atletaId, dataHora: sessao.dataHora, link: sessao.link }); setSessaoEditandoId(sessao.id); };
+      const apagarSessao = async (id) => { if(confirm("Desmarcar sessão?")) { await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, "agenda", id)); setSessoes(sessoes.filter(s => s.id !== id)); } };
 
-      const apagarSessao = async (id) => {
-        if(confirm("Desmarcar sessão?")) {
-          await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, "agenda", id));
-          setSessoes(sessoes.filter(s => s.id !== id));
-        }
-      };
-
-      // Lógica de Torneios
       const salvarTorneio = async () => {
-        if(!novoTorneio.nome || !novoTorneio.data) return alert("Preencha Nome e Data do torneio.");
+        if(!novoTorneio.nome || !novoTorneio.data) return alert("Preencha Nome e Data.");
         if (torneioEditandoId) {
           await window.fbAPI.updateDoc(window.fbAPI.doc(window.db, "torneios", torneioEditandoId), novoTorneio);
           setTorneios(torneios.map(t => t.id === torneioEditandoId ? { id: torneioEditandoId, ...novoTorneio } : t).sort((a,b) => new Date(a.data) - new Date(b.data)));
@@ -573,52 +751,50 @@
         setNovoTorneio({ nome: "", data: "" });
       };
 
-      const editarTorneio = (torneio) => {
-        setNovoTorneio({ nome: torneio.nome, data: torneio.data });
-        setTorneioEditandoId(torneio.id);
-      };
-
-      const apagarTorneio = async (id) => {
-        if(confirm("Apagar este torneio?")) {
-          await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, "torneios", id));
-          setTorneios(torneios.filter(t => t.id !== id));
-        }
-      };
+      const editarTorneio = (torneio) => { setNovoTorneio({ nome: torneio.nome, data: torneio.data }); setTorneioEditandoId(torneio.id); };
+      const apagarTorneio = async (id) => { if(confirm("Apagar este torneio?")) { await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, "torneios", id)); setTorneios(torneios.filter(t => t.id !== id)); } };
 
       return (
-        <div className="space-y-6 animate-fade-in pb-10">
-          <h2 className="text-xl md:text-2xl font-light border-b border-white/10 pb-4">Calendários & Agendamentos</h2>
+        <div className="space-y-8 animate-fade-in pb-10">
+          <header className="border-b border-white/10 pb-6">
+            <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3"><Icons.Calendar /> Agenda & Calendário</h2>
+            <p className="text-slate-400 text-sm mt-1">Sincronização de sessões clínicas e radar de torneios.</p>
+          </header>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
             {/* Bloco Sessões */}
-            <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[650px]">
-              <h3 className="text-lg font-bold text-optic-yellow mb-4">Sessões Clínicas</h3>
-              <div className="bg-slate-900 border border-white/10 p-4 rounded-xl mb-6 space-y-3 shrink-0">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-bold">{sessaoEditandoId ? 'Editando Sessão...' : 'Agendar Nova'}</span>
-                  {sessaoEditandoId && <button onClick={() => {setSessaoEditandoId(null); setNovaSessao({ atletaId: "", dataHora: "", link: "" });}} className="text-xs text-slate-400 underline">Cancelar Edição</button>}
+            <div className="glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col h-[700px] shadow-panel">
+              <h3 className="text-xl font-black text-optic-yellow mb-6 uppercase tracking-wider">Sessões Clínicas</h3>
+              
+              <div className="bg-slate-900/50 border border-white/10 p-5 rounded-2xl mb-8 space-y-4 shrink-0 shadow-inner">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">{sessaoEditandoId ? '🔧 Editando Sessão' : 'Nova Sessão'}</span>
+                  {sessaoEditandoId && <button onClick={() => {setSessaoEditandoId(null); setNovaSessao({ atletaId: "", dataHora: "", link: "" });}} className="text-[10px] text-optic-yellow font-bold uppercase tracking-widest hover:underline">Cancelar</button>}
                 </div>
-                <select value={novaSessao.atletaId} onChange={e=>setNovaSessao({...novaSessao, atletaId: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm outline-none"><option value="">Paciente...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}</select>
-                <input type="datetime-local" value={novaSessao.dataHora} onChange={e=>setNovaSessao({...novaSessao, dataHora: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm text-white" />
-                <input type="text" placeholder="Link Zoom/Meet" value={novaSessao.link} onChange={e=>setNovaSessao({...novaSessao, link: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm" />
-                <button onClick={salvarSessao} className="w-full bg-white/10 hover:bg-white/20 transition py-3 rounded text-sm font-bold">{sessaoEditandoId ? 'Atualizar Sessão' : 'Agendar Sessão'}</button>
+                <select value={novaSessao.atletaId} onChange={e=>setNovaSessao({...novaSessao, atletaId: e.target.value})} className="input-premium py-2"><option value="">Paciente...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}</select>
+                <input type="datetime-local" value={novaSessao.dataHora} onChange={e=>setNovaSessao({...novaSessao, dataHora: e.target.value})} className="input-premium py-2" />
+                <input type="text" placeholder="Link Zoom/Meet (Ou deixe vazio para autogerar)" value={novaSessao.link} onChange={e=>setNovaSessao({...novaSessao, link: e.target.value})} className="input-premium py-2" />
+                <button onClick={salvarSessao} className="btn-primary w-full text-xs">{sessaoEditandoId ? 'Salvar Alterações' : 'Confirmar Agendamento'}</button>
               </div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar pr-3 space-y-4">
                 {sessoes.map(s => {
                   const dS = new Date(s.dataHora);
                   const prox = dS > agora && dS <= limite48h;
                   return (
-                    <div key={s.id} className={`p-4 rounded-xl border ${prox ? 'bg-red-500/10 border-red-500/50' : 'bg-slate-900/50 border-white/5'} group relative`}>
-                      {prox && <span className="absolute -top-2 -right-2 flex h-4 w-4"><span className="animate-ping absolute h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative rounded-full h-4 w-4 bg-red-500"></span></span>}
-                      <div className="flex justify-between items-start">
-                        <p className="font-bold text-sm truncate pr-2">{s.nome || s.email.split('@')[0]}</p>
-                        <div className="flex gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 shrink-0">
-                          <button onClick={()=>editarSessao(s)} className="text-blue-400"><Icons.Edit /></button>
-                          <button onClick={()=>apagarSessao(s.id)} className="text-red-400"><Icons.Trash /></button>
+                    <div key={s.id} className={`p-5 rounded-2xl border transition-all duration-300 ${prox ? 'bg-red-950/30 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'bg-slate-900/40 border-white/5 hover:border-white/20'} group relative`}>
+                      {prox && <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4"><span className="animate-ping absolute h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative rounded-full h-4 w-4 bg-red-500"></span></span>}
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                           <p className="font-bold text-base text-white truncate">{s.nome || s.email.split('@')[0]}</p>
+                           <p className={`text-[11px] font-bold uppercase tracking-wider mt-1 ${prox ? 'text-red-400' : 'text-slate-400'}`}>{dS.toLocaleString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</p>
+                        </div>
+                        <div className="flex gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-black/40 p-1.5 rounded-lg border border-white/5">
+                          <button onClick={()=>editarSessao(s)} className="text-blue-400 hover:text-blue-300"><Icons.Edit /></button>
+                          <button onClick={()=>apagarSessao(s.id)} className="text-red-400 hover:text-red-300"><Icons.Trash /></button>
                         </div>
                       </div>
-                      <p className={`text-xs ${prox ? 'text-red-400 font-bold' : 'text-slate-400'}`}>{dS.toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</p>
-                      <a href={s.link} target="_blank" className="mt-3 block text-center text-xs bg-blue-600 hover:bg-blue-500 transition py-2 rounded">Acessar Sala (Meet/Zoom)</a>
+                      <a href={s.link} target="_blank" className="mt-4 block text-center text-[11px] font-bold uppercase tracking-widest bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white transition-all py-2.5 rounded-xl">Entrar na Sala</a>
                     </div>
                   );
                 })}
@@ -626,28 +802,30 @@
             </div>
 
             {/* Bloco Torneios */}
-            <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[650px]">
-              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Calendar /> Torneios Atuais</h3>
-              <div className="bg-slate-900 border border-white/10 p-4 rounded-xl mb-6 space-y-3 shrink-0">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-bold">{torneioEditandoId ? 'Editando Torneio...' : 'Adicionar Torneio'}</span>
-                  {torneioEditandoId && <button onClick={() => {setTorneioEditandoId(null); setNovoTorneio({ nome: "", data: "" });}} className="text-xs text-slate-400 underline">Cancelar</button>}
+            <div className="glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col h-[700px] shadow-panel">
+              <h3 className="text-xl font-black text-white mb-6 uppercase tracking-wider">Radar de Torneios</h3>
+              
+              <div className="bg-slate-900/50 border border-white/10 p-5 rounded-2xl mb-8 space-y-4 shrink-0 shadow-inner">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">{torneioEditandoId ? '🔧 Editando Torneio' : 'Adicionar ao Radar'}</span>
+                  {torneioEditandoId && <button onClick={() => {setTorneioEditandoId(null); setNovoTorneio({ nome: "", data: "" });}} className="text-[10px] text-optic-yellow font-bold uppercase tracking-widest hover:underline">Cancelar</button>}
                 </div>
-                <input type="text" placeholder="Nome do Torneio (Ex: US Open)" value={novoTorneio.nome} onChange={e=>setNovoTorneio({...novoTorneio, nome: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm text-white" />
-                <input type="date" value={novoTorneio.data} onChange={e=>setNovoTorneio({...novoTorneio, data: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm text-white" />
-                <button onClick={salvarTorneio} className="w-full bg-white/10 hover:bg-white/20 transition py-2 rounded text-sm font-bold">{torneioEditandoId ? 'Salvar Edição' : 'Adicionar ao Calendário'}</button>
+                <input type="text" placeholder="Nome do Torneio (Ex: US Open)" value={novoTorneio.nome} onChange={e=>setNovoTorneio({...novoTorneio, nome: e.target.value})} className="input-premium py-2" />
+                <input type="date" value={novoTorneio.data} onChange={e=>setNovoTorneio({...novoTorneio, data: e.target.value})} className="input-premium py-2" />
+                <button onClick={salvarTorneio} className="btn-secondary w-full text-xs">{torneioEditandoId ? 'Salvar Edição' : 'Registrar Competição'}</button>
               </div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
-                {torneios.length === 0 && <p className="text-xs text-slate-500 text-center mt-4">Nenhum torneio cadastrado.</p>}
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar pr-3 space-y-3">
+                {torneios.length === 0 && <p className="text-sm font-medium text-slate-500 text-center mt-10">Nenhum evento mapeado.</p>}
                 {torneios.map(t => (
-                  <div key={t.id} className="bg-slate-900 p-4 rounded-xl border-l-4 border-optic-yellow group flex justify-between items-center">
+                  <div key={t.id} className="bg-slate-900/40 p-5 rounded-2xl border-l-4 border-optic-yellow border-y border-r border-white/5 group flex justify-between items-center hover:bg-slate-800/50 transition-colors">
                     <div>
-                      <p className="font-bold text-sm md:text-base">{t.nome}</p>
-                      <p className="text-xs text-slate-400">Início: {new Date(t.data + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                      <p className="font-bold text-base text-white">{t.nome}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-1">Início: {new Date(t.data + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
                     </div>
-                    <div className="flex gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 shrink-0">
-                      <button onClick={()=>editarTorneio(t)} className="text-blue-400"><Icons.Edit /></button>
-                      <button onClick={()=>apagarTorneio(t.id)} className="text-red-400"><Icons.Trash /></button>
+                    <div className="flex gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-black/40 p-1.5 rounded-lg border border-white/5">
+                      <button onClick={()=>editarTorneio(t)} className="text-blue-400 hover:text-blue-300"><Icons.Edit /></button>
+                      <button onClick={()=>apagarTorneio(t.id)} className="text-red-400 hover:text-red-300"><Icons.Trash /></button>
                     </div>
                   </div>
                 ))}
@@ -669,38 +847,80 @@
       const gerarPDF = () => {
         if(!atletaId) return alert("Selecione um atleta.");
         const e = document.getElementById('relatorio-conteudo');
-        window.html2pdf().set({ margin: 15, filename: `Relatorio_AceMind_${atletaNome}.pdf`, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(e).save();
+        window.html2pdf().set({ margin: 15, filename: `Relatorio_AceMind_${atletaNome.replace(/\s+/g, '_')}.pdf`, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(e).save();
       };
 
       return (
-        <div className="space-y-6 animate-fade-in pb-10">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-white/10 pb-4 gap-4">
-            <h2 className="text-xl md:text-2xl font-light">Emissão de Relatórios (PDF)</h2>
-            <button onClick={gerarPDF} className="w-full sm:w-auto bg-optic-yellow text-black px-6 py-3 rounded font-bold hover:bg-[#b3e600]">Baixar PDF</button>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="glass-panel p-4 md:p-6 rounded-2xl space-y-5">
-              <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="w-full bg-slate-900 border border-white/20 rounded p-3 text-white outline-none"><option value="">Selecione o Atleta...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}</select>
-              <textarea value={treinos} onChange={e=>setTreinos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm text-white" placeholder="Registro Clínico de Treinos (Curto Prazo)"></textarea>
-              <textarea value={objetivos} onChange={e=>setObjetivos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm text-white" placeholder="Objetivos Finais (Longo Prazo)"></textarea>
+        <div className="space-y-8 animate-fade-in pb-10">
+          <header className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3"><Icons.Chart /> Exportar Dossiê</h2>
+              <p className="text-slate-400 text-sm mt-1">Geração de relatórios PDF para comissão técnica ou patrocinadores.</p>
             </div>
-            <div className="hidden lg:block bg-white text-black p-10 rounded-lg shadow-2xl overflow-y-auto h-[600px]">
-              <div id="relatorio-conteudo" className="bg-white">
-                <div className="border-b-4 border-black pb-4 mb-6"><h1 className="text-3xl font-black uppercase">Ace<span className="text-gray-400">Mind</span></h1><p className="text-sm">Relatório Clínico e Esportivo</p></div>
-                <h2 className="text-xl font-bold mb-1">Paciente: {atletaNome}</h2>
-                <p className="text-sm text-gray-500 mb-6">Data: {new Date().toLocaleDateString('pt-BR')}</p>
-                <div className="mb-6"><h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">Treinos (Curto Prazo)</h3><p className="text-sm whitespace-pre-wrap">{treinos}</p></div>
-                <div className="mb-6"><h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">Objetivos Finais (Longo Prazo)</h3><p className="text-sm whitespace-pre-wrap">{objetivos}</p></div>
+            <button onClick={gerarPDF} className="btn-primary py-3 px-8 text-sm"><svg className="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Baixar PDF Seguro</button>
+          </header>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="glass-panel p-6 md:p-8 rounded-[2rem] space-y-6 shadow-panel border-t-4 border-t-optic-yellow">
+              <div>
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Paciente / Atleta</label>
+                <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="input-premium">
+                  <option value="">Selecione o Atleta...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Registro de Treinos (Curto Prazo)</label>
+                <textarea value={treinos} onChange={e=>setTreinos(e.target.value)} className="input-premium h-40 custom-scrollbar resize-none" placeholder="Digite os apontamentos técnicos..."></textarea>
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Objetivos Finais (Longo Prazo)</label>
+                <textarea value={objetivos} onChange={e=>setObjetivos(e.target.value)} className="input-premium h-40 custom-scrollbar resize-none" placeholder="Digite as metas para o ano..."></textarea>
               </div>
             </div>
-            {/* Invisível para mobile export */}
+            
+            {/* Visualizador de PDF (Preview) */}
+            <div className="hidden lg:flex justify-center bg-slate-900/50 p-8 rounded-[2rem] border border-white/5 overflow-y-auto h-[750px] custom-scrollbar">
+              <div id="relatorio-conteudo" className="bg-white text-slate-900 p-12 w-full max-w-[800px] shadow-2xl shrink-0 font-sans">
+                <div className="border-b-4 border-slate-900 pb-6 mb-8 flex justify-between items-end">
+                   <div>
+                     <h1 className="text-4xl font-black uppercase tracking-tighter">Ace<span className="text-gray-400">Mind</span></h1>
+                     <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mt-1">Relatório Clínico de Performance</p>
+                   </div>
+                   <p className="text-sm font-bold text-slate-400">{new Date().toLocaleDateString('pt-BR')}</p>
+                </div>
+                
+                <div className="bg-slate-100 p-6 rounded-xl mb-8 border border-slate-200">
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Atleta / Paciente</h2>
+                  <p className="text-2xl font-black text-slate-900">{atletaNome}</p>
+                </div>
+                
+                <div className="mb-8">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900 border-b-2 border-optic-yellow inline-block pb-1 mb-4">Síntese de Treinos</h3>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{treinos || "Nenhum apontamento registrado."}</p>
+                </div>
+                
+                <div className="mb-8">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900 border-b-2 border-optic-yellow inline-block pb-1 mb-4">Projeção e Objetivos</h3>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{objetivos || "Nenhuma meta registrada."}</p>
+                </div>
+
+                <div className="mt-16 pt-8 border-t border-slate-200 text-center">
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Documento Confidencial • Gerado por AceMind System</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Container invisível para gerar PDF no mobile */}
             <div className="lg:hidden absolute top-[-9999px] left-[-9999px]">
-               <div id="relatorio-conteudo-mobile" className="bg-white text-black p-10 w-[800px]">
-                <div className="border-b-4 border-black pb-4 mb-6"><h1 className="text-3xl font-black uppercase">Ace<span className="text-gray-400">Mind</span></h1><p className="text-sm">Relatório Confidencial</p></div>
-                <h2 className="text-xl font-bold mb-1">Paciente: {atletaNome}</h2>
-                <p className="text-sm text-gray-500 mb-6">Data: {new Date().toLocaleDateString('pt-BR')}</p>
-                <div className="mb-6"><h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">Treinos (Curto Prazo)</h3><p className="text-sm whitespace-pre-wrap">{treinos}</p></div>
-                <div className="mb-6"><h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">Objetivos Finais (Longo Prazo)</h3><p className="text-sm whitespace-pre-wrap">{objetivos}</p></div>
+               <div id="relatorio-conteudo-mobile" className="bg-white text-slate-900 p-12 w-[800px] font-sans">
+                <div className="border-b-4 border-slate-900 pb-6 mb-8 flex justify-between items-end">
+                   <div><h1 className="text-4xl font-black uppercase tracking-tighter">Ace<span className="text-gray-400">Mind</span></h1><p className="text-xs font-bold uppercase tracking-widest text-slate-500 mt-1">Relatório Clínico de Performance</p></div>
+                   <p className="text-sm font-bold text-slate-400">{new Date().toLocaleDateString('pt-BR')}</p>
+                </div>
+                <div className="bg-slate-100 p-6 rounded-xl mb-8 border border-slate-200"><h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Atleta / Paciente</h2><p className="text-2xl font-black text-slate-900">{atletaNome}</p></div>
+                <div className="mb-8"><h3 className="text-sm font-bold uppercase tracking-widest text-slate-900 border-b-2 border-optic-yellow inline-block pb-1 mb-4">Síntese de Treinos</h3><p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{treinos || "Nenhum apontamento registrado."}</p></div>
+                <div className="mb-8"><h3 className="text-sm font-bold uppercase tracking-widest text-slate-900 border-b-2 border-optic-yellow inline-block pb-1 mb-4">Projeção e Objetivos</h3><p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{objetivos || "Nenhuma meta registrada."}</p></div>
+                <div className="mt-16 pt-8 border-t border-slate-200 text-center"><p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Documento Confidencial • Gerado por AceMind System</p></div>
               </div>
             </div>
           </div>
@@ -709,7 +929,7 @@
     };
 
     // --------------------------------------------------
-    // ROTEADOR DO PSICÓLOGO E MESTRE
+    // ROTEADOR DO PSICÓLOGO (SIDEBAR PREMIUM)
     // --------------------------------------------------
     const DashboardPsicologo = () => {
       const [abaAtiva, setAbaAtiva] = useState('dashboard');
@@ -720,23 +940,20 @@
 
       useEffect(() => {
         const carregarTudo = async () => {
-          // Checkins normais
           const qC = window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(20));
           const snapC = await window.fbAPI.getDocs(qC);
           setCheckins(snapC.docs.map(doc => ({ id: doc.id, ...doc.data() })));
           
-          // Atletas
           const qA = window.fbAPI.query(window.fbAPI.collection(window.db, "usuarios"), window.fbAPI.where("cargo", "==", "paciente"));
           const snapA = await window.fbAPI.getDocs(qA);
           setAtletas(snapA.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-          // Alertas SOS (Surpresa)
           const qSOS = window.fbAPI.query(window.fbAPI.collection(window.db, "sos_alertas"), window.fbAPI.where("status", "==", "pendente"));
           const snapSOS = await window.fbAPI.getDocs(qSOS);
           setAlertasSOS(snapSOS.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         };
         carregarTudo();
-        const intervalo = setInterval(carregarTudo, 30000); // Atualiza dados a cada 30s
+        const intervalo = setInterval(carregarTudo, 30000); 
         return () => clearInterval(intervalo);
       }, []);
 
@@ -748,46 +965,49 @@
       const menuItems = [
         { id: 'dashboard', label: 'Visão Geral', icon: Icons.Dashboard },
         { id: 'perfil', label: 'Perfil Esportivo', icon: Icons.Profile },
-        { id: 'prontuario', label: 'Prontuário (SOAP)', icon: Icons.Users },
-        { id: 'criticos', label: 'Estatísticas de Jogo', icon: Icons.Crosshair },
-        { id: 'agenda', label: 'Agenda & Torneios', icon: Icons.Calendar },
-        { id: 'relatorios', label: 'Relatórios PDF', icon: Icons.Chart },
+        { id: 'prontuario', label: 'Dossiê Clínico', icon: Icons.Users },
+        { id: 'criticos', label: 'Pressão em Jogo', icon: Icons.Crosshair },
+        { id: 'agenda', label: 'Calendário ATP', icon: Icons.Calendar },
+        { id: 'relatorios', label: 'Exportar PDF', icon: Icons.Chart },
       ];
 
       const trocarAba = (id) => { setAbaAtiva(id); setMenuAberto(false); }
 
       return (
-        <div className="flex flex-col h-[calc(100vh-64px)] w-full overflow-hidden">
+        <div className="flex flex-col h-[calc(100vh-72px)] w-full overflow-hidden">
           
-          {/* BANNER SURPRESA S.O.S (Aparece em qualquer aba se houver alerta) */}
+          {/* BANNER SOS */}
           {alertasSOS.length > 0 && (
-            <div className="w-full bg-red-600 text-white font-bold p-3 text-sm flex justify-between items-center z-50 shadow-lg shrink-0 sos-alert">
-              <div className="flex items-center gap-2">
+            <div className="w-full bg-red-600 text-white font-black uppercase tracking-wider p-4 text-sm flex flex-col sm:flex-row justify-between items-center gap-4 z-50 shadow-[0_10px_30px_rgba(239,68,68,0.4)] shrink-0 sos-alert">
+              <div className="flex items-center gap-3">
                 <Icons.Warning />
-                <span>EMERGÊNCIA S.O.S RECEBIDA: {alertasSOS[0].nome} precisa de apoio imediato!</span>
+                <span><span className="text-red-200">EMERGÊNCIA S.O.S:</span> {alertasSOS[0].nome} precisa de apoio!</span>
               </div>
-              <button onClick={() => resolverSOS(alertasSOS[0].id)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-xs">Marcar como Resolvido</button>
+              <button onClick={() => resolverSOS(alertasSOS[0].id)} className="bg-black/30 hover:bg-black/50 px-6 py-2 rounded-xl transition text-xs font-bold">Encerrar Alerta</button>
             </div>
           )}
 
-          <div className="flex flex-1 bg-[#020617] relative w-full overflow-hidden">
-            {menuAberto && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setMenuAberto(false)}></div>}
-            <aside className={`absolute lg:relative z-40 w-64 h-full glass-panel border-t-0 border-l-0 border-b-0 flex flex-col py-6 px-4 shrink-0 menu-transition bg-slate-950/95 lg:bg-transparent ${menuAberto ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-              <div className="flex justify-between items-center mb-6 pl-3">
-                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Módulos</div>
-                <button onClick={() => setMenuAberto(false)} className="lg:hidden text-slate-400 hover:text-white p-1"><Icons.Close /></button>
+          <div className="flex flex-1 relative w-full overflow-hidden">
+            {menuAberto && <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-30 lg:hidden" onClick={() => setMenuAberto(false)}></div>}
+            
+            {/* Sidebar World-Class */}
+            <aside className={`absolute lg:relative z-40 w-72 h-full glass-panel border-t-0 border-l-0 border-b-0 flex flex-col py-8 px-5 shrink-0 menu-transition bg-slate-950/95 lg:bg-transparent ${menuAberto ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shadow-2xl lg:shadow-none`}>
+              <div className="flex justify-between items-center mb-8 pl-4">
+                <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Painel de Controle</div>
+                <button onClick={() => setMenuAberto(false)} className="lg:hidden text-slate-400 hover:text-white p-2 bg-white/5 rounded-lg"><Icons.Close /></button>
               </div>
-              <nav className="flex flex-col gap-2">
+              <nav className="flex flex-col gap-3">
                 {menuItems.map(item => (
-                  <button key={item.id} onClick={() => trocarAba(item.id)} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${abaAtiva === item.id ? 'bg-optic-yellow text-black font-bold shadow-[0_0_15px_rgba(204,255,0,0.2)]' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
-                    <item.icon /><span className="text-sm">{item.label}</span>
+                  <button key={item.id} onClick={() => trocarAba(item.id)} className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 font-bold text-sm tracking-wide ${abaAtiva === item.id ? 'bg-optic-yellow text-slate-950 shadow-glow-yellow translate-x-2' : 'text-slate-400 hover:bg-white/10 hover:text-white hover:translate-x-1'}`}>
+                    <item.icon /><span>{item.label}</span>
                   </button>
                 ))}
               </nav>
             </aside>
-            <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar relative w-full">
-              <button onClick={() => setMenuAberto(true)} className="lg:hidden mb-6 bg-white/5 p-2 rounded-lg text-white flex items-center gap-2 border border-white/10 hover:bg-white/10 transition">
-                <Icons.Menu /> <span className="text-sm font-medium">Menu</span>
+            
+            <main className="flex-1 overflow-y-auto p-4 sm:p-10 custom-scrollbar relative w-full">
+              <button onClick={() => setMenuAberto(true)} className="lg:hidden mb-8 glass-panel p-3 rounded-xl text-white flex items-center gap-3 hover:bg-white/10 transition-all font-bold uppercase tracking-widest text-xs">
+                <Icons.Menu /> <span>Menu do Sistema</span>
               </button>
               {abaAtiva === 'dashboard' && <ModuloDashboard checkins={checkins} />}
               {abaAtiva === 'perfil' && <ModuloPerfil atletas={atletas} />}
@@ -801,6 +1021,9 @@
       );
     };
 
+    // --------------------------------------------------
+    // AUTENTICAÇÃO (GLASSMORPHISM)
+    // --------------------------------------------------
     const TelaAutenticacao = ({ setUsuarioLogado }) => {
       const [modo, setModo] = useState('login');
       const [nome, setNome] = useState('');
@@ -821,27 +1044,32 @@
             const data = docRef.exists() ? docRef.data() : {};
             setUsuarioLogado({ ...cred.user, nome: data.nome || email.split('@')[0], cargo: data.cargo || 'paciente' });
           }
-        } catch (err) { alert("Erro de acesso. Verifique dados ou chaves do Firebase."); }
+        } catch (err) { alert("Credenciais inválidas ou erro no Firebase."); }
       };
 
       return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <div className="glass-panel p-6 sm:p-8 rounded-2xl w-full max-w-md">
-            <h1 className="text-4xl font-light tracking-wider text-center mb-6">Ace<span className="text-optic-yellow font-bold">Mind</span></h1>
-            <div className="flex justify-between mb-8 border-b border-white/10 pb-2">
-              <button onClick={() => setModo('login')} className={`flex-1 pb-2 ${modo === 'login' ? 'text-optic-yellow border-b-2 font-bold' : 'text-slate-500'}`}>Entrar</button>
-              <button onClick={() => setModo('cadastro')} className={`flex-1 pb-2 ${modo === 'cadastro' ? 'text-optic-yellow border-b-2 font-bold' : 'text-slate-500'}`}>Criar Conta</button>
+        <div className="min-h-screen flex items-center justify-center p-4 relative">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-optic-yellow opacity-10 rounded-full blur-[150px] pointer-events-none"></div>
+          <div className="glass-panel p-8 sm:p-12 rounded-[2.5rem] w-full max-w-md relative z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-t-white/20 border-l-white/20">
+            <h1 className="text-5xl font-black tracking-tighter text-center mb-2 uppercase">Ace<span className="text-optic-yellow">Mind</span></h1>
+            <p className="text-center text-slate-400 text-xs font-bold tracking-[0.2em] uppercase mb-10">High Performance Lab</p>
+            
+            <div className="flex bg-slate-900/50 rounded-xl p-1 mb-8 border border-white/5">
+              <button onClick={() => setModo('login')} className={`flex-1 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 ${modo === 'login' ? 'bg-white/10 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}>Acessar</button>
+              <button onClick={() => setModo('cadastro')} className={`flex-1 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 ${modo === 'cadastro' ? 'bg-white/10 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}>Novo Registro</button>
             </div>
-            <form onSubmit={handleAuth} className="space-y-4">
-              {modo === 'cadastro' && <input type="text" placeholder="Nome Completo" value={nome} onChange={e=>setNome(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />}
-              <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
-              <input type="password" placeholder="Senha" value={senha} onChange={e=>setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
+
+            <form onSubmit={handleAuth} className="space-y-5">
+              {modo === 'cadastro' && <input type="text" placeholder="Nome Completo" value={nome} onChange={e=>setNome(e.target.value)} className="input-premium" required />}
+              <input type="email" placeholder="E-mail Institucional" value={email} onChange={e=>setEmail(e.target.value)} className="input-premium" required />
+              <input type="password" placeholder="Senha de Acesso" value={senha} onChange={e=>setSenha(e.target.value)} className="input-premium" required />
               {modo === 'cadastro' && (
-                <select value={cargo} onChange={e=>setCargo(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white">
-                  <option value="paciente">Atleta / Paciente</option><option value="psicologo">Psicólogo(a)</option>
+                <select value={cargo} onChange={e=>setCargo(e.target.value)} className="input-premium font-medium">
+                  <option value="paciente">Atleta / Paciente</option>
+                  <option value="psicologo">Equipe AceMind (Psicólogo)</option>
                 </select>
               )}
-              <button type="submit" className="w-full bg-optic-yellow text-black font-bold p-3 rounded">Acessar Sistema</button>
+              <button type="submit" className="btn-primary w-full mt-4 py-4 text-sm">Entrar na Quadra</button>
             </form>
           </div>
         </div>
@@ -866,21 +1094,24 @@
               } else { setUsuarioLogado(null); }
               setCarregando(false);
             });
-          } else if (window.firebaseErro) { clearInterval(chk); setCarregando(false); alert("Erro Firebase"); }
+          } else if (window.firebaseErro) { clearInterval(chk); setCarregando(false); alert("Erro de conexão Firebase."); }
         }, 100);
       }, []);
 
-      if (carregando) return <div className="min-h-screen flex items-center justify-center text-optic-yellow text-xl sm:text-2xl">Carregando AceMind...</div>;
+      if (carregando) return <div className="min-h-screen flex items-center justify-center text-optic-yellow text-xl sm:text-2xl font-black uppercase tracking-widest animate-pulse">Carregando Motor AceMind...</div>;
       if (!usuarioLogado) return <TelaAutenticacao setUsuarioLogado={setUsuarioLogado} />;
 
       return (
-        <div className="h-screen flex flex-col overflow-hidden w-full">
-          <div className="h-16 bg-slate-950 border-b border-white/10 flex justify-between items-center px-4 sm:px-6 shrink-0 z-50">
-            <span className="font-bold text-lg sm:text-xl tracking-widest text-white">Ace<span className="text-optic-yellow">Mind</span></span>
+        <div className="h-screen flex flex-col overflow-hidden w-full font-sans text-white">
+          <div className="h-18 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 flex justify-between items-center px-6 sm:px-10 shrink-0 z-50 py-4 shadow-xl">
+            <span className="font-black text-2xl tracking-tighter text-white uppercase flex items-center gap-2">Ace<span className="text-optic-yellow">Mind</span></span>
             <div className="flex gap-4 items-center">
-               <span className="text-sm font-medium text-slate-300 hidden sm:block">{usuarioLogado.nome}</span>
-               <span className="text-[10px] sm:text-xs font-bold text-slate-400 bg-white/5 px-2 py-1 rounded uppercase border border-white/10">{usuarioLogado.cargo}</span>
-               <button onClick={() => { window.fbAPI.signOut(window.auth); setUsuarioLogado(null); }} className="text-xs text-red-400 hover:text-red-300">Sair</button>
+               <div className="text-right hidden sm:block">
+                 <span className="text-sm font-bold text-white block">{usuarioLogado.nome}</span>
+                 <span className="text-[10px] font-black text-optic-yellow uppercase tracking-widest">{usuarioLogado.cargo}</span>
+               </div>
+               <div className="w-[1px] h-8 bg-white/10 hidden sm:block"></div>
+               <button onClick={() => { window.fbAPI.signOut(window.auth); setUsuarioLogado(null); }} className="text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-red-400 transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg">Logout</button>
             </div>
           </div>
           {usuarioLogado.cargo === 'psicologo' || usuarioLogado.cargo === 'admin' ? <DashboardPsicologo /> : <MobileApp usuarioAtual={usuarioLogado} />}
