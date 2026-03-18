@@ -20,6 +20,8 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
     .menu-transition { transition: transform 0.3s ease-in-out; }
+    @keyframes pulse-red { 0%, 100% { background-color: rgba(239, 68, 68, 0.1); } 50% { background-color: rgba(239, 68, 68, 0.3); } }
+    .sos-alert { animation: pulse-red 2s infinite; border: 1px solid #ef4444; }
   </style>
 
   <script type="module">
@@ -70,9 +72,11 @@
       Chart: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>,
       Video: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>,
       Trash: () => <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>,
+      Edit: () => <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>,
       Calendar: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>,
       Profile: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>,
-      Crosshair: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+      Crosshair: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>,
+      Warning: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
     };
 
     const calcularRisco = (foco, energia) => {
@@ -82,12 +86,13 @@
     };
 
     // ==============================================================================
-    // APP DO PACIENTE
+    // APP DO PACIENTE (Com Botão S.O.S)
     // ==============================================================================
     const MobileApp = ({ usuarioAtual }) => {
       const [foco, setFoco] = useState(5);
       const [energia, setEnergia] = useState(5);
       const [salvando, setSalvando] = useState(false);
+      const [sosEnviado, setSosEnviado] = useState(false);
 
       const salvarCheckin = async () => {
         setSalvando(true);
@@ -101,6 +106,18 @@
         setSalvando(false);
       };
 
+      const enviarSOS = async () => {
+        if(confirm("Isso enviará um alerta imediato de crise para o painel do seu psicólogo. Confirmar?")) {
+          try {
+            await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "sos_alertas"), {
+              pacienteId: usuarioAtual.uid, nome: usuarioAtual.nome, email: usuarioAtual.email, data: new Date().toISOString(), status: 'pendente'
+            });
+            setSosEnviado(true);
+            setTimeout(() => setSosEnviado(false), 5000);
+          } catch(e) { alert("Erro ao enviar SOS."); }
+        }
+      };
+
       return (
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-0 sm:p-4 bg-black/90">
           <div className="w-full h-full sm:max-w-[375px] sm:h-[750px] bg-slate-950 sm:rounded-[2.5rem] sm:border-[6px] sm:border-slate-800 overflow-hidden relative sm:shadow-2xl flex flex-col">
@@ -109,6 +126,7 @@
               <p className="text-slate-400 text-sm mt-1">Diário pós-treino.</p>
             </div>
             <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6 custom-scrollbar">
+              
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5">
                 <div className="space-y-6">
                   <div>
@@ -124,6 +142,20 @@
                   </button>
                 </div>
               </div>
+
+              {/* Botão S.O.S Surpresa */}
+              <button onClick={enviarSOS} disabled={sosEnviado} className={`w-full py-4 rounded-xl flex flex-col items-center justify-center border-2 transition ${sosEnviado ? 'bg-green-600 border-green-500' : 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20'}`}>
+                {sosEnviado ? (
+                   <span className="font-bold text-white">Alerta Enviado!</span>
+                ) : (
+                  <>
+                    <Icons.Warning className="text-red-500 w-8 h-8 mb-1" />
+                    <span className="font-bold text-red-400 uppercase tracking-widest text-sm">Botão S.O.S Mental</span>
+                    <span className="text-xs text-red-500/70 mt-1">Apenas emergências / crise</span>
+                  </>
+                )}
+              </button>
+
             </div>
           </div>
         </div>
@@ -375,13 +407,12 @@
         </div>
       );
     };
-    // --- MÓDULO 4: MOMENTOS CRÍTICOS (Estatísticas de Partida Real) ---
+
+    // --- MÓDULO 4: MOMENTOS CRÍTICOS (Estatísticas de Partida) ---
     const ModuloMomentosCriticos = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
       const [partidas, setPartidas] = useState([]);
-      const [novaPartida, setNovaPartida] = useState({
-        torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: ""
-      });
+      const [novaPartida, setNovaPartida] = useState({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "" });
       const [salvando, setSalvando] = useState(false);
 
       useEffect(() => {
@@ -398,9 +429,7 @@
         if (!novaPartida.torneio || !novaPartida.data) return alert("Preencha Torneio e Data.");
         setSalvando(true);
         try {
-          const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaId}/partidas`), {
-            ...novaPartida, dataRegistro: new Date().toISOString()
-          });
+          const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaId}/partidas`), { ...novaPartida, dataRegistro: new Date().toISOString() });
           setPartidas([{ id: docRef.id, ...novaPartida }, ...partidas].sort((a,b) => new Date(b.data) - new Date(a.data)));
           setNovaPartida({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "" });
         } catch (e) { alert("Erro ao salvar."); }
@@ -428,41 +457,33 @@
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 glass-panel p-4 md:p-6 rounded-2xl space-y-4">
                 <h3 className="font-bold text-optic-yellow mb-4">Lançar Nova Partida</h3>
-                
                 <div><label className="text-xs text-slate-400">Torneio / Fase</label><input type="text" placeholder="Ex: Roland Garros - 1ª Rodada" value={novaPartida.torneio} onChange={e=>setNovaPartida({...novaPartida, torneio: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
                 <div><label className="text-xs text-slate-400">Data do Jogo</label><input type="date" value={novaPartida.data} onChange={e=>setNovaPartida({...novaPartida, data: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1 text-white" /></div>
                 <div><label className="text-xs text-slate-400">Resultado</label><select value={novaPartida.resultado} onChange={e=>setNovaPartida({...novaPartida, resultado: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1"><option value="Vitória">Vitória</option><option value="Derrota">Derrota</option></select></div>
-                
                 <div className="pt-4 border-t border-white/10 mt-4">
                   <h4 className="text-xs font-bold text-slate-300 mb-3">Métricas de Pressão</h4>
                   <div className="space-y-3">
                     <div><label className="text-xs text-slate-400">Break Points Salvos (%)</label><input type="number" placeholder="Ex: 65" value={novaPartida.breakPointsSalvos} onChange={e=>setNovaPartida({...novaPartida, breakPointsSalvos: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
-                    <div><label className="text-xs text-slate-400">Duplas Faltas Críticas</label><input type="number" placeholder="Quantas ocorreram em BP ou vantagens" value={novaPartida.duplasFaltas} onChange={e=>setNovaPartida({...novaPartida, duplasFaltas: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
-                    <div><label className="text-xs text-slate-400">Erros Não Forçados (Tie-breaks)</label><input type="number" value={novaPartida.errosNaoForcados} onChange={e=>setNovaPartida({...novaPartida, errosNaoForcados: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
+                    <div><label className="text-xs text-slate-400">Duplas Faltas Críticas</label><input type="number" placeholder="Ocorreram em BP/Vantagens" value={novaPartida.duplasFaltas} onChange={e=>setNovaPartida({...novaPartida, duplasFaltas: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
+                    <div><label className="text-xs text-slate-400">Erros Não Forçados (TB)</label><input type="number" value={novaPartida.errosNaoForcados} onChange={e=>setNovaPartida({...novaPartida, errosNaoForcados: e.target.value})} className="w-full bg-slate-900 border border-white/20 rounded p-2 mt-1" /></div>
                   </div>
                 </div>
-
                 <button onClick={registrarPartida} disabled={salvando} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded transition mt-4 disabled:opacity-50">{salvando ? 'Salvando...' : 'Registrar Estatística'}</button>
               </div>
               
               <div className="lg:col-span-2 glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[650px]">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Crosshair /> Histórico de Desempenho</h3>
-                
                 <div className="grid grid-cols-3 gap-4 mb-6 shrink-0">
                   <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center"><p className="text-xs text-slate-400">Total de Jogos</p><p className="text-2xl font-bold text-white">{partidas.length}</p></div>
                   <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center"><p className="text-xs text-slate-400">Vitórias</p><p className="text-2xl font-bold text-green-400">{partidas.filter(p=>p.resultado==='Vitória').length}</p></div>
                   <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center"><p className="text-xs text-slate-400">Derrotas</p><p className="text-2xl font-bold text-red-400">{partidas.filter(p=>p.resultado==='Derrota').length}</p></div>
                 </div>
-
                 <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
                   {partidas.length === 0 && <p className="text-center text-slate-500 mt-10">Nenhuma partida registrada.</p>}
                   {partidas.map(p => (
                     <div key={p.id} className="bg-slate-900/50 p-4 rounded-xl border border-white/5 relative group hover:border-white/10 transition">
                       <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-bold text-optic-yellow">{p.torneio}</p>
-                          <p className="text-xs text-slate-400">{new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR')} • <span className={p.resultado === 'Vitória' ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>{p.resultado}</span></p>
-                        </div>
+                        <div><p className="font-bold text-optic-yellow">{p.torneio}</p><p className="text-xs text-slate-400">{new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR')} • <span className={p.resultado === 'Vitória' ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>{p.resultado}</span></p></div>
                         <button onClick={() => apagarPartida(p.id)} className="text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100"><Icons.Trash /></button>
                       </div>
                       <div className="grid grid-cols-3 gap-2 mt-4 text-xs bg-black/30 p-2 rounded">
@@ -480,48 +501,107 @@
       );
     };
 
-    // --- MÓDULO 5: AGENDA & TORNEIOS ---
+    // --- MÓDULO 5: AGENDA & TORNEIOS (COM CRUD COMPLETO E EDIÇÃO) ---
     const ModuloAgenda = ({ atletas }) => {
+      // Sessoes
       const [sessoes, setSessoes] = useState([]);
       const [novaSessao, setNovaSessao] = useState({ atletaId: "", dataHora: "", link: "" });
-      const [torneios] = useState([{ id: 1, nome: "Roland Garros", data: "2026-05-25" }, { id: 2, nome: "Challenger SP", data: "2026-04-10" }]);
+      const [sessaoEditandoId, setSessaoEditandoId] = useState(null);
+      
+      // Torneios (CRUD Completo no Firebase)
+      const [torneios, setTorneios] = useState([]);
+      const [novoTorneio, setNovoTorneio] = useState({ nome: "", data: "" });
+      const [torneioEditandoId, setTorneioEditandoId] = useState(null);
+
       const agora = new Date();
       const limite48h = new Date(agora.getTime() + (48 * 60 * 60 * 1000));
 
       useEffect(() => {
         const carregar = async () => {
-          const q = window.fbAPI.query(window.fbAPI.collection(window.db, "agenda"), window.fbAPI.orderBy("dataHora", "asc"));
-          const snap = await window.fbAPI.getDocs(q);
-          setSessoes(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          const qS = window.fbAPI.query(window.fbAPI.collection(window.db, "agenda"), window.fbAPI.orderBy("dataHora", "asc"));
+          const snapS = await window.fbAPI.getDocs(qS);
+          setSessoes(snapS.docs.map(d => ({ id: d.id, ...d.data() })));
+
+          const qT = window.fbAPI.query(window.fbAPI.collection(window.db, "torneios"), window.fbAPI.orderBy("data", "asc"));
+          const snapT = await window.fbAPI.getDocs(qT);
+          setTorneios(snapT.docs.map(d => ({ id: d.id, ...d.data() })));
         };
         carregar();
       }, []);
 
-      const agendarSessao = async () => {
-        if(!novaSessao.atletaId || !novaSessao.dataHora) return;
+      // Lógica de Sessões
+      const salvarSessao = async () => {
+        if(!novaSessao.atletaId || !novaSessao.dataHora) return alert("Preencha Paciente e Data.");
         const atleta = atletas.find(a => a.id === novaSessao.atletaId);
         const linkGerado = novaSessao.link || `https://meet.google.com/acemind-${Math.floor(Math.random()*1000)}`;
-        const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "agenda"), { atletaId: atleta.id, nome: atleta.nome, email: atleta.email, dataHora: novaSessao.dataHora, link: linkGerado });
-        setSessoes([...sessoes, { id: docRef.id, atletaId: atleta.id, nome: atleta.nome, email: atleta.email, dataHora: novaSessao.dataHora, link: linkGerado }].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora)));
+        const sessaoData = { atletaId: atleta.id, nome: atleta.nome, email: atleta.email, dataHora: novaSessao.dataHora, link: linkGerado };
+
+        if (sessaoEditandoId) {
+          await window.fbAPI.updateDoc(window.fbAPI.doc(window.db, "agenda", sessaoEditandoId), sessaoData);
+          setSessoes(sessoes.map(s => s.id === sessaoEditandoId ? { id: sessaoEditandoId, ...sessaoData } : s).sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora)));
+          setSessaoEditandoId(null);
+        } else {
+          const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "agenda"), sessaoData);
+          setSessoes([...sessoes, { id: docRef.id, ...sessaoData }].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora)));
+        }
         setNovaSessao({ atletaId: "", dataHora: "", link: "" });
       };
 
+      const editarSessao = (sessao) => {
+        setNovaSessao({ atletaId: sessao.atletaId, dataHora: sessao.dataHora, link: sessao.link });
+        setSessaoEditandoId(sessao.id);
+      };
+
       const apagarSessao = async (id) => {
-        await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, "agenda", id));
-        setSessoes(sessoes.filter(s => s.id !== id));
-      }
+        if(confirm("Desmarcar sessão?")) {
+          await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, "agenda", id));
+          setSessoes(sessoes.filter(s => s.id !== id));
+        }
+      };
+
+      // Lógica de Torneios
+      const salvarTorneio = async () => {
+        if(!novoTorneio.nome || !novoTorneio.data) return alert("Preencha Nome e Data do torneio.");
+        if (torneioEditandoId) {
+          await window.fbAPI.updateDoc(window.fbAPI.doc(window.db, "torneios", torneioEditandoId), novoTorneio);
+          setTorneios(torneios.map(t => t.id === torneioEditandoId ? { id: torneioEditandoId, ...novoTorneio } : t).sort((a,b) => new Date(a.data) - new Date(b.data)));
+          setTorneioEditandoId(null);
+        } else {
+          const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "torneios"), novoTorneio);
+          setTorneios([...torneios, { id: docRef.id, ...novoTorneio }].sort((a,b) => new Date(a.data) - new Date(b.data)));
+        }
+        setNovoTorneio({ nome: "", data: "" });
+      };
+
+      const editarTorneio = (torneio) => {
+        setNovoTorneio({ nome: torneio.nome, data: torneio.data });
+        setTorneioEditandoId(torneio.id);
+      };
+
+      const apagarTorneio = async (id) => {
+        if(confirm("Apagar este torneio?")) {
+          await window.fbAPI.deleteDoc(window.fbAPI.doc(window.db, "torneios", id));
+          setTorneios(torneios.filter(t => t.id !== id));
+        }
+      };
 
       return (
         <div className="space-y-6 animate-fade-in pb-10">
           <h2 className="text-xl md:text-2xl font-light border-b border-white/10 pb-4">Calendários & Agendamentos</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[600px] md:h-[650px]">
+            
+            {/* Bloco Sessões */}
+            <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[650px]">
               <h3 className="text-lg font-bold text-optic-yellow mb-4">Sessões Clínicas</h3>
               <div className="bg-slate-900 border border-white/10 p-4 rounded-xl mb-6 space-y-3 shrink-0">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-bold">{sessaoEditandoId ? 'Editando Sessão...' : 'Agendar Nova'}</span>
+                  {sessaoEditandoId && <button onClick={() => {setSessaoEditandoId(null); setNovaSessao({ atletaId: "", dataHora: "", link: "" });}} className="text-xs text-slate-400 underline">Cancelar Edição</button>}
+                </div>
                 <select value={novaSessao.atletaId} onChange={e=>setNovaSessao({...novaSessao, atletaId: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm outline-none"><option value="">Paciente...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}</select>
                 <input type="datetime-local" value={novaSessao.dataHora} onChange={e=>setNovaSessao({...novaSessao, dataHora: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm text-white" />
                 <input type="text" placeholder="Link Zoom/Meet" value={novaSessao.link} onChange={e=>setNovaSessao({...novaSessao, link: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm" />
-                <button onClick={agendarSessao} className="w-full bg-white/10 py-3 rounded text-sm font-bold">Agendar</button>
+                <button onClick={salvarSessao} className="w-full bg-white/10 hover:bg-white/20 transition py-3 rounded text-sm font-bold">{sessaoEditandoId ? 'Atualizar Sessão' : 'Agendar Sessão'}</button>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
                 {sessoes.map(s => {
@@ -530,17 +610,48 @@
                   return (
                     <div key={s.id} className={`p-4 rounded-xl border ${prox ? 'bg-red-500/10 border-red-500/50' : 'bg-slate-900/50 border-white/5'} group relative`}>
                       {prox && <span className="absolute -top-2 -right-2 flex h-4 w-4"><span className="animate-ping absolute h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative rounded-full h-4 w-4 bg-red-500"></span></span>}
-                      <div className="flex justify-between"><p className="font-bold text-sm truncate pr-2">{s.nome || s.email.split('@')[0]}</p><button onClick={()=>apagarSessao(s.id)} className="text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 shrink-0"><Icons.Trash /></button></div>
+                      <div className="flex justify-between items-start">
+                        <p className="font-bold text-sm truncate pr-2">{s.nome || s.email.split('@')[0]}</p>
+                        <div className="flex gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 shrink-0">
+                          <button onClick={()=>editarSessao(s)} className="text-blue-400"><Icons.Edit /></button>
+                          <button onClick={()=>apagarSessao(s.id)} className="text-red-400"><Icons.Trash /></button>
+                        </div>
+                      </div>
                       <p className={`text-xs ${prox ? 'text-red-400 font-bold' : 'text-slate-400'}`}>{dS.toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</p>
-                      <a href={s.link} target="_blank" className="mt-3 block text-center text-xs bg-blue-600 py-2 rounded">Acessar Sala</a>
+                      <a href={s.link} target="_blank" className="mt-3 block text-center text-xs bg-blue-600 hover:bg-blue-500 transition py-2 rounded">Acessar Sala (Meet/Zoom)</a>
                     </div>
                   );
                 })}
               </div>
             </div>
-            <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-auto lg:h-[650px]">
+
+            {/* Bloco Torneios */}
+            <div className="glass-panel p-4 md:p-6 rounded-2xl flex flex-col h-[650px]">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Calendar /> Torneios Atuais</h3>
-              <div className="space-y-4">{torneios.map(t => (<div key={t.id} className="bg-slate-900 p-4 rounded-xl border-l-4 border-optic-yellow"><p className="font-bold text-lg">{t.nome}</p><p className="text-sm text-slate-400">{new Date(t.data).toLocaleDateString('pt-BR')}</p></div>))}</div>
+              <div className="bg-slate-900 border border-white/10 p-4 rounded-xl mb-6 space-y-3 shrink-0">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-bold">{torneioEditandoId ? 'Editando Torneio...' : 'Adicionar Torneio'}</span>
+                  {torneioEditandoId && <button onClick={() => {setTorneioEditandoId(null); setNovoTorneio({ nome: "", data: "" });}} className="text-xs text-slate-400 underline">Cancelar</button>}
+                </div>
+                <input type="text" placeholder="Nome do Torneio (Ex: US Open)" value={novoTorneio.nome} onChange={e=>setNovoTorneio({...novoTorneio, nome: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm text-white" />
+                <input type="date" value={novoTorneio.data} onChange={e=>setNovoTorneio({...novoTorneio, data: e.target.value})} className="w-full bg-slate-800 rounded p-2 text-sm text-white" />
+                <button onClick={salvarTorneio} className="w-full bg-white/10 hover:bg-white/20 transition py-2 rounded text-sm font-bold">{torneioEditandoId ? 'Salvar Edição' : 'Adicionar ao Calendário'}</button>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                {torneios.length === 0 && <p className="text-xs text-slate-500 text-center mt-4">Nenhum torneio cadastrado.</p>}
+                {torneios.map(t => (
+                  <div key={t.id} className="bg-slate-900 p-4 rounded-xl border-l-4 border-optic-yellow group flex justify-between items-center">
+                    <div>
+                      <p className="font-bold text-sm md:text-base">{t.nome}</p>
+                      <p className="text-xs text-slate-400">Início: {new Date(t.data + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <div className="flex gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 shrink-0">
+                      <button onClick={()=>editarTorneio(t)} className="text-blue-400"><Icons.Edit /></button>
+                      <button onClick={()=>apagarTorneio(t.id)} className="text-red-400"><Icons.Trash /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -573,7 +684,6 @@
               <textarea value={treinos} onChange={e=>setTreinos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm text-white" placeholder="Registro Clínico de Treinos (Curto Prazo)"></textarea>
               <textarea value={objetivos} onChange={e=>setObjetivos(e.target.value)} className="w-full h-32 bg-slate-900 border border-white/10 rounded p-3 text-sm text-white" placeholder="Objetivos Finais (Longo Prazo)"></textarea>
             </div>
-            
             <div className="hidden lg:block bg-white text-black p-10 rounded-lg shadow-2xl overflow-y-auto h-[600px]">
               <div id="relatorio-conteudo" className="bg-white">
                 <div className="border-b-4 border-black pb-4 mb-6"><h1 className="text-3xl font-black uppercase">Ace<span className="text-gray-400">Mind</span></h1><p className="text-sm">Relatório Clínico e Esportivo</p></div>
@@ -583,8 +693,7 @@
                 <div className="mb-6"><h3 className="text-lg font-bold bg-gray-200 p-2 mb-2">Objetivos Finais (Longo Prazo)</h3><p className="text-sm whitespace-pre-wrap">{objetivos}</p></div>
               </div>
             </div>
-
-            {/* Container invisível para gerar PDF em mobile */}
+            {/* Invisível para mobile export */}
             <div className="lg:hidden absolute top-[-9999px] left-[-9999px]">
                <div id="relatorio-conteudo-mobile" className="bg-white text-black p-10 w-[800px]">
                 <div className="border-b-4 border-black pb-4 mb-6"><h1 className="text-3xl font-black uppercase">Ace<span className="text-gray-400">Mind</span></h1><p className="text-sm">Relatório Confidencial</p></div>
@@ -600,75 +709,98 @@
     };
 
     // --------------------------------------------------
-    // ROTEADOR DO PSICÓLOGO (MENU RESPONSIVO)
+    // ROTEADOR DO PSICÓLOGO E MESTRE
     // --------------------------------------------------
     const DashboardPsicologo = () => {
       const [abaAtiva, setAbaAtiva] = useState('dashboard');
       const [checkins, setCheckins] = useState([]);
       const [atletas, setAtletas] = useState([]);
+      const [alertasSOS, setAlertasSOS] = useState([]);
       const [menuAberto, setMenuAberto] = useState(false);
 
       useEffect(() => {
         const carregarTudo = async () => {
+          // Checkins normais
           const qC = window.fbAPI.query(window.fbAPI.collection(window.db, "checkins"), window.fbAPI.orderBy("data", "desc"), window.fbAPI.limit(20));
           const snapC = await window.fbAPI.getDocs(qC);
           setCheckins(snapC.docs.map(doc => ({ id: doc.id, ...doc.data() })));
           
+          // Atletas
           const qA = window.fbAPI.query(window.fbAPI.collection(window.db, "usuarios"), window.fbAPI.where("cargo", "==", "paciente"));
           const snapA = await window.fbAPI.getDocs(qA);
           setAtletas(snapA.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+          // Alertas SOS (Surpresa)
+          const qSOS = window.fbAPI.query(window.fbAPI.collection(window.db, "sos_alertas"), window.fbAPI.where("status", "==", "pendente"));
+          const snapSOS = await window.fbAPI.getDocs(qSOS);
+          setAlertasSOS(snapSOS.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         };
         carregarTudo();
+        const intervalo = setInterval(carregarTudo, 30000); // Atualiza dados a cada 30s
+        return () => clearInterval(intervalo);
       }, []);
+
+      const resolverSOS = async (id) => {
+        await window.fbAPI.updateDoc(window.fbAPI.doc(window.db, "sos_alertas", id), { status: 'resolvido' });
+        setAlertasSOS(alertasSOS.filter(a => a.id !== id));
+      };
 
       const menuItems = [
         { id: 'dashboard', label: 'Visão Geral', icon: Icons.Dashboard },
         { id: 'perfil', label: 'Perfil Esportivo', icon: Icons.Profile },
         { id: 'prontuario', label: 'Prontuário (SOAP)', icon: Icons.Users },
-        { id: 'criticos', label: 'Estatísticas do Jogo', icon: Icons.Crosshair },
+        { id: 'criticos', label: 'Estatísticas de Jogo', icon: Icons.Crosshair },
         { id: 'agenda', label: 'Agenda & Torneios', icon: Icons.Calendar },
         { id: 'relatorios', label: 'Relatórios PDF', icon: Icons.Chart },
       ];
 
-      const trocarAba = (id) => {
-        setAbaAtiva(id);
-        setMenuAberto(false);
-      }
+      const trocarAba = (id) => { setAbaAtiva(id); setMenuAberto(false); }
 
       return (
-        <div className="flex h-[calc(100vh-64px)] bg-[#020617] relative w-full overflow-hidden">
-          {menuAberto && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setMenuAberto(false)}></div>}
-          <aside className={`absolute lg:relative z-40 w-64 h-full glass-panel border-t-0 border-l-0 border-b-0 flex flex-col py-6 px-4 shrink-0 menu-transition bg-slate-950/95 lg:bg-transparent ${menuAberto ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-            <div className="flex justify-between items-center mb-6 pl-3">
-              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Módulos</div>
-              <button onClick={() => setMenuAberto(false)} className="lg:hidden text-slate-400 hover:text-white p-1"><Icons.Close /></button>
+        <div className="flex flex-col h-[calc(100vh-64px)] w-full overflow-hidden">
+          
+          {/* BANNER SURPRESA S.O.S (Aparece em qualquer aba se houver alerta) */}
+          {alertasSOS.length > 0 && (
+            <div className="w-full bg-red-600 text-white font-bold p-3 text-sm flex justify-between items-center z-50 shadow-lg shrink-0 sos-alert">
+              <div className="flex items-center gap-2">
+                <Icons.Warning />
+                <span>EMERGÊNCIA S.O.S RECEBIDA: {alertasSOS[0].nome} precisa de apoio imediato!</span>
+              </div>
+              <button onClick={() => resolverSOS(alertasSOS[0].id)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-xs">Marcar como Resolvido</button>
             </div>
-            <nav className="flex flex-col gap-2">
-              {menuItems.map(item => (
-                <button key={item.id} onClick={() => trocarAba(item.id)} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${abaAtiva === item.id ? 'bg-optic-yellow text-black font-bold shadow-[0_0_15px_rgba(204,255,0,0.2)]' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
-                  <item.icon /><span className="text-sm">{item.label}</span>
-                </button>
-              ))}
-            </nav>
-          </aside>
-          <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar relative w-full">
-            <button onClick={() => setMenuAberto(true)} className="lg:hidden mb-6 bg-white/5 p-2 rounded-lg text-white flex items-center gap-2 border border-white/10 hover:bg-white/10 transition">
-              <Icons.Menu /> <span className="text-sm font-medium">Menu</span>
-            </button>
-            {abaAtiva === 'dashboard' && <ModuloDashboard checkins={checkins} />}
-            {abaAtiva === 'perfil' && <ModuloPerfil atletas={atletas} />}
-            {abaAtiva === 'prontuario' && <ModuloProntuario atletas={atletas} />}
-            {abaAtiva === 'criticos' && <ModuloMomentosCriticos atletas={atletas} />}
-            {abaAtiva === 'agenda' && <ModuloAgenda atletas={atletas} />}
-            {abaAtiva === 'relatorios' && <ModuloRelatorios atletas={atletas} />}
-          </main>
+          )}
+
+          <div className="flex flex-1 bg-[#020617] relative w-full overflow-hidden">
+            {menuAberto && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setMenuAberto(false)}></div>}
+            <aside className={`absolute lg:relative z-40 w-64 h-full glass-panel border-t-0 border-l-0 border-b-0 flex flex-col py-6 px-4 shrink-0 menu-transition bg-slate-950/95 lg:bg-transparent ${menuAberto ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+              <div className="flex justify-between items-center mb-6 pl-3">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Módulos</div>
+                <button onClick={() => setMenuAberto(false)} className="lg:hidden text-slate-400 hover:text-white p-1"><Icons.Close /></button>
+              </div>
+              <nav className="flex flex-col gap-2">
+                {menuItems.map(item => (
+                  <button key={item.id} onClick={() => trocarAba(item.id)} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${abaAtiva === item.id ? 'bg-optic-yellow text-black font-bold shadow-[0_0_15px_rgba(204,255,0,0.2)]' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
+                    <item.icon /><span className="text-sm">{item.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </aside>
+            <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar relative w-full">
+              <button onClick={() => setMenuAberto(true)} className="lg:hidden mb-6 bg-white/5 p-2 rounded-lg text-white flex items-center gap-2 border border-white/10 hover:bg-white/10 transition">
+                <Icons.Menu /> <span className="text-sm font-medium">Menu</span>
+              </button>
+              {abaAtiva === 'dashboard' && <ModuloDashboard checkins={checkins} />}
+              {abaAtiva === 'perfil' && <ModuloPerfil atletas={atletas} />}
+              {abaAtiva === 'prontuario' && <ModuloProntuario atletas={atletas} />}
+              {abaAtiva === 'criticos' && <ModuloMomentosCriticos atletas={atletas} />}
+              {abaAtiva === 'agenda' && <ModuloAgenda atletas={atletas} />}
+              {abaAtiva === 'relatorios' && <ModuloRelatorios atletas={atletas} />}
+            </main>
+          </div>
         </div>
       );
     };
 
-    // --------------------------------------------------
-    // AUTENTICAÇÃO COM NOME OBRIGATÓRIO
-    // --------------------------------------------------
     const TelaAutenticacao = ({ setUsuarioLogado }) => {
       const [modo, setModo] = useState('login');
       const [nome, setNome] = useState('');
@@ -701,9 +833,7 @@
               <button onClick={() => setModo('cadastro')} className={`flex-1 pb-2 ${modo === 'cadastro' ? 'text-optic-yellow border-b-2 font-bold' : 'text-slate-500'}`}>Criar Conta</button>
             </div>
             <form onSubmit={handleAuth} className="space-y-4">
-              {modo === 'cadastro' && (
-                <input type="text" placeholder="Nome Completo" value={nome} onChange={e=>setNome(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
-              )}
+              {modo === 'cadastro' && <input type="text" placeholder="Nome Completo" value={nome} onChange={e=>setNome(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />}
               <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
               <input type="password" placeholder="Senha" value={senha} onChange={e=>setSenha(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded p-3 text-white" required />
               {modo === 'cadastro' && (
@@ -748,7 +878,6 @@
           <div className="h-16 bg-slate-950 border-b border-white/10 flex justify-between items-center px-4 sm:px-6 shrink-0 z-50">
             <span className="font-bold text-lg sm:text-xl tracking-widest text-white">Ace<span className="text-optic-yellow">Mind</span></span>
             <div className="flex gap-4 items-center">
-               {/* Usando o Nome no Topo */}
                <span className="text-sm font-medium text-slate-300 hidden sm:block">{usuarioLogado.nome}</span>
                <span className="text-[10px] sm:text-xs font-bold text-slate-400 bg-white/5 px-2 py-1 rounded uppercase border border-white/10">{usuarioLogado.cargo}</span>
                <button onClick={() => { window.fbAPI.signOut(window.auth); setUsuarioLogado(null); }} className="text-xs text-red-400 hover:text-red-300">Sair</button>
