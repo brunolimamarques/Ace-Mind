@@ -79,7 +79,7 @@
       border-radius: 999px; border: 1px solid rgba(255,255,255,0.05);
     }
 
-    /* SISTEMA DE BOTÕES PREMIUM - Fim do "Borrão Branco" */
+    /* SISTEMA DE BOTÕES PREMIUM */
     .btn-primary {
       @apply bg-optic-yellow text-slate-950 font-black uppercase tracking-wider rounded-xl py-3 px-6 hover:bg-[#b3e600] hover:shadow-glow-yellow transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2;
     }
@@ -90,8 +90,19 @@
       @apply bg-red-950/80 border border-red-500/50 text-red-400 font-bold uppercase tracking-wider rounded-xl py-3 px-6 hover:bg-red-600 hover:text-white hover:border-red-400 hover:shadow-glow-red transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 shadow-lg;
     }
     
-    .input-premium {
+    /* ESTILIZAÇÃO GLOBAL DE INPUTS - Resolve caixas brancas 'bugadas' */
+    input[type="text"], input[type="email"], input[type="password"], input[type="date"], input[type="datetime-local"], select, textarea {
       @apply w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-optic-yellow focus:ring-1 focus:ring-optic-yellow/50 transition-all duration-300 shadow-inner;
+    }
+    
+    /* Ajuste específico para seletores - Garante ícone visível */
+    select {
+      appearance: none;
+      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23AAAAAA%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.3c0%203%201.1%205.9%203.3%208.7l126.2%20126a17.6%2017.6%200%200%200%2012.6%205.3%2017.6%2017.6%200%200%200%2012.6-5.3l126.2-126a17.6%2017.6%200%200%200%203.3-8.8c0-4.9-1.8-9.2-5.3-12.8z%22%2F%3E%3C%2Fsvg%3E');
+      background-repeat: no-repeat, repeat;
+      background-position: right .7em top 50%, 0 0;
+      background-size: .65em auto, 100%;
+      padding-right: 2rem;
     }
 
     .menu-transition { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -109,7 +120,7 @@
     // COLE SUAS CHAVES AQUI
     // =========================================================================
     const firebaseConfig = {
- apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+    apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
   databaseURL: "https://ace-mind-c13a1-default-rtdb.firebaseio.com",
   projectId: "ace-mind-c13a1",
@@ -163,7 +174,7 @@
     };
 
     // ==============================================================================
-    // APP DO PACIENTE
+    // APP DO PACIENTE (Com Inputs Estilizados Globais e Botões Premium)
     // ==============================================================================
     const MobileApp = ({ usuarioAtual }) => {
       const [foco, setFoco] = useState(5);
@@ -209,12 +220,12 @@
                 <div className="space-y-8">
                   <div>
                     <div className="flex justify-between text-xs text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Desfocado</span><span className="text-optic-yellow">Flow Total</span></div>
-                    <input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} />
+                    <input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
                     <div className="text-center mt-2 font-black text-2xl text-white/80">{foco}</div>
                   </div>
                   <div className="border-t border-slate-700 pt-6">
                     <div className="flex justify-between text-xs text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Exausto</span><span className="text-optic-yellow">Energizado</span></div>
-                    <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} />
+                    <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
                     <div className="text-center mt-2 font-black text-2xl text-white/80">{energia}</div>
                   </div>
                   <button onClick={salvarCheckin} disabled={salvando} className="btn-primary w-full mt-4 text-sm">
@@ -240,8 +251,8 @@
       );
     };
 
-    // ==============================================================================
-    // MÓDULOS DO PSICÓLOGO 
+    // ================= =============================================================
+    // MÓDULOS DO PSICÓLOGO (Com Inputs Globais Estilizados e Alinhamento de Texto)
     // ==============================================================================
 
     const ModuloDashboard = ({ checkins }) => (
@@ -314,7 +325,7 @@
               <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3"><Icons.Profile /> Perfil Esportivo</h2>
               <p className="text-slate-400 text-sm mt-1">Dados técnicos e biológicos do tenista.</p>
             </div>
-            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="input-premium sm:w-64 font-medium">
+            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="sm:w-64 !text-xs !font-bold !uppercase !tracking-widest">
               <option value="">Selecione o Atleta...</option>
               {atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
             </select>
@@ -325,14 +336,14 @@
               <div className="absolute top-0 right-0 w-32 h-32 bg-optic-yellow opacity-5 blur-[100px]"></div>
               
               <div className="space-y-5 z-10">
-                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Categoria</label><input type="text" value={perfil.categoria} onChange={e=>setPerfil({...perfil, categoria: e.target.value})} className="input-premium" placeholder="Ex: ATP, ITF, Juvenil" /></div>
-                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Ranking Atual</label><input type="text" value={perfil.ranking} onChange={e=>setPerfil({...perfil, ranking: e.target.value})} className="input-premium font-bold text-optic-yellow" placeholder="Ex: #124 ATP" /></div>
-                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Mão Dominante</label><select value={perfil.mao} onChange={e=>setPerfil({...perfil, mao: e.target.value})} className="input-premium"><option value="">Selecione...</option><option value="Destro">Destro</option><option value="Canhoto">Canhoto</option><option value="Ambidestro">Ambidestro</option></select></div>
+                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Categoria</label><input type="text" value={perfil.categoria} onChange={e=>setPerfil({...perfil, categoria: e.target.value})} placeholder="Ex: ATP, ITF, Juvenil" /></div>
+                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Ranking Atual</label><input type="text" value={perfil.ranking} onChange={e=>setPerfil({...perfil, ranking: e.target.value})} className="!font-bold !text-optic-yellow" placeholder="Ex: #124 ATP" /></div>
+                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Mão Dominante</label><select value={perfil.mao} onChange={e=>setPerfil({...perfil, mao: e.target.value})}><option value="">Selecione...</option><option value="Destro">Destro</option><option value="Canhoto">Canhoto</option><option value="Ambidestro">Ambidestro</option></select></div>
               </div>
               
               <div className="space-y-5 z-10">
-                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Estilo de Jogo</label><input type="text" placeholder="Ex: Agressivo de Fundo, Saque e Voleio" value={perfil.estilo} onChange={e=>setPerfil({...perfil, estilo: e.target.value})} className="input-premium" /></div>
-                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Histórico de Lesões Recentes</label><textarea value={perfil.lesoes} onChange={e=>setPerfil({...perfil, lesoes: e.target.value})} className="input-premium h-32 custom-scrollbar resize-none" placeholder="Relate cirurgias, dores crônicas, tendinites..."></textarea></div>
+                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Estilo de Jogo</label><input type="text" placeholder="Ex: Agressivo de Fundo, Saque e Voleio" value={perfil.estilo} onChange={e=>setPerfil({...perfil, estilo: e.target.value})} /></div>
+                <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Histórico de Lesões Recentes</label><textarea value={perfil.lesoes} onChange={e=>setPerfil({...perfil, lesoes: e.target.value})} className="h-32 custom-scrollbar resize-none" placeholder="Relate cirurgias, dores crônicas, tendinites..."></textarea></div>
               </div>
               
               <div className="md:col-span-2 flex justify-end mt-4 z-10 border-t border-slate-700 pt-6">
@@ -438,7 +449,7 @@
               <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3"><Icons.Users /> Prontuário Clínico</h2>
               <p className="text-slate-400 text-sm mt-1">Registros SOAP, Rotinas e Linguagem Corporal.</p>
             </div>
-            <select value={atletaSelecionadoId} onChange={e => setAtletaSelecionadoId(e.target.value)} className="input-premium sm:w-64 font-bold uppercase tracking-widest text-xs">
+            <select value={atletaSelecionadoId} onChange={e => setAtletaSelecionadoId(e.target.value)} className="sm:w-64 !font-bold !uppercase !tracking-widest !text-xs">
               <option value="">Selecione o Atleta...</option>
               {atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
             </select>
@@ -447,7 +458,6 @@
           {!atletaSelecionadoId ? <div className="glass-panel p-12 text-center text-slate-500 rounded-[2rem] font-bold tracking-widest uppercase text-sm border-dashed border-white/20">Selecione um atleta no menu acima.</div> : (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
               
-              {/* Coluna Lateral: Rotinas e Vídeos */}
               <div className="space-y-8 xl:col-span-1">
                 <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-t-optic-yellow">
                   <div className="flex justify-between items-center mb-6">
@@ -459,11 +469,11 @@
                   <div className="space-y-5">
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-2">Rotina Pré-Saque</label>
-                      {editandoRotina ? <input type="text" value={rotinas.pre} onChange={e=>setRotinas({...rotinas, pre: e.target.value})} className="input-premium py-2" /> : <div className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm font-medium text-slate-300 break-words shadow-inner">{rotinas.pre}</div>}
+                      {editandoRotina ? <input type="text" value={rotinas.pre} onChange={e=>setRotinas({...rotinas, pre: e.target.value})} className="!py-2" /> : <div className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm font-medium text-slate-300 break-words shadow-inner">{rotinas.pre}</div>}
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-2">Rotina Pós-Erro</label>
-                      {editandoRotina ? <input type="text" value={rotinas.pos} onChange={e=>setRotinas({...rotinas, pos: e.target.value})} className="input-premium py-2" /> : <div className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm font-medium text-slate-300 break-words shadow-inner">{rotinas.pos}</div>}
+                      {editandoRotina ? <input type="text" value={rotinas.pos} onChange={e=>setRotinas({...rotinas, pos: e.target.value})} className="!py-2" /> : <div className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm font-medium text-slate-300 break-words shadow-inner">{rotinas.pos}</div>}
                     </div>
                   </div>
                 </div>
@@ -491,7 +501,6 @@
                 </div>
               </div>
 
-              {/* Coluna Principal: SOAP */}
               <div className="xl:col-span-2 glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col h-[700px] md:h-[800px]">
                 <h4 className="font-black text-xl text-white mb-6 uppercase tracking-wider">Registro Evolutivo (SOAP)</h4>
                 
@@ -500,8 +509,8 @@
                   <div className="flex justify-between items-center mt-4 border-t border-slate-700 pt-4">
                     <span className="text-[10px] text-optic-yellow font-black uppercase tracking-widest">{editandoAnotacaoId ? '🔧 Modo de Edição' : '📝 Novo Registro'}</span>
                     <div className="flex gap-3">
-                       {editandoAnotacaoId && <button onClick={() => {setNovaAnotacao(''); setEditandoAnotacaoId(null);}} className="btn-secondary py-2 px-4 text-xs">Cancelar</button>}
-                       <button onClick={salvarAnotacao} className="btn-primary py-2 px-6 text-xs">{editandoAnotacaoId ? 'Atualizar SOAP' : 'Salvar Registro'}</button>
+                       {editandoAnotacaoId && <button onClick={() => {setNovaAnotacao(''); setEditandoAnotacaoId(null);}} className="btn-secondary !py-2 !px-4 !text-xs">Cancelar</button>}
+                       <button onClick={salvarAnotacao} className="btn-primary !py-2 !px-6 !text-xs">{editandoAnotacaoId ? 'Atualizar SOAP' : 'Salvar Registro'}</button>
                     </div>
                   </div>
                 </div>
@@ -520,7 +529,7 @@
                           <button onClick={() => excluirAnotacao(a.id)} className="text-red-400 bg-red-500/10 hover:bg-red-500/20 p-2 rounded-lg transition" title="Excluir"><Icons.Trash /></button>
                         </div>
                       </div>
-                      <p className="text-sm font-medium text-slate-300 whitespace-pre-wrap leading-relaxed">{a.texto}</p>
+                      <p className="text-sm font-medium text-slate-300 whitespace-pre-wrap break-words text-justify w-full leading-relaxed">{a.texto}</p>
                     </div>
                   ))}
                 </div>
@@ -574,7 +583,7 @@
               <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3"><Icons.Crosshair /> Pressão em Jogo</h2>
               <p className="text-slate-400 text-sm mt-1">Análise de *Choking* e métricas de momentos críticos.</p>
             </div>
-            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="input-premium sm:w-64 font-bold uppercase tracking-widest text-xs">
+            <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="sm:w-64 !font-bold !uppercase !tracking-widest !text-xs">
               <option value="">Selecione o Atleta...</option>
               {atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
             </select>
@@ -583,33 +592,30 @@
           {!atletaId ? <div className="glass-panel p-12 text-center text-slate-500 rounded-[2rem] font-bold tracking-widest uppercase text-sm border-dashed border-white/20">Selecione um atleta no menu acima.</div> : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
-              {/* Formulário de Registro */}
               <div className="lg:col-span-1 glass-panel p-6 md:p-8 rounded-[2rem] space-y-6 h-fit border-t-4 border-t-optic-yellow shadow-panel">
                 <h3 className="font-black text-xl text-white uppercase tracking-wider mb-2">Lançar Partida</h3>
                 
                 <div className="space-y-4">
-                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Torneio / Fase</label><input type="text" placeholder="Ex: US Open - QF" value={novaPartida.torneio} onChange={e=>setNovaPartida({...novaPartida, torneio: e.target.value})} className="input-premium py-2 text-sm" /></div>
-                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Data</label><input type="date" value={novaPartida.data} onChange={e=>setNovaPartida({...novaPartida, data: e.target.value})} className="input-premium py-2 text-sm" /></div>
-                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Desfecho</label><select value={novaPartida.resultado} onChange={e=>setNovaPartida({...novaPartida, resultado: e.target.value})} className="input-premium py-2 text-sm font-black uppercase tracking-widest"><option value="Vitória">🏆 Vitória</option><option value="Derrota">❌ Derrota</option></select></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Torneio / Fase</label><input type="text" placeholder="Ex: US Open - QF" value={novaPartida.torneio} onChange={e=>setNovaPartida({...novaPartida, torneio: e.target.value})} className="!py-2 !text-sm" /></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Data</label><input type="date" value={novaPartida.data} onChange={e=>setNovaPartida({...novaPartida, data: e.target.value})} className="!py-2 !text-sm" /></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Desfecho</label><select value={novaPartida.resultado} onChange={e=>setNovaPartida({...novaPartida, resultado: e.target.value})} className="!py-2 !text-sm !font-black !uppercase !tracking-widest"><option value="Vitória">🏆 Vitória</option><option value="Derrota">❌ Derrota</option></select></div>
                 </div>
 
                 <div className="pt-6 border-t border-slate-700 mt-6 space-y-4">
                   <h4 className="text-[11px] font-black text-optic-yellow uppercase tracking-widest bg-optic-yellow/10 p-2 rounded-lg text-center border border-optic-yellow/20">Métricas Sob Pressão</h4>
-                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Break Points Salvos (%)</label><input type="number" placeholder="0 a 100" value={novaPartida.breakPointsSalvos} onChange={e=>setNovaPartida({...novaPartida, breakPointsSalvos: e.target.value})} className="input-premium py-2 text-sm font-mono" /></div>
-                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Duplas Faltas (Em BP/Vant)</label><input type="number" placeholder="Quantidade" value={novaPartida.duplasFaltas} onChange={e=>setNovaPartida({...novaPartida, duplasFaltas: e.target.value})} className="input-premium py-2 text-sm font-mono" /></div>
-                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Erros Não Forçados (Tie-Break)</label><input type="number" placeholder="Quantidade" value={novaPartida.errosNaoForcados} onChange={e=>setNovaPartida({...novaPartida, errosNaoForcados: e.target.value})} className="input-premium py-2 text-sm font-mono" /></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Break Points Salvos (%)</label><input type="number" placeholder="0 a 100" value={novaPartida.breakPointsSalvos} onChange={e=>setNovaPartida({...novaPartida, breakPointsSalvos: e.target.value})} className="!py-2 !text-sm !font-mono" /></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Duplas Faltas (Em BP/Vant)</label><input type="number" placeholder="Quantidade" value={novaPartida.duplasFaltas} onChange={e=>setNovaPartida({...novaPartida, duplasFaltas: e.target.value})} className="!py-2 !text-sm !font-mono" /></div>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Erros Não Forçados (Tie-Break)</label><input type="number" placeholder="Quantidade" value={novaPartida.errosNaoForcados} onChange={e=>setNovaPartida({...novaPartida, errosNaoForcados: e.target.value})} className="!py-2 !text-sm !font-mono" /></div>
                 </div>
 
                 <button onClick={registrarPartida} disabled={salvando} className="btn-primary w-full mt-6 text-sm">{salvando ? 'Computando...' : 'Gravar Estatística'}</button>
               </div>
               
-              {/* Placar / Scoreboard ATP Style */}
               <div className="lg:col-span-2 glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col h-[700px] md:h-[800px] bg-slate-950/90 border-slate-800 relative overflow-hidden shadow-2xl">
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-court-blue opacity-10 rounded-full blur-[120px] pointer-events-none"></div>
 
                 <h3 className="text-xl font-black mb-6 text-white uppercase tracking-wider flex items-center gap-3"><span className="w-2 h-6 bg-optic-yellow inline-block rounded-full shadow-glow-yellow"></span> Match History</h3>
                 
-                {/* Resumo Global */}
                 <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8 shrink-0">
                   <div className="bg-slate-900 border border-slate-700 p-4 rounded-2xl text-center shadow-inner relative overflow-hidden">
                      <p className="text-[10px] md:text-[11px] text-slate-400 font-black uppercase tracking-[0.2em] relative z-10">Total Jogos</p>
@@ -627,7 +633,6 @@
                   </div>
                 </div>
 
-                {/* Lista de Partidas Estilo Broadcast */}
                 <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2 relative z-10">
                   {partidas.length === 0 && <p className="text-center text-slate-600 font-bold uppercase tracking-widest text-xs mt-10">Aguardando dados da primeira partida.</p>}
                   {partidas.map(p => (
@@ -738,7 +743,6 @@
           </header>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Bloco Sessões */}
             <div className="glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col h-[700px] shadow-panel">
               <h3 className="text-xl font-black text-optic-yellow mb-6 uppercase tracking-wider">Sessões Clínicas</h3>
               
@@ -747,9 +751,9 @@
                   <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">{sessaoEditandoId ? '🔧 Editando Sessão' : 'Nova Sessão'}</span>
                   {sessaoEditandoId && <button onClick={() => {setSessaoEditandoId(null); setNovaSessao({ atletaId: "", dataHora: "", link: "" });}} className="text-[10px] text-optic-yellow font-bold uppercase tracking-widest hover:underline">Cancelar</button>}
                 </div>
-                <select value={novaSessao.atletaId} onChange={e=>setNovaSessao({...novaSessao, atletaId: e.target.value})} className="input-premium py-2 text-sm"><option value="">Paciente...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}</select>
-                <input type="datetime-local" value={novaSessao.dataHora} onChange={e=>setNovaSessao({...novaSessao, dataHora: e.target.value})} className="input-premium py-2 text-sm" />
-                <input type="text" placeholder="Link Zoom/Meet (Ou deixe vazio para autogerar)" value={novaSessao.link} onChange={e=>setNovaSessao({...novaSessao, link: e.target.value})} className="input-premium py-2 text-sm" />
+                <select value={novaSessao.atletaId} onChange={e=>setNovaSessao({...novaSessao, atletaId: e.target.value})} className="!py-2 !text-sm"><option value="">Paciente...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}</select>
+                <input type="datetime-local" value={novaSessao.dataHora} onChange={e=>setNovaSessao({...novaSessao, dataHora: e.target.value})} className="!py-2 !text-sm" />
+                <input type="text" placeholder="Link Zoom/Meet (Vazio auto-gera)" value={novaSessao.link} onChange={e=>setNovaSessao({...novaSessao, link: e.target.value})} className="!py-2 !text-sm" />
                 <button onClick={salvarSessao} className="btn-primary w-full text-xs">{sessaoEditandoId ? 'Salvar Alterações' : 'Confirmar Agendamento'}</button>
               </div>
 
@@ -777,7 +781,6 @@
               </div>
             </div>
 
-            {/* Bloco Torneios */}
             <div className="glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col h-[700px] shadow-panel">
               <h3 className="text-xl font-black text-white mb-6 uppercase tracking-wider">Radar de Torneios</h3>
               
@@ -786,8 +789,8 @@
                   <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">{torneioEditandoId ? '🔧 Editando Torneio' : 'Adicionar ao Radar'}</span>
                   {torneioEditandoId && <button onClick={() => {setTorneioEditandoId(null); setNovoTorneio({ nome: "", data: "" });}} className="text-[10px] text-optic-yellow font-bold uppercase tracking-widest hover:underline">Cancelar</button>}
                 </div>
-                <input type="text" placeholder="Nome do Torneio (Ex: US Open)" value={novoTorneio.nome} onChange={e=>setNovoTorneio({...novoTorneio, nome: e.target.value})} className="input-premium py-2 text-sm" />
-                <input type="date" value={novoTorneio.data} onChange={e=>setNovoTorneio({...novoTorneio, data: e.target.value})} className="input-premium py-2 text-sm" />
+                <input type="text" placeholder="Nome do Torneio (Ex: US Open)" value={novoTorneio.nome} onChange={e=>setNovoTorneio({...novoTorneio, nome: e.target.value})} className="!py-2 !text-sm" />
+                <input type="date" value={novoTorneio.data} onChange={e=>setNovoTorneio({...novoTorneio, data: e.target.value})} className="!py-2 !text-sm" />
                 <button onClick={salvarTorneio} className="btn-secondary w-full text-xs">{torneioEditandoId ? 'Salvar Edição' : 'Registrar Competição'}</button>
               </div>
 
@@ -840,17 +843,17 @@
             <div className="glass-panel p-6 md:p-8 rounded-[2rem] space-y-6 shadow-panel border-t-4 border-t-optic-yellow">
               <div>
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Paciente / Atleta</label>
-                <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="input-premium font-bold tracking-wide">
+                <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="!font-bold !tracking-wide">
                   <option value="">Selecione o Atleta...</option>{atletas.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Registro de Treinos (Curto Prazo)</label>
-                <textarea value={treinos} onChange={e=>setTreinos(e.target.value)} className="input-premium h-40 custom-scrollbar resize-none font-medium" placeholder="Digite os apontamentos técnicos..."></textarea>
+                <textarea value={treinos} onChange={e=>setTreinos(e.target.value)} className="h-40 custom-scrollbar resize-none !font-medium" placeholder="Digite os apontamentos técnicos..."></textarea>
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Objetivos Finais (Longo Prazo)</label>
-                <textarea value={objetivos} onChange={e=>setObjetivos(e.target.value)} className="input-premium h-40 custom-scrollbar resize-none font-medium" placeholder="Digite as metas para o ano..."></textarea>
+                <textarea value={objetivos} onChange={e=>setObjetivos(e.target.value)} className="h-40 custom-scrollbar resize-none !font-medium" placeholder="Digite as metas para o ano..."></textarea>
               </div>
             </div>
             
@@ -871,12 +874,12 @@
                 
                 <div className="mb-8">
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 border-b-[3px] border-optic-yellow inline-block pb-1 mb-4">Síntese de Treinos</h3>
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">{treinos || "Nenhum apontamento registrado."}</p>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap text-justify leading-relaxed font-medium w-full break-words">{treinos || "Nenhum apontamento registrado."}</p>
                 </div>
                 
                 <div className="mb-8">
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 border-b-[3px] border-optic-yellow inline-block pb-1 mb-4">Projeção e Objetivos</h3>
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">{objetivos || "Nenhuma meta registrada."}</p>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap text-justify leading-relaxed font-medium w-full break-words">{objetivos || "Nenhuma meta registrada."}</p>
                 </div>
 
                 <div className="mt-16 pt-8 border-t-2 border-slate-200 text-center">
@@ -892,8 +895,8 @@
                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest">{new Date().toLocaleDateString('pt-BR')}</p>
                 </div>
                 <div className="bg-slate-100 p-6 rounded-2xl mb-8 border border-slate-200"><h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Atleta / Paciente</h2><p className="text-2xl font-black text-slate-900 tracking-tight uppercase">{atletaNome}</p></div>
-                <div className="mb-8"><h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 border-b-[3px] border-optic-yellow inline-block pb-1 mb-4">Síntese de Treinos</h3><p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">{treinos || "Nenhum apontamento registrado."}</p></div>
-                <div className="mb-8"><h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 border-b-[3px] border-optic-yellow inline-block pb-1 mb-4">Projeção e Objetivos</h3><p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">{objetivos || "Nenhuma meta registrada."}</p></div>
+                <div className="mb-8"><h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 border-b-[3px] border-optic-yellow inline-block pb-1 mb-4">Síntese de Treinos</h3><p className="text-sm text-slate-700 whitespace-pre-wrap text-justify leading-relaxed font-medium w-full break-words">{treinos || "Nenhum apontamento registrado."}</p></div>
+                <div className="mb-8"><h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 border-b-[3px] border-optic-yellow inline-block pb-1 mb-4">Projeção e Objetivos</h3><p className="text-sm text-slate-700 whitespace-pre-wrap text-justify leading-relaxed font-medium w-full break-words">{objetivos || "Nenhuma meta registrada."}</p></div>
                 <div className="mt-16 pt-8 border-t-2 border-slate-200 text-center"><p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Documento Confidencial • Gerado por AceMind System</p></div>
               </div>
             </div>
@@ -903,7 +906,7 @@
     };
 
     // --------------------------------------------------
-    // ROTEADOR DO PSICÓLOGO (SIDEBAR PREMIUM)
+    // ROTEADOR DO PSICÓLOGO E MESTRE
     // --------------------------------------------------
     const DashboardPsicologo = () => {
       const [abaAtiva, setAbaAtiva] = useState('dashboard');
@@ -993,9 +996,6 @@
       );
     };
 
-    // --------------------------------------------------
-    // AUTENTICAÇÃO (GLASSMORPHISM PREMIUM)
-    // --------------------------------------------------
     const TelaAutenticacao = ({ setUsuarioLogado }) => {
       const [modo, setModo] = useState('login');
       const [nome, setNome] = useState('');
@@ -1032,11 +1032,11 @@
             </div>
 
             <form onSubmit={handleAuth} className="space-y-5">
-              {modo === 'cadastro' && <input type="text" placeholder="Nome Completo" value={nome} onChange={e=>setNome(e.target.value)} className="input-premium font-medium text-sm" required />}
-              <input type="email" placeholder="E-mail Institucional" value={email} onChange={e=>setEmail(e.target.value)} className="input-premium font-medium text-sm" required />
-              <input type="password" placeholder="Senha de Acesso" value={senha} onChange={e=>setSenha(e.target.value)} className="input-premium font-medium text-sm" required />
+              {modo === 'cadastro' && <input type="text" placeholder="Nome Completo" value={nome} onChange={e=>setNome(e.target.value)} className="!font-medium !text-sm" required />}
+              <input type="email" placeholder="E-mail Institucional" value={email} onChange={e=>setEmail(e.target.value)} className="!font-medium !text-sm" required />
+              <input type="password" placeholder="Senha de Acesso" value={senha} onChange={e=>setSenha(e.target.value)} className="!font-medium !text-sm" required />
               {modo === 'cadastro' && (
-                <select value={cargo} onChange={e=>setCargo(e.target.value)} className="input-premium font-bold uppercase tracking-widest text-xs">
+                <select value={cargo} onChange={e=>setCargo(e.target.value)} className="!font-bold !uppercase !tracking-widest !text-xs">
                   <option value="paciente">Atleta / Paciente</option>
                   <option value="psicologo">Equipe AceMind (Psicólogo)</option>
                 </select>
