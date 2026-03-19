@@ -104,7 +104,6 @@
       padding-right: 2.5rem;
     }
 
-    /* Animação Suave para o Breathing Tool (4 segundos) */
     .breath-transition { transition: all 4s ease-in-out; }
     .menu-transition { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
     @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } }
@@ -166,10 +165,13 @@
       Crosshair: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>,
       Warning: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>,
       TennisBall: () => <svg className="w-6 h-6 shrink-0 text-optic-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" strokeWidth="2"/><path strokeLinecap="round" strokeWidth="2" d="M7.5 4.2A8 8 0 0110 10a8 8 0 01-5.8 2.5M16.5 19.8A8 8 0 0114 14a8 8 0 015.8-2.5"/></svg>,
-      // Novos Ícones para as Funcionalidades Premium do Atleta
-      Wind: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.59 7.41a2 2 0 012.82 2.82c-.39.39-1.02.39-1.41 0a1 1 0 00-1.42 1.42c.39.39 1.02.39 1.41 0a2 2 0 01-2.82-2.82m-3.54 3.54a2 2 0 012.82 2.82c-.39.39-1.02.39-1.41 0a1 1 0 00-1.42 1.42c.39.39 1.02.39 1.41 0a2 2 0 01-2.82-2.82M9.41 12.59a2 2 0 01-2.82-2.82c.39-.39 1.02-.39 1.41 0a1 1 0 001.42-1.42c-.39-.39-1.02-.39-1.41 0a2 2 0 012.82 2.82"></path></svg>,
+      Wind: () => <svg className="w-5 h-5 shrink-0 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.59 7.41a2 2 0 012.82 2.82c-.39.39-1.02.39-1.41 0a1 1 0 00-1.42 1.42c.39.39 1.02.39 1.41 0a2 2 0 01-2.82-2.82m-3.54 3.54a2 2 0 012.82 2.82c-.39.39-1.02.39-1.41 0a1 1 0 00-1.42 1.42c.39.39 1.02.39 1.41 0a2 2 0 01-2.82-2.82M9.41 12.59a2 2 0 01-2.82-2.82c.39-.39 1.02-.39 1.41 0a1 1 0 001.42-1.42c-.39-.39-1.02-.39-1.41 0a2 2 0 012.82 2.82"></path></svg>,
       Target: () => <svg className="w-5 h-5 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
-      Flame: () => <svg className="w-5 h-5 shrink-0 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"></path></svg>
+      Flame: () => <svg className="w-5 h-5 shrink-0 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"></path></svg>,
+      CheckCircle: () => <svg className="w-5 h-5 shrink-0 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
+      Moon: () => <svg className="w-5 h-5 shrink-0 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>,
+      Eye: () => <svg className="w-5 h-5 shrink-0 text-optic-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>,
+      Trophy: () => <svg className="w-5 h-5 shrink-0 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
     };
 
     const calcularRisco = (foco, energia) => {
@@ -179,45 +181,49 @@
     };
 
     // ==============================================================================
-    // APP DO PACIENTE (Com as 3 Novas Ferramentas Premium)
+    // APP DO PACIENTE (ARSENAL DE ALTA PERFORMANCE)
     // ==============================================================================
     const MobileApp = ({ usuarioAtual }) => {
-      // Estados Originais
+      // Estados: Diário Base e Funcionalidades Anteriores
       const [foco, setFoco] = useState(5);
       const [energia, setEnergia] = useState(5);
+      const [sono, setSono] = useState(5); // NOVO: Monitor de Sono
+      const [pontoForte, setPontoForte] = useState("");
+      
       const [salvando, setSalvando] = useState(false);
       const [sosEnviado, setSosEnviado] = useState(false);
-
-      // Estados das Novas Funcionalidades
       const [rotinas, setRotinas] = useState({ pre: "Carregando...", pos: "Carregando..." });
-      const [pontoForte, setPontoForte] = useState("");
+      
+      // Estados: Zone Reset
       const [respirando, setRespirando] = useState(false);
       const [faseRespiracao, setFaseRespiracao] = useState("INSPIRA");
 
-      // Buscar Rotinas do Psicólogo em Tempo Real (Funcionalidade 2)
+      // Estados: Pré-Match Checklist
+      const [checklist, setChecklist] = useState({ equipamento: false, hidratacao: false, visualizacao: false, tatica: false });
+      const todosChecados = Object.values(checklist).every(v => v);
+
+      // Estados: Visão de Túnel (Mantra)
+      const [mantraAtivo, setMantraAtivo] = useState(false);
+      const [meuMantra, setMeuMantra] = useState("EU CONTROLO O QUE POSSO CONTROLAR.");
+
+      // Estados: Raio-X Express (Partida)
+      const [novaPartida, setNovaPartida] = useState({ torneio: "", resultado: "Vitória", nivelConfianca: 5 });
+      const [salvandoPartida, setSalvandoPartida] = useState(false);
+
       useEffect(() => {
         const fetchRotinas = async () => {
            const docSnap = await window.fbAPI.getDoc(window.fbAPI.doc(window.db, "prontuarios", usuarioAtual.uid));
-           if(docSnap.exists() && docSnap.data().rotinas) {
-               setRotinas(docSnap.data().rotinas);
-           } else {
-               setRotinas({ pre: "Nenhuma rotina pré-saque definida.", pos: "Nenhuma rotina pós-erro definida." });
-           }
+           if(docSnap.exists() && docSnap.data().rotinas) { setRotinas(docSnap.data().rotinas); } 
+           else { setRotinas({ pre: "Nenhuma rotina pré-saque definida.", pos: "Nenhuma rotina pós-erro definida." }); }
         };
         fetchRotinas();
       }, [usuarioAtual.uid]);
 
-      // Lógica do Zone Reset - Respiração Tática Box Breathing (Funcionalidade 1)
       useEffect(() => {
         let interval;
         if (respirando) {
-          let step = 0;
-          const fases = ["INSPIRA", "SEGURA", "EXPIRA", "PAUSA"];
-          setFaseRespiracao(fases[0]);
-          interval = setInterval(() => {
-            step = (step + 1) % 4;
-            setFaseRespiracao(fases[step]);
-          }, 4000); // 4 segundos cada fase
+          let step = 0; const fases = ["INSPIRA", "SEGURA", "EXPIRA", "PAUSA"]; setFaseRespiracao(fases[0]);
+          interval = setInterval(() => { step = (step + 1) % 4; setFaseRespiracao(fases[step]); }, 4000); 
         }
         return () => clearInterval(interval);
       }, [respirando]);
@@ -226,34 +232,52 @@
         setSalvando(true);
         try {
           await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "checkins"), {
-            pacienteId: usuarioAtual.uid, 
-            nome: usuarioAtual.nome, 
-            email: usuarioAtual.email, 
-            foco: parseInt(foco), 
-            energia: parseInt(energia), 
-            pontoForte: pontoForte, // Funcionalidade 3: Salva o trunfo do dia
-            data: new Date().toISOString()
+            pacienteId: usuarioAtual.uid, nome: usuarioAtual.nome, email: usuarioAtual.email, 
+            foco: parseInt(foco), energia: parseInt(energia), sono: parseInt(sono), pontoForte: pontoForte, data: new Date().toISOString()
           });
-          alert("Diário e Trunfo enviados! Excelente trabalho mental.");
-          setFoco(5); setEnergia(5); setPontoForte("");
+          alert("Diário enviado ao QG mental!");
+          setFoco(5); setEnergia(5); setSono(5); setPontoForte("");
         } catch (error) { alert("Erro ao salvar."); }
         setSalvando(false);
       };
 
+      const enviarRaioX = async () => {
+        if(!novaPartida.torneio) return alert("Informe onde foi a partida.");
+        setSalvandoPartida(true);
+        try {
+          await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${usuarioAtual.uid}/partidas`), { 
+            torneio: novaPartida.torneio, resultado: novaPartida.resultado, nivelConfianca: novaPartida.nivelConfianca, dataRegistro: new Date().toISOString(), data: new Date().toISOString().split('T')[0]
+          });
+          alert("Raio-X enviado direto pro mentor!");
+          setNovaPartida({ torneio: "", resultado: "Vitória", nivelConfianca: 5 });
+        } catch (e) { alert("Erro ao salvar partida."); }
+        setSalvandoPartida(false);
+      }
+
       const enviarSOS = async () => {
-        if(confirm("ACIONAR S.O.S: Seu psicólogo será notificado imediatamente. Confirmar?")) {
+        if(confirm("ACIONAR S.O.S MENTAL: O psicólogo será notificado. Prosseguir?")) {
           try {
-            await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "sos_alertas"), {
-              pacienteId: usuarioAtual.uid, nome: usuarioAtual.nome, email: usuarioAtual.email, data: new Date().toISOString(), status: 'pendente'
-            });
-            setSosEnviado(true);
-            setTimeout(() => setSosEnviado(false), 8000);
+            await window.fbAPI.addDoc(window.fbAPI.collection(window.db, "sos_alertas"), { pacienteId: usuarioAtual.uid, nome: usuarioAtual.nome, email: usuarioAtual.email, data: new Date().toISOString(), status: 'pendente' });
+            setSosEnviado(true); setTimeout(() => setSosEnviado(false), 8000);
           } catch(e) { alert("Erro ao enviar SOS."); }
         }
       };
 
+      const toggleCheck = (item) => setChecklist({...checklist, [item]: !checklist[item]});
+
       return (
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-0 sm:p-4 bg-black/40">
+          
+          {/* SOBREPOSIÇÃO: MODO VISÃO DE TÚNEL */}
+          {mantraAtivo && (
+             <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-8 animate-fade-in" onClick={() => setMantraAtivo(false)}>
+                <div className="absolute inset-0 bg-gradient-to-b from-optic-yellow/5 to-transparent pointer-events-none"></div>
+                <Icons.Eye className="w-16 h-16 text-optic-yellow opacity-50 mb-8 drop-shadow-[0_0_20px_rgba(204,255,0,0.4)]" />
+                <h1 className="text-4xl sm:text-6xl font-black text-center text-white tracking-tighter uppercase leading-tight drop-shadow-2xl">{meuMantra}</h1>
+                <p className="absolute bottom-10 text-[10px] text-slate-500 font-bold uppercase tracking-widest animate-pulse">Toque em qualquer lugar para sair</p>
+             </div>
+          )}
+
           <div className="w-full h-full sm:max-w-[420px] sm:h-[850px] glass-panel sm:rounded-[2.5rem] overflow-hidden relative flex flex-col sm:border-[8px] sm:border-slate-900 shadow-2xl">
             
             <div className="pt-8 pb-6 px-8 bg-gradient-to-br from-court-blue to-slate-900 shrink-0 relative overflow-hidden border-b border-white/10">
@@ -264,30 +288,40 @@
 
             <div className="flex-1 overflow-y-auto px-5 py-6 space-y-6 custom-scrollbar relative z-10 pb-10">
               
-              {/* FUNCIONALIDADE 1: Zone Reset (Respiração Tática) */}
-              <div className={`bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel transition-all duration-500 overflow-hidden ${respirando ? 'ring-2 ring-optic-yellow/50' : ''}`}>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2"><Icons.Wind /> Zone Reset</h3>
-                  <button onClick={() => setRespirando(!respirando)} className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-colors ${respirando ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-optic-yellow text-slate-900 hover:bg-white'}`}>
-                    {respirando ? 'PARAR' : 'INICIAR CICLO'}
-                  </button>
-                </div>
-                
-                {respirando ? (
-                  <div className="flex flex-col items-center justify-center py-8 relative">
-                    {/* Círculo Animado de Respiração (4s in, 4s hold, 4s out, 4s hold) */}
-                    <div className={`w-32 h-32 rounded-full flex items-center justify-center border-4 breath-transition ${faseRespiracao === 'INSPIRA' ? 'scale-[1.6] border-optic-yellow bg-optic-yellow/10' : faseRespiracao === 'EXPIRA' ? 'scale-75 border-court-blue bg-court-blue/10' : 'scale-110 border-white/30 bg-white/5'}`}>
-                       <span className={`font-black tracking-widest text-xs text-center transition-colors duration-500 ${faseRespiracao === 'INSPIRA' ? 'text-optic-yellow' : 'text-white'}`}>{faseRespiracao}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-[11px] text-slate-400 font-medium">Ferramenta Box Breathing (Técnica SEAL) para redução imediata de batimentos em momentos de alta pressão.</p>
-                )}
+              {/* NOVA FERRAMENTA 3: MODO VISÃO DE TÚNEL */}
+              <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel flex gap-3 items-center">
+                 <div className="flex-1">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Frase Âncora (Mantra)</label>
+                    <input type="text" value={meuMantra} onChange={e=>setMeuMantra(e.target.value)} className="bg-transparent text-sm font-bold text-white outline-none w-full border-b border-slate-600 focus:border-optic-yellow transition-colors pb-1" />
+                 </div>
+                 <button onClick={() => setMantraAtivo(true)} className="bg-optic-yellow text-slate-900 p-3 rounded-2xl hover:bg-white transition-all shadow-glow-yellow active:scale-95">
+                    <Icons.Eye />
+                 </button>
               </div>
 
-              {/* FUNCIONALIDADE 2: Cofre de Rotinas (Lidas do Firebase do Psicólogo) */}
+              {/* NOVA FERRAMENTA 2: CHECKLIST DE TRINCHEIRA (PRÉ-MATCH) */}
               <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel">
-                 <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.Target /> Minhas Rotinas Táticas</h3>
+                 <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.CheckCircle /> Preparação de Trincheira</h3>
+                 <div className="grid grid-cols-2 gap-3">
+                    <button onClick={()=>toggleCheck('equipamento')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.equipamento ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
+                      <span className="text-2xl">🎒</span><span className="text-[9px] font-black uppercase tracking-widest">Equipamento</span>
+                    </button>
+                    <button onClick={()=>toggleCheck('hidratacao')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.hidratacao ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
+                      <span className="text-2xl">💧</span><span className="text-[9px] font-black uppercase tracking-widest">Hidratação</span>
+                    </button>
+                    <button onClick={()=>toggleCheck('visualizacao')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.visualizacao ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
+                      <span className="text-2xl">🧠</span><span className="text-[9px] font-black uppercase tracking-widest">Visualização</span>
+                    </button>
+                    <button onClick={()=>toggleCheck('tatica')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.tatica ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
+                      <span className="text-2xl">📋</span><span className="text-[9px] font-black uppercase tracking-widest">Tática Revisada</span>
+                    </button>
+                 </div>
+                 {todosChecados && <div className="mt-4 text-center text-[10px] font-black text-optic-yellow uppercase tracking-[0.2em] animate-pulse bg-optic-yellow/10 p-2 rounded-lg border border-optic-yellow/20">🚀 Pronto para a Guerra!</div>}
+              </div>
+
+              {/* COFRE DE ROTINAS */}
+              <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel">
+                 <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.Target /> Cofre Tático (Mentor)</h3>
                  <div className="space-y-3">
                     <div className="bg-black/40 border border-white/5 p-3 rounded-xl">
                        <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Ritual Pré-Saque</span>
@@ -300,26 +334,67 @@
                  </div>
               </div>
 
-              {/* BLOCO ORIGINAL ATUALIZADO + FUNCIONALIDADE 3: Trunfo do Dia */}
+              {/* ZONE RESET */}
+              <div className={`bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel transition-all duration-500 overflow-hidden ${respirando ? 'ring-2 ring-cyan-400/50' : ''}`}>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2"><Icons.Wind /> Zone Reset</h3>
+                  <button onClick={() => setRespirando(!respirando)} className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-colors ${respirando ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-cyan-400 text-slate-900 hover:bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.4)]'}`}>
+                    {respirando ? 'PARAR' : 'INICIAR CICLO'}
+                  </button>
+                </div>
+                {respirando ? (
+                  <div className="flex flex-col items-center justify-center py-8 relative">
+                    <div className={`w-32 h-32 rounded-full flex items-center justify-center border-4 breath-transition ${faseRespiracao === 'INSPIRA' ? 'scale-[1.6] border-cyan-400 bg-cyan-400/10' : faseRespiracao === 'EXPIRA' ? 'scale-75 border-slate-500 bg-slate-500/10' : 'scale-110 border-white/30 bg-white/5'}`}>
+                       <span className={`font-black tracking-widest text-xs text-center transition-colors duration-500 ${faseRespiracao === 'INSPIRA' ? 'text-cyan-400' : 'text-white'}`}>{faseRespiracao}</span>
+                    </div>
+                  </div>
+                ) : ( <p className="text-[11px] text-slate-400 font-medium">Box Breathing (Técnica SEAL) para redução cardíaca imediata.</p> )}
+              </div>
+
+              {/* NOVA FERRAMENTA 4: RAIO-X DA PARTIDA */}
+              <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-6 shadow-panel border-t-4 border-t-court-blue">
+                 <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.Trophy /> Raio-X Pós-Jogo</h3>
+                 <div className="space-y-4">
+                    <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Torneio/Fase</label><input type="text" value={novaPartida.torneio} onChange={e=>setNovaPartida({...novaPartida, torneio: e.target.value})} placeholder="Ex: Final Regional" className="!py-2 !text-sm" /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                       <button onClick={()=>setNovaPartida({...novaPartida, resultado: 'Vitória'})} className={`py-2 rounded-xl border text-sm font-black uppercase tracking-widest transition-all ${novaPartida.resultado === 'Vitória' ? 'bg-green-900/40 border-green-500 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-slate-800 border-slate-600 text-slate-400'}`}>Vitória</button>
+                       <button onClick={()=>setNovaPartida({...novaPartida, resultado: 'Derrota'})} className={`py-2 rounded-xl border text-sm font-black uppercase tracking-widest transition-all ${novaPartida.resultado === 'Derrota' ? 'bg-red-900/40 border-red-500 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-slate-800 border-slate-600 text-slate-400'}`}>Derrota</button>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[11px] text-slate-400 mb-2 uppercase font-bold tracking-wider"><span>Confiança na Pressão</span><span className="text-court-blue">Gelo</span></div>
+                      <input type="range" min="1" max="10" value={novaPartida.nivelConfianca} onChange={(e) => setNovaPartida({...novaPartida, nivelConfianca: e.target.value})} className="!border-none !p-0 !bg-transparent shadow-none" />
+                    </div>
+                    <button onClick={enviarRaioX} disabled={salvandoPartida} className="w-full bg-court-blue text-white font-black uppercase tracking-wider rounded-xl py-3 shadow-[0_0_15px_rgba(30,58,138,0.5)] hover:bg-blue-800 text-xs transition-all active:scale-95">{salvandoPartida ? 'Enviando...' : 'Submeter Estatística'}</button>
+                 </div>
+              </div>
+
+              {/* DIÁRIO DE TREINO (COM NOVA FERRAMENTA 1: BATERIA NEURAL) */}
               <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-6 shadow-panel">
-                <h3 className="font-black text-white uppercase tracking-wider text-sm mb-6 border-b border-slate-700 pb-3">Diário de Performance</h3>
+                <h3 className="font-black text-white uppercase tracking-wider text-sm mb-6 border-b border-slate-700 pb-3">Diário de Performance Base</h3>
                 <div className="space-y-8">
+                  
+                  {/* NOVA FERRAMENTA 1: SONO */}
                   <div>
+                    <div className="flex justify-between text-[11px] text-slate-400 mb-4 uppercase font-bold tracking-wider flex items-center gap-1"><Icons.Moon /> <span>Descanso Ruim</span><span className="text-indigo-400">Recuperado</span></div>
+                    <input type="range" min="1" max="10" value={sono} onChange={(e) => setSono(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
+                    <div className="text-center mt-2 font-black text-xl text-indigo-300/80">{sono}</div>
+                  </div>
+
+                  <div className="border-t border-slate-700 pt-6">
                     <div className="flex justify-between text-[11px] text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Desfocado</span><span className="text-optic-yellow">Flow Total</span></div>
                     <input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
-                    <div className="text-center mt-2 font-black text-2xl text-white/80">{foco}</div>
+                    <div className="text-center mt-2 font-black text-xl text-white/80">{foco}</div>
                   </div>
                   
                   <div className="border-t border-slate-700 pt-6">
                     <div className="flex justify-between text-[11px] text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Exausto</span><span className="text-optic-yellow">Energizado</span></div>
                     <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
-                    <div className="text-center mt-2 font-black text-2xl text-white/80">{energia}</div>
+                    <div className="text-center mt-2 font-black text-xl text-white/80">{energia}</div>
                   </div>
 
-                  {/* Funcionalidade 3: Micro-journaling positivo */}
                   <div className="border-t border-slate-700 pt-6">
                      <label className="text-[11px] text-orange-400 font-black uppercase tracking-widest block mb-2 flex items-center gap-1"><Icons.Flame /> O Trunfo do Dia</label>
-                     <p className="text-[10px] text-slate-400 mb-3">Reforço positivo: Qual foi o seu melhor momento ou atitude mental no treino de hoje?</p>
+                     <p className="text-[10px] text-slate-400 mb-3">Reforço positivo: Qual foi o seu melhor momento ou atitude mental hoje?</p>
                      <textarea value={pontoForte} onChange={e => setPontoForte(e.target.value)} placeholder="Ex: Consegui esquecer a dupla falta rápido..." className="!h-20 !text-sm !font-medium custom-scrollbar resize-none"></textarea>
                   </div>
 
@@ -329,7 +404,7 @@
                 </div>
               </div>
 
-              {/* Botão SOS SMT */}
+              {/* Botão SOS */}
               <button onClick={enviarSOS} disabled={sosEnviado} className={`w-full py-5 rounded-3xl flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 border-2 ${sosEnviado ? 'bg-green-900 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]' : 'bg-red-950/80 border-red-500/60 hover:bg-red-900 hover:border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-glow-red'}`}>
                 {sosEnviado ? (
                    <span className="font-bold text-green-400 text-lg uppercase tracking-widest">Apoio a caminho!</span>
@@ -348,9 +423,8 @@
     };
 
     // ==============================================================================
-    // MÓDULOS DO PSICÓLOGO (Atualizados para mostrar o "Trunfo do Dia")
+    // MÓDULOS DO PSICÓLOGO
     // ==============================================================================
-
     const ModuloDashboard = ({ checkins }) => (
       <div className="space-y-8 animate-fade-in pb-10">
         <header className="border-b border-white/10 pb-6 flex items-center justify-between">
@@ -381,7 +455,6 @@
                     </div>
                     <p className="text-[10px] uppercase tracking-widest text-white/90 bg-slate-800 px-3 py-1.5 rounded-lg inline-block font-bold border border-slate-600 mb-4">{risco.texto}</p>
                     
-                    {/* Exibe o Trunfo do Dia se o atleta preencheu */}
                     {reg.pontoForte && (
                       <div className="mb-4 bg-orange-500/10 border border-orange-500/20 p-3 rounded-xl">
                          <span className="text-[9px] text-orange-400 font-black uppercase tracking-[0.2em] flex items-center gap-1 mb-1"><Icons.Flame /> Trunfo do Dia</span>
@@ -390,10 +463,12 @@
                     )}
                   </div>
                   
-                  <div className="mt-auto flex gap-4 text-sm border-t border-slate-700 pt-3">
-                     <div className="flex-1 text-center"><span className="text-slate-500 block text-[10px] uppercase font-bold tracking-widest">Foco</span><strong className={`text-xl font-black ${reg.foco <= 4 ? 'text-red-400' : 'text-white'}`}>{reg.foco}</strong></div>
+                  <div className="mt-auto flex gap-2 text-sm border-t border-slate-700 pt-3">
+                     <div className="flex-1 text-center"><span className="text-slate-500 block text-[9px] uppercase font-bold tracking-widest">Foco</span><strong className={`text-lg font-black ${reg.foco <= 4 ? 'text-red-400' : 'text-white'}`}>{reg.foco}</strong></div>
                      <div className="w-[1px] bg-slate-700"></div>
-                     <div className="flex-1 text-center"><span className="text-slate-500 block text-[10px] uppercase font-bold tracking-widest">Energia</span><strong className={`text-xl font-black ${reg.energia <= 4 ? 'text-red-400' : 'text-white'}`}>{reg.energia}</strong></div>
+                     <div className="flex-1 text-center"><span className="text-slate-500 block text-[9px] uppercase font-bold tracking-widest">Energia</span><strong className={`text-lg font-black ${reg.energia <= 4 ? 'text-red-400' : 'text-white'}`}>{reg.energia}</strong></div>
+                     <div className="w-[1px] bg-slate-700"></div>
+                     <div className="flex-1 text-center"><span className="text-slate-500 block text-[9px] uppercase font-bold tracking-widest">Sono</span><strong className={`text-lg font-black ${reg.sono <= 4 ? 'text-indigo-400' : 'text-white'}`}>{reg.sono || '-'}</strong></div>
                   </div>
                 </div>
               );
@@ -402,6 +477,7 @@
         </div>
       </div>
     );
+
     const ModuloPerfil = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
       const [perfil, setPerfil] = useState({ categoria: "", ranking: "", estilo: "", mao: "", lesoes: "" });
@@ -461,7 +537,6 @@
       );
     };
 
-    // --- MÓDULO 3: PRONTUÁRIO CLÍNICO (SOAP PREMIUM) ---
     const ModuloProntuario = ({ atletas }) => {
       const [atletaSelecionadoId, setAtletaSelecionadoId] = useState("");
       const [rotinas, setRotinas] = useState({ pre: "", pos: "" });
@@ -648,17 +723,16 @@
       );
     };
 
-    // --- MÓDULO 4: MOMENTOS CRÍTICOS (PLACAR ATP STYLE) ---
     const ModuloMomentosCriticos = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
       const [partidas, setPartidas] = useState([]);
-      const [novaPartida, setNovaPartida] = useState({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "" });
+      const [novaPartida, setNovaPartida] = useState({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "", nivelConfianca: "" });
       const [salvando, setSalvando] = useState(false);
 
       useEffect(() => {
         if (!atletaId) return;
         const carregarPartidas = async () => {
-          const q = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${atletaId}/partidas`), window.fbAPI.orderBy("data", "desc"));
+          const q = window.fbAPI.query(window.fbAPI.collection(window.db, `prontuarios/${atletaId}/partidas`), window.fbAPI.orderBy("dataRegistro", "desc"));
           const snap = await window.fbAPI.getDocs(q);
           setPartidas(snap.docs.map(d => ({ id: d.id, ...d.data() })));
         };
@@ -666,12 +740,12 @@
       }, [atletaId]);
 
       const registrarPartida = async () => {
-        if (!novaPartida.torneio || !novaPartida.data) return alert("Preencha Torneio e Data.");
+        if (!novaPartida.torneio) return alert("Preencha o Torneio.");
         setSalvando(true);
         try {
-          const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaId}/partidas`), { ...novaPartida, dataRegistro: new Date().toISOString() });
-          setPartidas([{ id: docRef.id, ...novaPartida }, ...partidas].sort((a,b) => new Date(b.data) - new Date(a.data)));
-          setNovaPartida({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "" });
+          const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaId}/partidas`), { ...novaPartida, data: novaPartida.data || new Date().toISOString().split('T')[0], dataRegistro: new Date().toISOString() });
+          setPartidas([{ id: docRef.id, ...novaPartida, dataRegistro: new Date().toISOString() }, ...partidas].sort((a,b) => new Date(b.dataRegistro) - new Date(a.dataRegistro)));
+          setNovaPartida({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "", nivelConfianca: "" });
         } catch (e) { alert("Erro ao salvar."); }
         setSalvando(false);
       };
@@ -710,6 +784,7 @@
 
                 <div className="pt-6 border-t border-slate-700 mt-6 space-y-4">
                   <h4 className="text-[11px] font-black text-optic-yellow uppercase tracking-widest bg-optic-yellow/10 p-2 rounded-lg text-center border border-optic-yellow/20">Métricas Sob Pressão</h4>
+                  <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Nível de Confiança / Gelo (1 a 10)</label><input type="number" placeholder="1 a 10" value={novaPartida.nivelConfianca} onChange={e=>setNovaPartida({...novaPartida, nivelConfianca: e.target.value})} className="!py-2 !text-sm !font-mono" /></div>
                   <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Break Points Salvos (%)</label><input type="number" placeholder="0 a 100" value={novaPartida.breakPointsSalvos} onChange={e=>setNovaPartida({...novaPartida, breakPointsSalvos: e.target.value})} className="!py-2 !text-sm !font-mono" /></div>
                   <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Duplas Faltas (Em BP/Vant)</label><input type="number" placeholder="Quantidade" value={novaPartida.duplasFaltas} onChange={e=>setNovaPartida({...novaPartida, duplasFaltas: e.target.value})} className="!py-2 !text-sm !font-mono" /></div>
                   <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Erros Não Forçados (Tie-Break)</label><input type="number" placeholder="Quantidade" value={novaPartida.errosNaoForcados} onChange={e=>setNovaPartida({...novaPartida, errosNaoForcados: e.target.value})} className="!py-2 !text-sm !font-mono" /></div>
@@ -750,24 +825,28 @@
                            <div className={`w-1.5 h-12 rounded-full ${p.resultado === 'Vitória' ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.6)]'}`}></div>
                            <div>
                              <p className="font-black text-xl text-white tracking-wider uppercase">{p.torneio}</p>
-                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">{new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                             {p.data && <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">{new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR')}</p>}
                            </div>
                         </div>
                         <button onClick={() => apagarPartida(p.id)} className="text-slate-600 hover:text-red-500 bg-white/5 p-2 rounded-lg transition-colors"><Icons.Trash /></button>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-1 bg-black/40 rounded-xl overflow-hidden border border-white/5 shadow-inner">
-                        <div className="p-4 text-center border-r border-white/5">
-                           <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">BP Salvos</span> 
-                           <strong className="text-2xl font-black font-mono text-white">{p.breakPointsSalvos || '-'}%</strong>
+                      <div className="grid grid-cols-4 gap-1 bg-black/40 rounded-xl overflow-hidden border border-white/5 shadow-inner">
+                        <div className="p-3 text-center border-r border-white/5">
+                           <span className="text-[8px] sm:text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Confiança</span> 
+                           <strong className="text-xl sm:text-2xl font-black font-mono text-court-blue">{p.nivelConfianca ? p.nivelConfianca+'/10' : '-'}</strong>
                         </div>
-                        <div className="p-4 text-center border-r border-white/5">
-                           <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Duplas Faltas</span> 
-                           <strong className="text-2xl font-black font-mono text-white">{p.duplasFaltas || '-'}</strong>
+                        <div className="p-3 text-center border-r border-white/5">
+                           <span className="text-[8px] sm:text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">BP Salvos</span> 
+                           <strong className="text-xl sm:text-2xl font-black font-mono text-white">{p.breakPointsSalvos ? p.breakPointsSalvos+'%' : '-'}</strong>
                         </div>
-                        <div className="p-4 text-center">
-                           <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Erros N.F.</span> 
-                           <strong className="text-2xl font-black font-mono text-white">{p.errosNaoForcados || '-'}</strong>
+                        <div className="p-3 text-center border-r border-white/5">
+                           <span className="text-[8px] sm:text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Duplas Faltas</span> 
+                           <strong className="text-xl sm:text-2xl font-black font-mono text-white">{p.duplasFaltas || '-'}</strong>
+                        </div>
+                        <div className="p-3 text-center">
+                           <span className="text-[8px] sm:text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Erros N.F.</span> 
+                           <strong className="text-xl sm:text-2xl font-black font-mono text-white">{p.errosNaoForcados || '-'}</strong>
                         </div>
                       </div>
                     </div>
@@ -780,7 +859,6 @@
       );
     };
 
-    // --- MÓDULO 5: AGENDA & TORNEIOS ---
     const ModuloAgenda = ({ atletas }) => {
       const [sessoes, setSessoes] = useState([]);
       const [novaSessao, setNovaSessao] = useState({ atletaId: "", dataHora: "", link: "" });
@@ -922,7 +1000,6 @@
       );
     };
 
-    // --- MÓDULO 6: RELATÓRIOS (PDF) ---
     const ModuloRelatorios = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
       const [objetivos, setObjetivos] = useState("");
@@ -1012,9 +1089,6 @@
       );
     };
 
-    // --------------------------------------------------
-    // ROTEADOR DO PSICÓLOGO
-    // --------------------------------------------------
     const DashboardPsicologo = () => {
       const [abaAtiva, setAbaAtiva] = useState('dashboard');
       const [checkins, setCheckins] = useState([]);
