@@ -120,7 +120,7 @@
     // COLE SUAS CHAVES AQUI
     // =========================================================================
     const firebaseConfig = {
- apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
+      apiKey: "AIzaSyA-Wkrh3xZc-V0snzsjvg4i9ffxWCKyu0M",
   authDomain: "ace-mind-c13a1.firebaseapp.com",
   databaseURL: "https://ace-mind-c13a1-default-rtdb.firebaseio.com",
   projectId: "ace-mind-c13a1",
@@ -154,6 +154,7 @@
     const Icons = {
       Menu: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>,
       Close: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>,
+      Home: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>,
       Dashboard: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>,
       Users: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>,
       Chart: () => <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>,
@@ -181,13 +182,17 @@
     };
 
     // ==============================================================================
-    // APP DO PACIENTE (ARSENAL DE ALTA PERFORMANCE)
+    // APP DO PACIENTE (COM NAVEGAÇÃO HAMBÚRGUER E RELATO DE PARTIDA)
     // ==============================================================================
     const MobileApp = ({ usuarioAtual }) => {
-      // Estados: Diário Base e Funcionalidades Anteriores
+      // Navegação
+      const [abaAtiva, setAbaAtiva] = useState('home');
+      const [menuAberto, setMenuAberto] = useState(false);
+
+      // Estados: Diário Base e Funcionalidades
       const [foco, setFoco] = useState(5);
       const [energia, setEnergia] = useState(5);
-      const [sono, setSono] = useState(5); // NOVO: Monitor de Sono
+      const [sono, setSono] = useState(5); 
       const [pontoForte, setPontoForte] = useState("");
       
       const [salvando, setSalvando] = useState(false);
@@ -206,8 +211,8 @@
       const [mantraAtivo, setMantraAtivo] = useState(false);
       const [meuMantra, setMeuMantra] = useState("EU CONTROLO O QUE POSSO CONTROLAR.");
 
-      // Estados: Raio-X Express (Partida)
-      const [novaPartida, setNovaPartida] = useState({ torneio: "", resultado: "Vitória", nivelConfianca: 5 });
+      // Estados: Raio-X Express (Partida) - AGORA COM RELATO
+      const [novaPartida, setNovaPartida] = useState({ torneio: "", resultado: "Vitória", nivelConfianca: 5, relato: "" });
       const [salvandoPartida, setSalvandoPartida] = useState(false);
 
       useEffect(() => {
@@ -246,10 +251,12 @@
         setSalvandoPartida(true);
         try {
           await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${usuarioAtual.uid}/partidas`), { 
-            torneio: novaPartida.torneio, resultado: novaPartida.resultado, nivelConfianca: novaPartida.nivelConfianca, dataRegistro: new Date().toISOString(), data: new Date().toISOString().split('T')[0]
+            torneio: novaPartida.torneio, resultado: novaPartida.resultado, nivelConfianca: novaPartida.nivelConfianca, 
+            relato: novaPartida.relato, // Novo campo salvo
+            dataRegistro: new Date().toISOString(), data: new Date().toISOString().split('T')[0]
           });
           alert("Raio-X enviado direto pro mentor!");
-          setNovaPartida({ torneio: "", resultado: "Vitória", nivelConfianca: 5 });
+          setNovaPartida({ torneio: "", resultado: "Vitória", nivelConfianca: 5, relato: "" });
         } catch (e) { alert("Erro ao salvar partida."); }
         setSalvandoPartida(false);
       }
@@ -266,9 +273,9 @@
       const toggleCheck = (item) => setChecklist({...checklist, [item]: !checklist[item]});
 
       return (
-        <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-0 sm:p-4 bg-black/40">
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-0 sm:p-4 bg-black/40 relative">
           
-          {/* SOBREPOSIÇÃO: MODO VISÃO DE TÚNEL */}
+          {/* MODO VISÃO DE TÚNEL (SOBREPOSIÇÃO MÁXIMA) */}
           {mantraAtivo && (
              <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-8 animate-fade-in" onClick={() => setMantraAtivo(false)}>
                 <div className="absolute inset-0 bg-gradient-to-b from-optic-yellow/5 to-transparent pointer-events-none"></div>
@@ -280,142 +287,195 @@
 
           <div className="w-full h-full sm:max-w-[420px] sm:h-[850px] glass-panel sm:rounded-[2.5rem] overflow-hidden relative flex flex-col sm:border-[8px] sm:border-slate-900 shadow-2xl">
             
-            <div className="pt-8 pb-6 px-8 bg-gradient-to-br from-court-blue to-slate-900 shrink-0 relative overflow-hidden border-b border-white/10">
+            {/* HEADER COM BOTÃO HAMBÚRGUER */}
+            <div className="pt-8 pb-6 px-8 bg-gradient-to-br from-court-blue to-slate-900 shrink-0 relative overflow-hidden border-b border-white/10 flex justify-between items-start">
               <div className="absolute top-0 right-0 opacity-10"><Icons.TennisBall /></div>
-              <h2 className="text-3xl text-white font-black tracking-tight truncate">Olá, {usuarioAtual.nome.split(' ')[0]}</h2>
-              <p className="text-optic-yellow text-[10px] mt-1 font-black tracking-[0.2em] uppercase">High Performance Toolkit</p>
+              <div className="relative z-10">
+                 <h2 className="text-3xl text-white font-black tracking-tight truncate">Olá, {usuarioAtual.nome.split(' ')[0]}</h2>
+                 <p className="text-optic-yellow text-[10px] mt-1 font-black tracking-[0.2em] uppercase">High Performance Toolkit</p>
+              </div>
+              <button onClick={() => setMenuAberto(true)} className="relative z-10 text-white hover:text-optic-yellow transition-colors p-2 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm active:scale-95">
+                 <Icons.Menu />
+              </button>
             </div>
 
+            {/* OVERLAY DO MENU */}
+            {menuAberto && <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-40 rounded-[2.5rem]" onClick={() => setMenuAberto(false)}></div>}
+
+            {/* SIDEBAR DO ATLETA */}
+            <aside className={`absolute top-0 left-0 h-full w-[280px] bg-slate-950 z-50 transition-transform duration-300 sm:rounded-l-[2rem] flex flex-col py-8 px-5 border-r border-white/10 shadow-2xl ${menuAberto ? 'translate-x-0' : '-translate-x-full'}`}>
+               <div className="flex justify-between items-center mb-8 pl-2">
+                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Menu do Atleta</span>
+                 <button onClick={() => setMenuAberto(false)} className="text-slate-400 hover:text-white p-2 bg-white/5 rounded-lg"><Icons.Close /></button>
+               </div>
+               <nav className="flex flex-col gap-3">
+                 <button onClick={() => { setAbaAtiva('home'); setMenuAberto(false); }} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all font-black text-xs tracking-widest uppercase ${abaAtiva === 'home' ? 'bg-optic-yellow text-slate-950 shadow-glow-yellow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                   <Icons.Home /> QG Mental
+                 </button>
+                 <button onClick={() => { setAbaAtiva('pre'); setMenuAberto(false); }} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all font-black text-xs tracking-widest uppercase ${abaAtiva === 'pre' ? 'bg-optic-yellow text-slate-950 shadow-glow-yellow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                   <Icons.Target /> Pré-Jogo
+                 </button>
+                 <button onClick={() => { setAbaAtiva('pos'); setMenuAberto(false); }} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all font-black text-xs tracking-widest uppercase ${abaAtiva === 'pos' ? 'bg-optic-yellow text-slate-950 shadow-glow-yellow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                   <Icons.Trophy /> Raio-X Pós-Jogo
+                 </button>
+               </nav>
+            </aside>
+
+            {/* ÁREA DE CONTEÚDO SCROLLÁVEL */}
             <div className="flex-1 overflow-y-auto px-5 py-6 space-y-6 custom-scrollbar relative z-10 pb-10">
               
-              {/* NOVA FERRAMENTA 3: MODO VISÃO DE TÚNEL */}
-              <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel flex gap-3 items-center">
-                 <div className="flex-1">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Frase Âncora (Mantra)</label>
-                    <input type="text" value={meuMantra} onChange={e=>setMeuMantra(e.target.value)} className="bg-transparent text-sm font-bold text-white outline-none w-full border-b border-slate-600 focus:border-optic-yellow transition-colors pb-1" />
-                 </div>
-                 <button onClick={() => setMantraAtivo(true)} className="bg-optic-yellow text-slate-900 p-3 rounded-2xl hover:bg-white transition-all shadow-glow-yellow active:scale-95">
-                    <Icons.Eye />
-                 </button>
-              </div>
-
-              {/* NOVA FERRAMENTA 2: CHECKLIST DE TRINCHEIRA (PRÉ-MATCH) */}
-              <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel">
-                 <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.CheckCircle /> Preparação de Trincheira</h3>
-                 <div className="grid grid-cols-2 gap-3">
-                    <button onClick={()=>toggleCheck('equipamento')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.equipamento ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
-                      <span className="text-2xl">🎒</span><span className="text-[9px] font-black uppercase tracking-widest">Equipamento</span>
-                    </button>
-                    <button onClick={()=>toggleCheck('hidratacao')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.hidratacao ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
-                      <span className="text-2xl">💧</span><span className="text-[9px] font-black uppercase tracking-widest">Hidratação</span>
-                    </button>
-                    <button onClick={()=>toggleCheck('visualizacao')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.visualizacao ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
-                      <span className="text-2xl">🧠</span><span className="text-[9px] font-black uppercase tracking-widest">Visualização</span>
-                    </button>
-                    <button onClick={()=>toggleCheck('tatica')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.tatica ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
-                      <span className="text-2xl">📋</span><span className="text-[9px] font-black uppercase tracking-widest">Tática Revisada</span>
-                    </button>
-                 </div>
-                 {todosChecados && <div className="mt-4 text-center text-[10px] font-black text-optic-yellow uppercase tracking-[0.2em] animate-pulse bg-optic-yellow/10 p-2 rounded-lg border border-optic-yellow/20">🚀 Pronto para a Guerra!</div>}
-              </div>
-
-              {/* COFRE DE ROTINAS */}
-              <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel">
-                 <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.Target /> Cofre Tático (Mentor)</h3>
-                 <div className="space-y-3">
-                    <div className="bg-black/40 border border-white/5 p-3 rounded-xl">
-                       <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Ritual Pré-Saque</span>
-                       <p className="text-xs text-slate-300 font-medium">{rotinas.pre}</p>
+              {/* === ABA: QG MENTAL (HOME) === */}
+              {abaAtiva === 'home' && (
+                <div className="space-y-6 animate-fade-in">
+                  
+                  {/* ZONE RESET */}
+                  <div className={`bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel transition-all duration-500 overflow-hidden ${respirando ? 'ring-2 ring-cyan-400/50' : ''}`}>
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2"><Icons.Wind /> Zone Reset</h3>
+                      <button onClick={() => setRespirando(!respirando)} className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-colors ${respirando ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-cyan-400 text-slate-900 hover:bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.4)]'}`}>
+                        {respirando ? 'PARAR' : 'INICIAR CICLO'}
+                      </button>
                     </div>
-                    <div className="bg-black/40 border border-white/5 p-3 rounded-xl">
-                       <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Reset Pós-Erro</span>
-                       <p className="text-xs text-slate-300 font-medium">{rotinas.pos}</p>
-                    </div>
-                 </div>
-              </div>
+                    {respirando ? (
+                      <div className="flex flex-col items-center justify-center py-8 relative">
+                        <div className={`w-32 h-32 rounded-full flex items-center justify-center border-4 breath-transition ${faseRespiracao === 'INSPIRA' ? 'scale-[1.6] border-cyan-400 bg-cyan-400/10' : faseRespiracao === 'EXPIRA' ? 'scale-75 border-slate-500 bg-slate-500/10' : 'scale-110 border-white/30 bg-white/5'}`}>
+                           <span className={`font-black tracking-widest text-xs text-center transition-colors duration-500 ${faseRespiracao === 'INSPIRA' ? 'text-cyan-400' : 'text-white'}`}>{faseRespiracao}</span>
+                        </div>
+                      </div>
+                    ) : ( <p className="text-[11px] text-slate-400 font-medium">Box Breathing (Técnica SEAL) para redução cardíaca imediata.</p> )}
+                  </div>
 
-              {/* ZONE RESET */}
-              <div className={`bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel transition-all duration-500 overflow-hidden ${respirando ? 'ring-2 ring-cyan-400/50' : ''}`}>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2"><Icons.Wind /> Zone Reset</h3>
-                  <button onClick={() => setRespirando(!respirando)} className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-colors ${respirando ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-cyan-400 text-slate-900 hover:bg-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.4)]'}`}>
-                    {respirando ? 'PARAR' : 'INICIAR CICLO'}
+                  {/* DIÁRIO DE TREINO */}
+                  <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-6 shadow-panel">
+                    <h3 className="font-black text-white uppercase tracking-wider text-sm mb-6 border-b border-slate-700 pb-3">Diário de Performance Base</h3>
+                    <div className="space-y-8">
+                      <div>
+                        <div className="flex justify-between text-[11px] text-slate-400 mb-4 uppercase font-bold tracking-wider flex items-center gap-1"><Icons.Moon /> <span>Descanso Ruim</span><span className="text-indigo-400">Recuperado</span></div>
+                        <input type="range" min="1" max="10" value={sono} onChange={(e) => setSono(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
+                        <div className="text-center mt-2 font-black text-xl text-indigo-300/80">{sono}</div>
+                      </div>
+                      <div className="border-t border-slate-700 pt-6">
+                        <div className="flex justify-between text-[11px] text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Desfocado</span><span className="text-optic-yellow">Flow Total</span></div>
+                        <input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
+                        <div className="text-center mt-2 font-black text-xl text-white/80">{foco}</div>
+                      </div>
+                      <div className="border-t border-slate-700 pt-6">
+                        <div className="flex justify-between text-[11px] text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Exausto</span><span className="text-optic-yellow">Energizado</span></div>
+                        <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
+                        <div className="text-center mt-2 font-black text-xl text-white/80">{energia}</div>
+                      </div>
+                      <div className="border-t border-slate-700 pt-6">
+                         <label className="text-[11px] text-orange-400 font-black uppercase tracking-widest block mb-2 flex items-center gap-1"><Icons.Flame /> O Trunfo do Dia</label>
+                         <p className="text-[10px] text-slate-400 mb-3">Reforço positivo: Qual foi o seu melhor momento ou atitude mental hoje?</p>
+                         <textarea value={pontoForte} onChange={e => setPontoForte(e.target.value)} placeholder="Ex: Consegui esquecer a dupla falta rápido..." className="!h-20 !text-sm !font-medium custom-scrollbar resize-none"></textarea>
+                      </div>
+                      <button onClick={salvarCheckin} disabled={salvando} className="btn-primary w-full mt-2 text-sm">{salvando ? 'Sincronizando...' : 'Salvar Diário'}</button>
+                    </div>
+                  </div>
+
+                  {/* BOTÃO SOS */}
+                  <button onClick={enviarSOS} disabled={sosEnviado} className={`w-full py-5 rounded-3xl flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 border-2 ${sosEnviado ? 'bg-green-900 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]' : 'bg-red-950/80 border-red-500/60 hover:bg-red-900 hover:border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-glow-red'}`}>
+                    {sosEnviado ? (
+                       <span className="font-bold text-green-400 text-lg uppercase tracking-widest">Apoio a caminho!</span>
+                    ) : (
+                      <>
+                        <Icons.Warning className="text-red-500 w-10 h-10 mb-2 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+                        <span className="font-black text-white uppercase tracking-[0.2em] text-sm drop-shadow-md">S.O.S Mental</span>
+                        <span className="text-xs text-red-300 mt-1 font-medium">Acionar Psicólogo Agora</span>
+                      </>
+                    )}
                   </button>
                 </div>
-                {respirando ? (
-                  <div className="flex flex-col items-center justify-center py-8 relative">
-                    <div className={`w-32 h-32 rounded-full flex items-center justify-center border-4 breath-transition ${faseRespiracao === 'INSPIRA' ? 'scale-[1.6] border-cyan-400 bg-cyan-400/10' : faseRespiracao === 'EXPIRA' ? 'scale-75 border-slate-500 bg-slate-500/10' : 'scale-110 border-white/30 bg-white/5'}`}>
-                       <span className={`font-black tracking-widest text-xs text-center transition-colors duration-500 ${faseRespiracao === 'INSPIRA' ? 'text-cyan-400' : 'text-white'}`}>{faseRespiracao}</span>
-                    </div>
-                  </div>
-                ) : ( <p className="text-[11px] text-slate-400 font-medium">Box Breathing (Técnica SEAL) para redução cardíaca imediata.</p> )}
-              </div>
+              )}
 
-              {/* NOVA FERRAMENTA 4: RAIO-X DA PARTIDA */}
-              <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-6 shadow-panel border-t-4 border-t-court-blue">
-                 <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.Trophy /> Raio-X Pós-Jogo</h3>
-                 <div className="space-y-4">
-                    <div><label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Torneio/Fase</label><input type="text" value={novaPartida.torneio} onChange={e=>setNovaPartida({...novaPartida, torneio: e.target.value})} placeholder="Ex: Final Regional" className="!py-2 !text-sm" /></div>
-                    <div className="grid grid-cols-2 gap-3">
-                       <button onClick={()=>setNovaPartida({...novaPartida, resultado: 'Vitória'})} className={`py-2 rounded-xl border text-sm font-black uppercase tracking-widest transition-all ${novaPartida.resultado === 'Vitória' ? 'bg-green-900/40 border-green-500 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-slate-800 border-slate-600 text-slate-400'}`}>Vitória</button>
-                       <button onClick={()=>setNovaPartida({...novaPartida, resultado: 'Derrota'})} className={`py-2 rounded-xl border text-sm font-black uppercase tracking-widest transition-all ${novaPartida.resultado === 'Derrota' ? 'bg-red-900/40 border-red-500 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-slate-800 border-slate-600 text-slate-400'}`}>Derrota</button>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-[11px] text-slate-400 mb-2 uppercase font-bold tracking-wider"><span>Confiança na Pressão</span><span className="text-court-blue">Gelo</span></div>
-                      <input type="range" min="1" max="10" value={novaPartida.nivelConfianca} onChange={(e) => setNovaPartida({...novaPartida, nivelConfianca: e.target.value})} className="!border-none !p-0 !bg-transparent shadow-none" />
-                    </div>
-                    <button onClick={enviarRaioX} disabled={salvandoPartida} className="w-full bg-court-blue text-white font-black uppercase tracking-wider rounded-xl py-3 shadow-[0_0_15px_rgba(30,58,138,0.5)] hover:bg-blue-800 text-xs transition-all active:scale-95">{salvandoPartida ? 'Enviando...' : 'Submeter Estatística'}</button>
-                 </div>
-              </div>
-
-              {/* DIÁRIO DE TREINO (COM NOVA FERRAMENTA 1: BATERIA NEURAL) */}
-              <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-6 shadow-panel">
-                <h3 className="font-black text-white uppercase tracking-wider text-sm mb-6 border-b border-slate-700 pb-3">Diário de Performance Base</h3>
-                <div className="space-y-8">
+              {/* === ABA: PRÉ-JOGO === */}
+              {abaAtiva === 'pre' && (
+                <div className="space-y-6 animate-fade-in">
                   
-                  {/* NOVA FERRAMENTA 1: SONO */}
-                  <div>
-                    <div className="flex justify-between text-[11px] text-slate-400 mb-4 uppercase font-bold tracking-wider flex items-center gap-1"><Icons.Moon /> <span>Descanso Ruim</span><span className="text-indigo-400">Recuperado</span></div>
-                    <input type="range" min="1" max="10" value={sono} onChange={(e) => setSono(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
-                    <div className="text-center mt-2 font-black text-xl text-indigo-300/80">{sono}</div>
+                  {/* VISÃO DE TÚNEL */}
+                  <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel flex gap-3 items-center">
+                     <div className="flex-1">
+                        <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Frase Âncora (Mantra)</label>
+                        <input type="text" value={meuMantra} onChange={e=>setMeuMantra(e.target.value)} className="bg-transparent text-sm font-bold text-white outline-none w-full border-b border-slate-600 focus:border-optic-yellow transition-colors pb-1" />
+                     </div>
+                     <button onClick={() => setMantraAtivo(true)} className="bg-optic-yellow text-slate-900 p-3 rounded-2xl hover:bg-white transition-all shadow-glow-yellow active:scale-95">
+                        <Icons.Eye />
+                     </button>
                   </div>
 
-                  <div className="border-t border-slate-700 pt-6">
-                    <div className="flex justify-between text-[11px] text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Desfocado</span><span className="text-optic-yellow">Flow Total</span></div>
-                    <input type="range" min="1" max="10" value={foco} onChange={(e) => setFoco(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
-                    <div className="text-center mt-2 font-black text-xl text-white/80">{foco}</div>
-                  </div>
-                  
-                  <div className="border-t border-slate-700 pt-6">
-                    <div className="flex justify-between text-[11px] text-slate-400 mb-4 uppercase font-bold tracking-wider"><span>Exausto</span><span className="text-optic-yellow">Energizado</span></div>
-                    <input type="range" min="1" max="10" value={energia} onChange={(e) => setEnergia(e.target.value)} className="!border-none !p-0 !bg-transparent shadow-none" />
-                    <div className="text-center mt-2 font-black text-xl text-white/80">{energia}</div>
+                  {/* CHECKLIST DE TRINCHEIRA */}
+                  <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel">
+                     <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.CheckCircle /> Preparação de Trincheira</h3>
+                     <div className="grid grid-cols-2 gap-3">
+                        <button onClick={()=>toggleCheck('equipamento')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.equipamento ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
+                          <span className="text-2xl">🎒</span><span className="text-[9px] font-black uppercase tracking-widest">Equipamento</span>
+                        </button>
+                        <button onClick={()=>toggleCheck('hidratacao')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.hidratacao ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
+                          <span className="text-2xl">💧</span><span className="text-[9px] font-black uppercase tracking-widest">Hidratação</span>
+                        </button>
+                        <button onClick={()=>toggleCheck('visualizacao')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.visualizacao ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
+                          <span className="text-2xl">🧠</span><span className="text-[9px] font-black uppercase tracking-widest">Visualização</span>
+                        </button>
+                        <button onClick={()=>toggleCheck('tatica')} className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${checklist.tatica ? 'bg-green-900/40 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-slate-800/50 border-slate-600 text-slate-400 hover:border-slate-400'}`}>
+                          <span className="text-2xl">📋</span><span className="text-[9px] font-black uppercase tracking-widest">Tática Revisada</span>
+                        </button>
+                     </div>
+                     {todosChecados && <div className="mt-4 text-center text-[10px] font-black text-optic-yellow uppercase tracking-[0.2em] animate-pulse bg-optic-yellow/10 p-2 rounded-lg border border-optic-yellow/20">🚀 Pronto para a Guerra!</div>}
                   </div>
 
-                  <div className="border-t border-slate-700 pt-6">
-                     <label className="text-[11px] text-orange-400 font-black uppercase tracking-widest block mb-2 flex items-center gap-1"><Icons.Flame /> O Trunfo do Dia</label>
-                     <p className="text-[10px] text-slate-400 mb-3">Reforço positivo: Qual foi o seu melhor momento ou atitude mental hoje?</p>
-                     <textarea value={pontoForte} onChange={e => setPontoForte(e.target.value)} placeholder="Ex: Consegui esquecer a dupla falta rápido..." className="!h-20 !text-sm !font-medium custom-scrollbar resize-none"></textarea>
+                  {/* COFRE DE ROTINAS */}
+                  <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-5 shadow-panel">
+                     <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.Target /> Cofre Tático (Mentor)</h3>
+                     <div className="space-y-3">
+                        <div className="bg-black/40 border border-white/5 p-3 rounded-xl">
+                           <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Ritual Pré-Saque</span>
+                           <p className="text-xs text-slate-300 font-medium">{rotinas.pre}</p>
+                        </div>
+                        <div className="bg-black/40 border border-white/5 p-3 rounded-xl">
+                           <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Reset Pós-Erro</span>
+                           <p className="text-xs text-slate-300 font-medium">{rotinas.pos}</p>
+                        </div>
+                     </div>
                   </div>
-
-                  <button onClick={salvarCheckin} disabled={salvando} className="btn-primary w-full mt-2 text-sm">
-                    {salvando ? 'Sincronizando...' : 'Salvar Diário'}
-                  </button>
                 </div>
-              </div>
+              )}
 
-              {/* Botão SOS */}
-              <button onClick={enviarSOS} disabled={sosEnviado} className={`w-full py-5 rounded-3xl flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 border-2 ${sosEnviado ? 'bg-green-900 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]' : 'bg-red-950/80 border-red-500/60 hover:bg-red-900 hover:border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-glow-red'}`}>
-                {sosEnviado ? (
-                   <span className="font-bold text-green-400 text-lg uppercase tracking-widest">Apoio a caminho!</span>
-                ) : (
-                  <>
-                    <Icons.Warning className="text-red-500 w-10 h-10 mb-2 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
-                    <span className="font-black text-white uppercase tracking-[0.2em] text-sm drop-shadow-md">S.O.S Mental</span>
-                    <span className="text-xs text-red-300 mt-1 font-medium">Acionar Psicólogo Agora</span>
-                  </>
-                )}
-              </button>
+              {/* === ABA: PÓS-JOGO (RAIO-X) === */}
+              {abaAtiva === 'pos' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl p-6 shadow-panel border-t-4 border-t-court-blue">
+                     <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2 mb-4"><Icons.Trophy /> Raio-X Pós-Jogo</h3>
+                     <div className="space-y-5">
+                        <div>
+                          <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Torneio/Fase</label>
+                          <input type="text" value={novaPartida.torneio} onChange={e=>setNovaPartida({...novaPartida, torneio: e.target.value})} placeholder="Ex: Final Regional" className="!py-2 !text-sm" />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                           <button onClick={()=>setNovaPartida({...novaPartida, resultado: 'Vitória'})} className={`py-2 rounded-xl border text-sm font-black uppercase tracking-widest transition-all ${novaPartida.resultado === 'Vitória' ? 'bg-green-900/40 border-green-500 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-slate-800 border-slate-600 text-slate-400'}`}>Vitória</button>
+                           <button onClick={()=>setNovaPartida({...novaPartida, resultado: 'Derrota'})} className={`py-2 rounded-xl border text-sm font-black uppercase tracking-widest transition-all ${novaPartida.resultado === 'Derrota' ? 'bg-red-900/40 border-red-500 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-slate-800 border-slate-600 text-slate-400'}`}>Derrota</button>
+                        </div>
+                        
+                        <div>
+                          <div className="flex justify-between text-[11px] text-slate-400 mb-2 uppercase font-bold tracking-wider"><span>Confiança na Pressão</span><span className="text-court-blue">Gelo</span></div>
+                          <input type="range" min="1" max="10" value={novaPartida.nivelConfianca} onChange={(e) => setNovaPartida({...novaPartida, nivelConfianca: e.target.value})} className="!border-none !p-0 !bg-transparent shadow-none" />
+                        </div>
+
+                        {/* NOVO CAMPO: RELATO DA PARTIDA */}
+                        <div className="border-t border-slate-700 pt-5 mt-2">
+                           <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-2">Diário Tático: Como se sentiu?</label>
+                           <p className="text-[10px] text-slate-500 mb-2">Dificuldades? O que fluiu bem? Momentos de tensão?</p>
+                           <textarea value={novaPartida.relato} onChange={e=>setNovaPartida({...novaPartida, relato: e.target.value})} placeholder="Escreva o que quiser desabafar sobre o jogo..." className="!h-28 !text-sm !font-medium custom-scrollbar resize-none"></textarea>
+                        </div>
+
+                        <button onClick={enviarRaioX} disabled={salvandoPartida} className="w-full bg-court-blue text-white font-black uppercase tracking-wider rounded-xl py-4 shadow-[0_0_15px_rgba(30,58,138,0.5)] hover:bg-blue-800 text-xs transition-all active:scale-95 mt-2">
+                          {salvandoPartida ? 'Enviando ao Psicólogo...' : 'Submeter Estatística'}
+                        </button>
+                     </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
@@ -726,7 +786,8 @@
     const ModuloMomentosCriticos = ({ atletas }) => {
       const [atletaId, setAtletaId] = useState("");
       const [partidas, setPartidas] = useState([]);
-      const [novaPartida, setNovaPartida] = useState({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "", nivelConfianca: "" });
+      // Modificado para suportar o relato
+      const [novaPartida, setNovaPartida] = useState({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "", nivelConfianca: "", relato: "" });
       const [salvando, setSalvando] = useState(false);
 
       useEffect(() => {
@@ -745,7 +806,7 @@
         try {
           const docRef = await window.fbAPI.addDoc(window.fbAPI.collection(window.db, `prontuarios/${atletaId}/partidas`), { ...novaPartida, data: novaPartida.data || new Date().toISOString().split('T')[0], dataRegistro: new Date().toISOString() });
           setPartidas([{ id: docRef.id, ...novaPartida, dataRegistro: new Date().toISOString() }, ...partidas].sort((a,b) => new Date(b.dataRegistro) - new Date(a.dataRegistro)));
-          setNovaPartida({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "", nivelConfianca: "" });
+          setNovaPartida({ torneio: "", data: "", resultado: "Vitória", breakPointsSalvos: "", duplasFaltas: "", errosNaoForcados: "", nivelConfianca: "", relato: "" });
         } catch (e) { alert("Erro ao salvar."); }
         setSalvando(false);
       };
@@ -762,7 +823,7 @@
           <header className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-3"><Icons.Crosshair /> Pressão em Jogo</h2>
-              <p className="text-slate-400 text-sm mt-1">Análise de *Choking* e métricas de momentos críticos.</p>
+              <p className="text-slate-400 text-sm mt-1">Análise de *Choking*, métricas e relatos de momentos críticos.</p>
             </div>
             <select value={atletaId} onChange={e => setAtletaId(e.target.value)} className="sm:w-64 !font-bold !uppercase !tracking-widest !text-xs">
               <option value="">Selecione o Atleta...</option>
@@ -831,7 +892,7 @@
                         <button onClick={() => apagarPartida(p.id)} className="text-slate-600 hover:text-red-500 bg-white/5 p-2 rounded-lg transition-colors"><Icons.Trash /></button>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-1 bg-black/40 rounded-xl overflow-hidden border border-white/5 shadow-inner">
+                      <div className="grid grid-cols-4 gap-1 bg-black/40 rounded-xl overflow-hidden border border-white/5 shadow-inner mb-4">
                         <div className="p-3 text-center border-r border-white/5">
                            <span className="text-[8px] sm:text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] block mb-1">Confiança</span> 
                            <strong className="text-xl sm:text-2xl font-black font-mono text-court-blue">{p.nivelConfianca ? p.nivelConfianca+'/10' : '-'}</strong>
@@ -849,6 +910,17 @@
                            <strong className="text-xl sm:text-2xl font-black font-mono text-white">{p.errosNaoForcados || '-'}</strong>
                         </div>
                       </div>
+
+                      {/* EXIBIÇÃO DO RELATO DO ATLETA PARA O PSICÓLOGO */}
+                      {p.relato && (
+                        <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                           <span className="text-[9px] text-optic-yellow font-black uppercase tracking-[0.2em] flex items-center gap-1 mb-2">
+                             <Icons.Eye /> Diário de Bordo (Relato do Atleta)
+                           </span>
+                           <p className="text-xs text-slate-300 font-medium whitespace-pre-wrap leading-relaxed">{p.relato}</p>
+                        </div>
+                      )}
+
                     </div>
                   ))}
                 </div>
