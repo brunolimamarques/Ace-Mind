@@ -19,7 +19,7 @@
   --starter:#60a5fa;--pro:#d4ff00;--elite:#f59e0b;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg0);color:var(--txt);font-family:'DM Sans',sans-serif;-webkit-tap-highlight-color:transparent;color-scheme:dark;overflow:hidden}
+body{background:var(--bg0);color:var(--txt);font-family:'DM Sans',sans-serif;-webkit-tap-highlight-color:transparent;color-scheme:dark;overflow:hidden;height:100vh}
 .court-bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(ellipse 130% 90% at 70% -10%,#0a1a3a,#030508 55%)}
 .court-bg::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(212,255,0,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(212,255,0,.022) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 60% at 70% 20%,black 20%,transparent 80%)}
 .noise{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px}
@@ -60,8 +60,8 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25)}
 .slbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .ptitle{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;letter-spacing:-.01em;text-transform:uppercase;color:var(--txt)}
 /* phone shell */
-.phone-shell{width:100%;max-width:420px;background:rgba(11,18,32,.88);backdrop-filter:blur(30px);border-radius:40px;overflow:hidden;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.07);box-shadow:0 30px 80px rgba(0,0,0,.7);position:relative;min-height:calc(100vh - 80px)}
-.phone-header{background:linear-gradient(135deg,#0a1d3e,#060f22 60%,#030508);padding:28px 20px 18px;flex-shrink:0;position:relative;overflow:hidden}
+/* phone-shell removed - now using full layout */
+.phone-header{background:linear-gradient(135deg,#0a1d3e,#060f22 60%,#030508);padding:20px 16px 16px;flex-shrink:0;position:sticky;top:0;z-index:30;overflow:hidden}
 .phone-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,255,0,.2),transparent)}
 /* check tile */
 .check-tile{background:rgba(0,0,0,.2);border:1px solid var(--b2);border-radius:15px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all .25s;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
@@ -156,6 +156,71 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25)}
 .mag::before{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(212,255,0,.07),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
 .mag:hover::before{opacity:1}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══ RESPONSIVE / HAMBURGER SIDEBAR ═══ */
+@media(max-width:768px){
+  .top-nav-user{display:none !important}
+  .main-pad{padding:16px !important}
+  .psico-sidebar{
+    position:fixed !important;top:0;left:0;height:100vh !important;
+    width:280px !important;z-index:99 !important;
+    transform:translateX(-100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1) !important;
+  }
+  .psico-sidebar.mobile-open{transform:translateX(0) !important}
+  .psico-sidebar.sidebar-collapsed{width:280px !important}
+  .sidebar-collapsed .nav-label{display:block !important}
+  .sidebar-collapsed .nav-item{justify-content:flex-start !important;padding:11px 14px !important}
+  .sidebar-collapsed .sidebar-footer-txt{display:block !important}
+  .psico-main{width:100% !important}
+  .hamburger-btn{display:flex !important}
+  .grid-2col{grid-template-columns:1fr !important}
+  .grid-3col{grid-template-columns:1fr 1fr !important}
+}
+@media(max-width:480px){
+  .grid-3col{grid-template-columns:1fr !important}
+  .grid-2col{grid-template-columns:1fr !important}
+}
+/* Sidebar overlay (mobile) */
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:98;display:none}
+.sidebar-overlay.open{display:block}
+/* Sidebar collapsed (desktop icon-only) */
+.sidebar-collapsed{width:64px !important;padding:20px 8px !important}
+.sidebar-collapsed .nav-label{display:none}
+.sidebar-collapsed .nav-item{justify-content:center !important;padding:12px !important}
+.sidebar-collapsed .sidebar-footer-txt{display:none}
+.sidebar-collapsed .sidebar-logo-txt{display:none}
+/* Hamburger button — hidden on desktop, shown on mobile */
+.hamburger-btn{
+  display:none;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:11px;padding:8px 12px;cursor:pointer;color:var(--txt);
+  align-items:center;gap:8px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
+  letter-spacing:.12em;text-transform:uppercase;transition:all .2s;flex-shrink:0;
+}
+.hamburger-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(212,255,0,.25)}
+/* Collapse toggle button (desktop) */
+.collapse-btn{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:9px;padding:7px;cursor:pointer;color:var(--dim);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+}
+.collapse-btn:hover{background:rgba(212,255,0,.08);color:var(--y);border-color:rgba(212,255,0,.2)}
+/* Tooltip on collapsed nav */
+.nav-item-wrap{position:relative}
+.nav-tooltip{
+  position:absolute;left:calc(100% + 10px);top:50%;
+  transform:translateY(-50%) translateX(-6px);
+  background:rgba(11,18,32,.98);border:1px solid rgba(255,255,255,.12);
+  border-radius:9px;padding:5px 11px;
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--txt);
+  white-space:nowrap;opacity:0;pointer-events:none;
+  transition:all .18s;z-index:200;
+}
+.nav-item-wrap:hover .nav-tooltip{opacity:1;transform:translateY(-50%) translateX(0)}
 </style>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -446,7 +511,7 @@ function MobileApp({user,userPlan,onPlanChange}){
   };
 
   return (
-    <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'calc(100vh - 65px)',background:'rgba(0,0,0,.28)'}}>
+    <div style={{height:'calc(100vh - 65px)',display:'flex',flexDirection:'column',overflow:'hidden',background:'rgba(0,0,0,.18)'}}>
 
       {/* MANTRA OVERLAY — Effect #9 Glitch */}
       {mantraOn&&(
@@ -458,46 +523,48 @@ function MobileApp({user,userPlan,onPlanChange}){
         </div>
       )}
 
-      <div className="phone-shell">
-        {/* HEADER — Effect #1 stagger */}
-        <div className="phone-header">
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-            <div className="ae">
-              <p style={{fontFamily:'Barlow Condensed',fontSize:10,fontWeight:700,letterSpacing:'.2em',textTransform:'uppercase',color:'rgba(212,255,0,.65)',marginBottom:4}}>High Performance Lab</p>
-              <h2 style={{fontFamily:'Barlow Condensed',fontWeight:900,fontSize:34,lineHeight:1,color:'#fff',margin:0}}>Olá, {user.nome.split(' ')[0]}</h2>
-            </div>
-            <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8}}>
-              <span className={`plan-chip ${userPlan} ae1`}>{planInfo.emoji} {planInfo.label}</span>
-              <button onClick={()=>setMenu(true)} style={{background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',borderRadius:11,padding:9,cursor:'pointer',color:'#fff',display:'flex'}}><I.Menu/></button>
-            </div>
+      {/* ── HEADER fixo no topo ── */}
+      <div className="phone-header" style={{flexShrink:0,zIndex:30,position:'relative'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+          <div className="ae">
+            <p style={{fontFamily:'Barlow Condensed',fontSize:10,fontWeight:700,letterSpacing:'.2em',textTransform:'uppercase',color:'rgba(212,255,0,.65)',marginBottom:4}}>High Performance Lab</p>
+            <h2 style={{fontFamily:'Barlow Condensed',fontWeight:900,fontSize:'clamp(24px,6vw,32px)',lineHeight:1,color:'#fff',margin:0}}>Olá, {user.nome.split(' ')[0]}</h2>
           </div>
-          <div style={{display:'flex',gap:7,marginTop:14}} className="ae2">
-            {[{id:'home',l:'QG Mental'},{id:'pre',l:'Pré-Jogo'},{id:'pos',l:'Pós-Jogo'}].map(t=>(
-              <button key={t.id} onClick={()=>setAba(t.id)} style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:11,letterSpacing:'.12em',textTransform:'uppercase',padding:'5px 13px',borderRadius:99,cursor:'pointer',transition:'all .2s',border:'1px solid',background:aba===t.id?'rgba(212,255,0,.12)':'transparent',borderColor:aba===t.id?'rgba(212,255,0,.35)':'rgba(255,255,255,.08)',color:aba===t.id?'#d4ff00':'rgba(255,255,255,.4)'}}>{t.l}</button>
-            ))}
+          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8}}>
+            <span className={`plan-chip ${userPlan} ae1`}>{planInfo.emoji} {planInfo.label}</span>
+            <button onClick={()=>setMenu(true)} style={{background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.1)',borderRadius:11,padding:9,cursor:'pointer',color:'#fff',display:'flex'}}><I.Menu/></button>
           </div>
         </div>
+        {/* ABAS — sempre visíveis */}
+        <div style={{display:'flex',gap:7,marginTop:14,overflowX:'auto',paddingBottom:2}} className="ae2">
+          {[{id:'home',l:'QG Mental'},{id:'pre',l:'Pré-Jogo'},{id:'pos',l:'Pós-Jogo'}].map(t=>(
+            <button key={t.id} onClick={()=>setAba(t.id)} style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:11,letterSpacing:'.12em',textTransform:'uppercase',padding:'6px 14px',borderRadius:99,cursor:'pointer',transition:'all .2s',border:'1px solid',background:aba===t.id?'rgba(212,255,0,.12)':'transparent',borderColor:aba===t.id?'rgba(212,255,0,.35)':'rgba(255,255,255,.08)',color:aba===t.id?'#d4ff00':'rgba(255,255,255,.4)',whiteSpace:'nowrap',flexShrink:0}}>{t.l}</button>
+          ))}
+        </div>
+      </div>
 
-        {/* SIDEBAR */}
-        {menu&&<div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.75)',backdropFilter:'blur(8px)',zIndex:40,borderRadius:40}} onClick={()=>setMenu(false)}/>}
-        <aside style={{position:'absolute',top:0,left:0,height:'100%',width:268,background:'rgba(4,7,13,.97)',backdropFilter:'blur(30px)',borderRight:'1px solid rgba(255,255,255,.06)',zIndex:50,display:'flex',flexDirection:'column',padding:'24px 14px',transition:'transform .3s cubic-bezier(.4,0,.2,1)',transform:menu?'translateX(0)':'translateX(-100%)'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:22}}>
-            <span className="slbl">Menu do Atleta</span>
-            <button onClick={()=>setMenu(false)} style={{background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.08)',borderRadius:8,padding:7,cursor:'pointer',color:'var(--dim)',display:'flex'}}><I.Close/></button>
-          </div>
-          <nav style={{display:'flex',flexDirection:'column',gap:4}}>
-            {[{id:'home',l:'QG Mental',ic:I.Home},{id:'pre',l:'Pré-Jogo',ic:I.Target},{id:'pos',l:'Raio-X Pós-Jogo',ic:I.Trophy}].map(item=>(
-              <button key={item.id} onClick={()=>{setAba(item.id);setMenu(false);}} className={`nav-item${aba===item.id?' active':''}`}><item.ic/>{item.l}</button>
-            ))}
-          </nav>
-          <div style={{marginTop:'auto',paddingTop:14,borderTop:'1px solid rgba(255,255,255,.05)'}}>
-            <p className="slbl" style={{marginBottom:8}}>Plano atual</p>
-            <span className={`plan-chip ${userPlan}`} style={{width:'100%',justifyContent:'center',pointerEvents:'none'}}>{planInfo.emoji} {planInfo.label}</span>
-          </div>
-        </aside>
+      {/* Sidebar overlay */}
+      {menu&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.75)',backdropFilter:'blur(8px)',zIndex:40}} onClick={()=>setMenu(false)}/>}
 
-        {/* CONTENT */}
-        <div className="cs" style={{flex:1,overflowY:'auto',padding:'16px 14px',display:'flex',flexDirection:'column',gap:11}}>
+      {/* Sidebar drawer */}
+      <aside style={{position:'fixed',top:0,left:0,height:'100%',width:272,background:'rgba(4,7,13,.97)',backdropFilter:'blur(30px)',borderRight:'1px solid rgba(255,255,255,.06)',zIndex:50,display:'flex',flexDirection:'column',padding:'24px 14px',transition:'transform .3s cubic-bezier(.4,0,.2,1)',transform:menu?'translateX(0)':'translateX(-100%)'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:22}}>
+          <span className="slbl">Menu do Atleta</span>
+          <button onClick={()=>setMenu(false)} style={{background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.08)',borderRadius:8,padding:7,cursor:'pointer',color:'var(--dim)',display:'flex'}}><I.Close/></button>
+        </div>
+        <nav style={{display:'flex',flexDirection:'column',gap:4}}>
+          {[{id:'home',l:'QG Mental',ic:I.Home},{id:'pre',l:'Pré-Jogo',ic:I.Target},{id:'pos',l:'Raio-X Pós-Jogo',ic:I.Trophy}].map(item=>(
+            <button key={item.id} onClick={()=>{setAba(item.id);setMenu(false);}} className={`nav-item${aba===item.id?' active':''}`}><item.ic/>{item.l}</button>
+          ))}
+        </nav>
+        <div style={{marginTop:'auto',paddingTop:14,borderTop:'1px solid rgba(255,255,255,.05)'}}>
+          <p className="slbl" style={{marginBottom:8}}>Plano atual</p>
+          <span className={`plan-chip ${userPlan}`} style={{width:'100%',justifyContent:'center',pointerEvents:'none'}}>{planInfo.emoji} {planInfo.label}</span>
+        </div>
+      </aside>
+
+      {/* ── CONTEÚDO SCROLLÁVEL ── */}
+      <div className="cs" style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch',padding:'14px 14px 32px',display:'flex',flexDirection:'column',gap:11}}>
 
           {/* ── QG MENTAL ── */}
           {aba==='home'&&(
@@ -662,7 +729,6 @@ function MobileApp({user,userPlan,onPlanChange}){
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }
@@ -679,7 +745,7 @@ function ModuloDashboard({checkins,userPlan}){
         <p style={{fontSize:14,color:'var(--dim)',marginTop:6}}>Estado mental dos atletas nas últimas 24h.</p>
       </header>
       {/* Effect #4 counters */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:12,marginBottom:26}}>
+      <div className="grid-3col" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:12,marginBottom:26}}>
         <Counter target={checkins.length} suffix="" label="Check-ins" delay={0}/>
         <Counter target={checkins.filter(c=>c.foco<=4||c.energia<=4).length} suffix="" label="Em Risco" delay={100} color="#f87171"/>
         <Counter target={checkins.filter(c=>c.foco>=8&&c.energia>=8).length} suffix="" label="Em Flow" delay={200} color="#4ade80"/>
@@ -750,7 +816,7 @@ function ModuloPerfil({atletas}){
         <select value={aid} onChange={e=>setAid(e.target.value)} style={{width:220,fontSize:12,fontFamily:'Barlow Condensed',fontWeight:700,letterSpacing:'.12em',textTransform:'uppercase'}}><option value="">Selecione o Atleta...</option>{atletas.map(a=><option key={a.id} value={a.id}>{a.nome}</option>)}</select>
       </header>
       {!aid?<div className="glass" style={{padding:60,textAlign:'center',borderRadius:22,borderStyle:'dashed',borderColor:'rgba(255,255,255,.1)'}}><span className="slbl">Selecione um atleta acima</span></div>:(
-        <div className="glass" style={{borderRadius:22,padding:32,display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+        <div className="glass grid-2col" style={{borderRadius:22,padding:32,display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
           <div style={{display:'flex',flexDirection:'column',gap:18}}>
             {[{l:'Categoria',k:'categoria',ph:'Ex: ATP, ITF'},{l:'Ranking',k:'ranking',ph:'Ex: #124 ATP'}].map((f,i)=>(
               <div key={i}><label className="slbl" style={{display:'block',marginBottom:7}}>{f.l}</label><input type="text" value={perfil[f.k]} onChange={e=>setPerfil({...perfil,[f.k]:e.target.value})} placeholder={f.ph} style={f.k==='ranking'?{color:'var(--y)',fontFamily:'DM Mono'}:{}}/></div>
@@ -819,7 +885,7 @@ function ModuloProntuario({atletas,userPlan}){
         <select value={id} onChange={e=>setId(e.target.value)} style={{width:220,fontSize:12,fontFamily:'Barlow Condensed',fontWeight:700,letterSpacing:'.12em',textTransform:'uppercase'}}><option value="">Selecione o Atleta...</option>{atletas.map(a=><option key={a.id} value={a.id}>{a.nome}</option>)}</select>
       </header>
       {!id?<div className="glass" style={{padding:60,textAlign:'center',borderRadius:22}}><span className="slbl">Selecione um atleta</span></div>:(
-        <div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:20}}>
+        <div className="grid-2col" style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:20}}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div className="glass" style={{borderRadius:18,padding:20,borderTop:'3px solid var(--y)'}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
@@ -911,7 +977,7 @@ function ModuloMomentosCriticos({atletas,userPlan}){
         <select value={aid} onChange={e=>setAid(e.target.value)} style={{width:220,fontSize:12,fontFamily:'Barlow Condensed',fontWeight:700,letterSpacing:'.12em',textTransform:'uppercase'}}><option value="">Selecione o Atleta...</option>{atletas.map(a=><option key={a.id} value={a.id}>{a.nome}</option>)}</select>
       </header>
       {!aid?<div className="glass" style={{padding:60,textAlign:'center',borderRadius:22}}><span className="slbl">Selecione um atleta</span></div>:(
-        <div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:20}}>
+        <div className="grid-2col" style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:20}}>
           <div className="glass" style={{borderRadius:18,padding:22,borderTop:'3px solid var(--y)',height:'fit-content'}}>
             <h3 style={{fontFamily:'Barlow Condensed',fontWeight:900,fontSize:16,textTransform:'uppercase',color:'#e2e8f0',margin:'0 0 18px'}}>Lançar Partida</h3>
             <div style={{display:'flex',flexDirection:'column',gap:13}}>
@@ -1006,7 +1072,7 @@ function ModuloAgenda({atletas}){
         <p className="slbl" style={{marginBottom:6}}>Sessões e competições</p>
         <h2 className="ptitle">Agenda & Calendário</h2>
       </header>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+      <div className="grid-2col" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
         <div className="glass" style={{borderRadius:18,padding:24,display:'flex',flexDirection:'column',height:660}}>
           <h3 style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:15,textTransform:'uppercase',color:'var(--y)',margin:'0 0 18px'}}>Sessões Clínicas</h3>
           <div style={{background:'rgba(0,0,0,.3)',border:'1px solid rgba(255,255,255,.06)',borderRadius:13,padding:14,marginBottom:14,flexShrink:0}}>
@@ -1156,7 +1222,7 @@ function ModuloAdmin({atletas}){
       </header>
 
       {/* Stats row */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:28}}>
+      <div className="grid-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:28}}>
         {[
           {k:'starter',l:'Starter',c:'var(--starter)',bg:'rgba(96,165,250,.08)',border:'rgba(96,165,250,.2)'},
           {k:'pro',l:'Pro',c:'var(--pro)',bg:'rgba(212,255,0,.08)',border:'rgba(212,255,0,.2)'},
@@ -1249,14 +1315,15 @@ function ModuloAdmin({atletas}){
 }
 
 /* ══════════════════════════════════════
-   DASHBOARD PSICÓLOGO
+   DASHBOARD PSICÓLOGO — RESPONSIVO
 ══════════════════════════════════════ */
 function DashboardPsicologo({isAdmin}){
   const [aba,setAba]=useState('dashboard');
   const [checkins,setCheckins]=useState([]);
   const [atletas,setAtletas]=useState([]);
   const [alertas,setAlertas]=useState([]);
-  // Psicólogo e Admin têm acesso TOTAL — sem restrições de plano
+  const [sideOpen,setSideOpen]=useState(false);   // mobile: drawer open
+  const [collapsed,setCollapsed]=useState(false);  // desktop: collapsed to icon-only
   const userPlan='elite';
 
   useEffect(()=>{
@@ -1271,7 +1338,10 @@ function DashboardPsicologo({isAdmin}){
     load();const iv=setInterval(load,30000);return()=>clearInterval(iv);
   },[]);
 
-  const resolverSOS=async id=>{await window.fb.updateDoc(window.fb.doc(window.db,'sos_alertas',id),{status:'resolvido'});setAlertas(alertas.filter(a=>a.id!==id));};
+  const resolverSOS=async id=>{
+    await window.fb.updateDoc(window.fb.doc(window.db,'sos_alertas',id),{status:'resolvido'});
+    setAlertas(alertas.filter(a=>a.id!==id));
+  };
 
   const menuItems=[
     {id:'dashboard',l:'Visão Geral',ic:I.Dashboard},
@@ -1283,33 +1353,106 @@ function DashboardPsicologo({isAdmin}){
     ...(isAdmin?[{id:'admin',l:'Gestão de Planos',ic:I.Crown}]:[]),
   ];
 
+  const navTo=id=>{setAba(id);setSideOpen(false);};
+
+  /* Collapse toggle icon */
+  const CollapseIcon=()=>(
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {collapsed
+        ?<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+        :<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7M19 19l-7-7 7-7"/>
+      }
+    </svg>
+  );
+
   return (
     <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 65px)',width:'100%',overflow:'hidden'}}>
 
-      {/* Effect #2 SOS pulse */}
+      {/* SOS Alert */}
       {alertas.length>0&&(
-        <div className="glow-r" style={{background:'linear-gradient(135deg,#7f1d1d,#991b1b)',padding:'13px 22px',display:'flex',justifyContent:'space-between',alignItems:'center',gap:14,flexShrink:0,zIndex:60}}>
-          <div style={{display:'flex',alignItems:'center',gap:11,color:'#fff'}}><I.Warning/><span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:13,letterSpacing:'.1em',textTransform:'uppercase'}}><span style={{color:'#fca5a5'}}>EMERGÊNCIA S.O.S: </span>{alertas[0].nome} precisa de apoio!</span></div>
-          <button onClick={()=>resolverSOS(alertas[0].id)} className="btn-sec" style={{padding:'7px 13px',fontSize:11,background:'rgba(0,0,0,.3)',borderColor:'rgba(255,255,255,.2)',flexShrink:0}}>Encerrar</button>
+        <div className="glow-r" style={{background:'linear-gradient(135deg,#7f1d1d,#991b1b)',padding:'12px 18px',display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexShrink:0,zIndex:60}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,color:'#fff',minWidth:0}}>
+            <I.Warning/>
+            <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:13,letterSpacing:'.1em',textTransform:'uppercase',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+              <span style={{color:'#fca5a5'}}>S.O.S: </span>{alertas[0].nome} precisa de apoio!
+            </span>
+          </div>
+          <button onClick={()=>resolverSOS(alertas[0].id)} className="btn-sec" style={{padding:'6px 12px',fontSize:11,background:'rgba(0,0,0,.3)',borderColor:'rgba(255,255,255,.2)',flexShrink:0}}>Encerrar</button>
         </div>
       )}
 
-      <div style={{display:'flex',flex:1,overflow:'hidden'}}>
+      {/* ── LAYOUT ROW ── */}
+      <div style={{display:'flex',flex:1,overflow:'hidden',position:'relative'}}>
+
+        {/* Mobile overlay */}
+        <div className={`sidebar-overlay${sideOpen?' open':''}`} onClick={()=>setSideOpen(false)}/>
+
         {/* SIDEBAR */}
-        <aside className="sidebar-wrap" style={{width:252,height:'100%',display:'flex',flexDirection:'column',padding:'26px 13px',flexShrink:0}}>
-          <p className="slbl" style={{padding:'0 5px',marginBottom:22}}>Painel de Controle</p>
-          <nav style={{display:'flex',flexDirection:'column',gap:3}}>
+        <aside
+          className={`sidebar-wrap psico-sidebar${collapsed?' sidebar-collapsed':''}${sideOpen?' mobile-open':''}`}
+          style={{
+            width:collapsed?64:248,height:'100%',display:'flex',flexDirection:'column',
+            padding:collapsed?'20px 8px':'22px 12px',
+            flexShrink:0,zIndex:99,
+            transition:'width .28s cubic-bezier(.4,0,.2,1),padding .28s',
+            overflow:'hidden',
+          }}>
+
+          {/* Sidebar header */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:collapsed?'center':'space-between',marginBottom:20,flexShrink:0}}>
+            {!collapsed&&<p className="slbl sidebar-logo-txt" style={{padding:'0 4px'}}>Painel de Controle</p>}
+            {/* Desktop collapse toggle */}
+            <button className="collapse-btn" onClick={()=>setCollapsed(c=>!c)} title={collapsed?'Expandir menu':'Recolher menu'}>
+              <CollapseIcon/>
+            </button>
+          </div>
+
+          {/* Nav items */}
+          <nav style={{display:'flex',flexDirection:'column',gap:3,flex:1}}>
             {menuItems.map(item=>(
-              <button key={item.id} onClick={()=>setAba(item.id)} className={`nav-item${aba===item.id?' active':''}`}><item.ic/>{item.l}</button>
+              <div key={item.id} className="nav-item-wrap">
+                <button
+                  onClick={()=>navTo(item.id)}
+                  className={`nav-item${aba===item.id?' active':''}`}
+                  style={{justifyContent:collapsed?'center':'flex-start',paddingLeft:collapsed?12:14}}
+                  title={item.l}>
+                  <item.ic/>
+                  <span className="nav-label" style={{display:collapsed?'none':'block',whiteSpace:'nowrap'}}>{item.l}</span>
+                </button>
+                {collapsed&&<div className="nav-tooltip">{item.l}</div>}
+              </div>
             ))}
           </nav>
-          <div style={{marginTop:'auto',paddingTop:14,borderTop:'1px solid rgba(255,255,255,.05)'}}>
-            <p className="slbl" style={{color:'rgba(212,255,0,.4)',fontSize:9}}>Acesso Completo ao Sistema</p>
+
+          {/* Footer */}
+          <div style={{paddingTop:14,borderTop:'1px solid rgba(255,255,255,.05)',flexShrink:0}}>
+            {collapsed
+              ?<div style={{display:'flex',justifyContent:'center',opacity:.35}}><I.Target/></div>
+              :<p className="slbl sidebar-footer-txt" style={{color:'rgba(212,255,0,.4)',fontSize:9}}>Acesso Completo ao Sistema</p>
+            }
           </div>
         </aside>
 
-        {/* MAIN */}
-        <main className="cs" style={{flex:1,overflowY:'auto',padding:'32px 38px',width:0}}>
+        {/* MAIN CONTENT */}
+        <main className="cs psico-main" className="cs psico-main main-pad" style={{flex:1,overflowY:'auto',padding:'28px 32px',width:0,transition:'padding .28s'}}>
+
+          {/* Mobile hamburger bar at top of content */}
+          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+            <button className="hamburger-btn" onClick={()=>setSideOpen(o=>!o)}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {sideOpen
+                  ?<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+                  :<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M4 7h16M4 12h10M4 17h16"/>
+                }
+              </svg>
+              {sideOpen?'Fechar':'Menu'}
+            </button>
+            {/* Current section label on mobile */}
+            <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--dim)'}}>
+              {menuItems.find(m=>m.id===aba)?.l}
+            </span>
+          </div>
+
           {aba==='dashboard'&&<ModuloDashboard checkins={checkins} userPlan={userPlan}/>}
           {aba==='perfil'&&<ModuloPerfil atletas={atletas}/>}
           {aba==='prontuario'&&<ModuloProntuario atletas={atletas} userPlan={userPlan}/>}
@@ -1438,22 +1581,22 @@ function App(){
 
   return (
     <div style={{height:'100vh',display:'flex',flexDirection:'column',overflow:'hidden',width:'100%'}}>
-      {/* TOP NAV — Effect #9 glitch */}
-      <div className="top-nav" style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'13px 24px',flexShrink:0,zIndex:50}}>
-        <div style={{display:'flex',alignItems:'center',gap:11}}>
-          <div style={{width:30,height:30,borderRadius:'50%',background:'rgba(212,255,0,.07)',border:'1px solid rgba(212,255,0,.2)',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(212,255,0,.7)'}}><I.Ball/></div>
+      {/* TOP NAV — responsivo */}
+      <div className="top-nav" style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'11px 20px',flexShrink:0,zIndex:50,gap:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(212,255,0,.07)',border:'1px solid rgba(212,255,0,.2)',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(212,255,0,.7)',flexShrink:0}}><I.Ball/></div>
           <div className="glitch" data-text="ACEMIND">
-            <span style={{fontFamily:'Barlow Condensed',fontWeight:900,fontSize:21,color:'var(--txt)',textTransform:'uppercase',letterSpacing:'-.01em'}}>Ace<span style={{color:'var(--y)'}}>Mind</span></span>
+            <span style={{fontFamily:'Barlow Condensed',fontWeight:900,fontSize:20,color:'var(--txt)',textTransform:'uppercase',letterSpacing:'-.01em'}}>Ace<span style={{color:'var(--y)'}}>Mind</span></span>
           </div>
         </div>
-        <div style={{display:'flex',alignItems:'center',gap:13}}>
-          <div style={{textAlign:'right'}}>
-            <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,color:'#e2e8f0',letterSpacing:'.03em',textTransform:'uppercase',display:'block'}}>{user.nome}</span>
+        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'nowrap'}}>
+          <div className="top-nav-user" style={{textAlign:'right',display:'flex',flexDirection:'column'}}>
+            <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,color:'#e2e8f0',letterSpacing:'.03em',textTransform:'uppercase',whiteSpace:'nowrap'}}>{user.nome}</span>
             <span className="slbl" style={{color:'rgba(212,255,0,.55)'}}>{user.cargo}</span>
           </div>
-          <div style={{width:1,height:26,background:'rgba(255,255,255,.08)'}}/>
-          {(user.cargo==='paciente')&&<span className={`plan-chip ${userPlan}`}>{planInfo.emoji} {planInfo.label}</span>}
-          <button onClick={()=>{window.fb.signOut(window.auth);setUser(null);}} className="btn-danger">Logout</button>
+          <div className="top-nav-user" style={{width:1,height:24,background:'rgba(255,255,255,.08)'}}/>
+          {(user.cargo==='paciente')&&<span className={`plan-chip ${userPlan}`} style={{whiteSpace:'nowrap'}}>{planInfo.emoji} {planInfo.label}</span>}
+          <button onClick={()=>{window.fb.signOut(window.auth);setUser(null);}} className="btn-danger" style={{whiteSpace:'nowrap'}}>Sair</button>
         </div>
       </div>
 
