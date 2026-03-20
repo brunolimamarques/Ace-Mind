@@ -271,17 +271,56 @@ const PLANS={
   pro:{level:2,label:'Pro',color:'#d4ff00',emoji:'⚡'},
   elite:{level:3,label:'Elite',color:'#f59e0b',emoji:'👑'},
 };
-const FEATURES={
-  sos:{min:'pro',label:'S.O.S Mental'},
-  mantra:{min:'starter',label:'Visão de Túnel'},
-  zoneReset:{min:'starter',label:'Zone Reset'},
-  raioX:{min:'pro',label:'Raio-X Pós-Jogo'},
-  videoUpload:{min:'elite',label:'Upload de Vídeo'},
-  particles:{min:'starter',label:'Painel Partículas'},
-  checklist:{min:'starter',label:'Checklist'},
-  pdfExport:{min:'pro',label:'Exportar PDF'},
-  relatos:{min:'pro',label:'Ver Relatos'},
+// FEATURES carregado do Firestore (admin pode editar) — fallback local abaixo
+const FEATURES_DEFAULT={
+  // QG Mental
+  sos:          {min:'pro',    label:'S.O.S Mental'},
+  mantra:       {min:'starter',label:'Visão de Túnel'},
+  zoneReset:    {min:'starter',label:'Zone Reset'},
+  particles:    {min:'starter',label:'Painel de Partículas'},
+  // Pré-Jogo
+  checklist:    {min:'starter',label:'Checklist Pré-Jogo'},
+  // Pós-Jogo
+  raioX:        {min:'pro',    label:'Raio-X Pós-Jogo'},
+  relatos:      {min:'pro',    label:'Ver Relatos do Atleta'},
+  // Analytics
+  analytics:    {min:'starter',label:'📊 Analytics & Stats'},
+  graficosEvo:  {min:'pro',    label:'Gráfico de Evolução'},
+  trofeus:      {min:'starter',label:'Sala de Troféus (PRs)'},
+  comparativo:  {min:'pro',    label:'Comparativo de Meses'},
+  // Wellness
+  wellness:     {min:'starter',label:'💊 Saúde & Recuperação'},
+  sonoFadiga:   {min:'starter',label:'Avaliação Sono/Fadiga'},
+  riscoLesao:   {min:'pro',    label:'Indicador de Risco de Lesão'},
+  lesoes:       {min:'starter',label:'Histórico de Lesões'},
+  hidratacao:   {min:'starter',label:'Controle de Hidratação'},
+  macros:       {min:'pro',    label:'Macronutrientes do Dia'},
+  // Metas
+  metas:        {min:'starter',label:'🎯 Metas & Calendário'},
+  calendario:   {min:'starter',label:'Calendário de Treinos'},
+  okr:          {min:'pro',    label:'Mural de Objetivos (OKR)'},
+  // Psicólogo
+  videoUpload:  {min:'elite',  label:'Upload de Vídeo'},
+  pdfExport:    {min:'pro',    label:'Exportar PDF'},
 };
+
+// Runtime features — substituído pelo Firestore se admin tiver editado
+let FEATURES={...FEATURES_DEFAULT};
+
+// Carrega permissões salvas pelo admin
+async function carregarPermissoes(){
+  try{
+    const d=await window.fb.getDoc(window.fb.doc(window.db,'config','permissoes'));
+    if(d.exists()&&d.data().features){
+      const saved=d.data().features;
+      Object.keys(FEATURES_DEFAULT).forEach(k=>{
+        if(saved[k]?.min) FEATURES[k]={...FEATURES_DEFAULT[k],min:saved[k].min};
+      });
+    }
+  }catch(e){/* usa default */}
+}
+// Inicia carregamento (não-bloqueante)
+const permissoesPromise=typeof window.fb!=='undefined'?carregarPermissoes():Promise.resolve();
 const canAccess=(plan,feat)=>(PLANS[plan]?.level??1)>=(PLANS[FEATURES[feat]?.min]?.level??1);
 
 /* ══ PLAN GATE ══ */
@@ -753,13 +792,25 @@ function MobileApp({user,userPlan,onPlanChange}){
           )}
 
           {/* ── ANALYTICS & STATS ── */}
-          {aba==='analytics'&&<TabAnalytics uid={user.uid}/>}
+          {aba==='analytics'&&(
+            <PlanGate feature="analytics" userPlan={userPlan} style={{borderRadius:18,minHeight:200}}>
+              <TabAnalytics uid={user.uid} userPlan={userPlan}/>
+            </PlanGate>
+          )}
 
           {/* ── SAÚDE & RECUPERAÇÃO ── */}
-          {aba==='wellness'&&<TabWellness uid={user.uid}/>}
+          {aba==='wellness'&&(
+            <PlanGate feature="wellness" userPlan={userPlan} style={{borderRadius:18,minHeight:200}}>
+              <TabWellness uid={user.uid} userPlan={userPlan}/>
+            </PlanGate>
+          )}
 
           {/* ── METAS & CALENDÁRIO ── */}
-          {aba==='metas'&&<TabMetas uid={user.uid}/>}
+          {aba==='metas'&&(
+            <PlanGate feature="metas" userPlan={userPlan} style={{borderRadius:18,minHeight:200}}>
+              <TabMetas uid={user.uid} userPlan={userPlan}/>
+            </PlanGate>
+          )}
 
         </div>
     </div>
@@ -769,7 +820,7 @@ function MobileApp({user,userPlan,onPlanChange}){
 /* ══════════════════════════════════════
    TAB ANALYTICS — Gráficos & Troféus
 ══════════════════════════════════════ */
-function TabAnalytics({uid}){
+function TabAnalytics({uid,userPlan="starter"}){
   const [periodo,setPeriodo]=useState('7d');
   const [checkins,setCheckins]=useState([]);
   const [prs,setPRs]=useState([]);
@@ -866,7 +917,9 @@ function TabAnalytics({uid}){
         </div>
         {filtered.length===0
           ?<p style={{fontSize:12,color:'var(--muted)',textAlign:'center',padding:'24px 0'}}>Nenhum check-in nesse período.</p>
-          :<div style={{height:200}}><canvas ref={chartRef}/></div>
+          :<PlanGate feature="graficosEvo" userPlan={userPlan} style={{borderRadius:12}}>
+            <div style={{height:200}}><canvas ref={chartRef}/></div>
+          </PlanGate>
         }
         {/* Averages strip */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1,background:'rgba(255,255,255,.04)',borderRadius:10,overflow:'hidden',marginTop:12}}>
@@ -880,6 +933,7 @@ function TabAnalytics({uid}){
       </div>
 
       {/* Seasonal comparison */}
+      <PlanGate feature="comparativo" userPlan={userPlan} style={{borderRadius:18}}>
       <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
         <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0',display:'block',marginBottom:14}}>📅 Comparativo de Meses</span>
         {comp.map((c,i)=>{
@@ -896,6 +950,7 @@ function TabAnalytics({uid}){
           );
         })}
       </div>
+      </PlanGate>
 
       {/* Trophy Room */}
       <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
@@ -941,7 +996,7 @@ function TabAnalytics({uid}){
 /* ══════════════════════════════════════
    TAB WELLNESS — Saúde & Recuperação
 ══════════════════════════════════════ */
-function TabWellness({uid}){
+function TabWellness({uid,userPlan="starter"}){
   const [subAba,setSubAba]=useState('sono');
   // Sono/fadiga diária
   const [bem,setBem]=useState({acordei:7,fadiga:3,dor:0,nota:''});
@@ -1018,7 +1073,7 @@ function TabWellness({uid}){
       {subAba==='sono'&&(
         <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
           <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0',display:'block',marginBottom:16}}>Avaliação de Hoje</span>
-          {riscoLesao&&(
+          {riscoLesao&&canAccess(userPlan,'riscoLesao')&&(
             <div style={{background:riscoBg(riscoLesao),border:`1px solid ${riscoColor(riscoLesao)}44`,borderRadius:12,padding:'11px 14px',marginBottom:14,display:'flex',alignItems:'center',gap:10}}>
               <span style={{fontSize:20}}>{riscoLesao==='alto'?'⚠️':riscoLesao==='moderado'?'🟡':'✅'}</span>
               <div><p style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:13,textTransform:'uppercase',color:riscoColor(riscoLesao),margin:0}}>Risco de Lesão: {riscoLesao.toUpperCase()}</p><p style={{fontSize:11,color:'var(--dim)',margin:'3px 0 0'}}>{riscoLesao==='alto'?'Considere descanso ou sessão leve.':riscoLesao==='moderado'?'Atenção redobrada no treino.':'Ótimo! Pode treinar em alta intensidade.'}</p></div>
@@ -1119,7 +1174,8 @@ function TabWellness({uid}){
             </div>
             <p style={{fontSize:11,color:'var(--muted)',marginTop:7}}>{coposAgua.length>=metaCopos?'🎉 Meta de hidratação atingida!':coposAgua.length>=metaCopos/2?'Boa! Continue hidratando.':'Lembre-se de beber água.'}</p>
           </div>
-          {/* Macros */}
+          {/* Macros — gated */}
+          <PlanGate feature="macros" userPlan={userPlan} style={{borderRadius:18}}>
           <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
             <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0',display:'block',marginBottom:14}}>🍽️ Macronutrientes do Dia</span>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
@@ -1145,6 +1201,7 @@ function TabWellness({uid}){
               <button onClick={salvarMacros} className="btn-y" style={{width:'100%',fontSize:12}}>Salvar Macros do Dia</button>
             </div>
           </div>
+          </PlanGate>
         </div>
       )}
     </div>
@@ -1154,7 +1211,7 @@ function TabWellness({uid}){
 /* ══════════════════════════════════════
    TAB METAS — Calendário & OKRs
 ══════════════════════════════════════ */
-function TabMetas({uid}){
+function TabMetas({uid,userPlan="starter"}){
   const [subAba,setSubAba]=useState('cal');
   const [semana,setSemana]=useState(0); // 0=current week offset
   const [treinos,setTreinos]=useState({});
@@ -1296,8 +1353,9 @@ function TabMetas({uid}){
         </div>
       )}
 
-      {/* OKRs */}
+      {/* OKRs — gated */}
       {subAba==='okr'&&(
+        <PlanGate feature="okr" userPlan={userPlan} style={{borderRadius:18}}>
         <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
             <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0'}}>🎯 Mural de Objetivos</span>
@@ -1369,6 +1427,7 @@ function TabMetas({uid}){
             );
           })}
         </div>
+        </PlanGate>
       )}
     </div>
   );
@@ -1935,22 +1994,155 @@ function ModuloAdmin({atletas}){
         })}
       </div>
 
-      {/* Legend */}
-      <div style={{marginTop:20,background:'rgba(11,18,32,.5)',border:'1px solid rgba(255,255,255,.05)',borderRadius:16,padding:'16px 20px'}}>
-        <p className="slbl" style={{marginBottom:12}}>Permissões por plano</p>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:8}}>
-          {Object.entries(FEATURES).map(([k,f])=>{
-            const minP=PLANS[f.min];
-            return (
-              <div key={k} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 10px',borderRadius:8,background:'rgba(0,0,0,.2)'}}>
-                <span style={{width:8,height:8,borderRadius:'50%',background:f.min==='elite'?'var(--elite)':f.min==='pro'?'var(--pro)':'var(--starter)',flexShrink:0,boxShadow:`0 0 6px ${f.min==='elite'?'rgba(245,158,11,.5)':f.min==='pro'?'rgba(212,255,0,.5)':'rgba(96,165,250,.5)'}`}}/>
-                <span style={{fontSize:11,color:'var(--dim)',flex:1}}>{f.label}</span>
-                <span style={{fontFamily:'Barlow Condensed',fontSize:9,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:minP.color}}>{minP.label}+</span>
-              </div>
-            );
-          })}
+      {/* ── PERMISSÕES EDITÁVEIS ── */}
+      <PermissoesEditor/>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════
+   EDITOR DE PERMISSÕES (Admin)
+   Admin pode arrastar qualquer feature
+   entre os planos. Salva no Firestore.
+══════════════════════════════════════ */
+function PermissoesEditor(){
+  const [local,setLocal]=useState(()=>{
+    // Clone FEATURES_DEFAULT as initial state
+    const s={};
+    Object.entries(FEATURES_DEFAULT).forEach(([k,v])=>{s[k]={...v};});
+    return s;
+  });
+  const [salvando,setSalvando]=useState(false);
+  const [saved,setSaved]=useState(false);
+  const [carregado,setCarregado]=useState(false);
+
+  // Load from Firestore on mount
+  useEffect(()=>{
+    (async()=>{
+      try{
+        const d=await window.fb.getDoc(window.fb.doc(window.db,'config','permissoes'));
+        if(d.exists()&&d.data().features){
+          const saved=d.data().features;
+          const novo={};
+          Object.keys(FEATURES_DEFAULT).forEach(k=>{
+            novo[k]={...FEATURES_DEFAULT[k],min:saved[k]?.min||FEATURES_DEFAULT[k].min};
+          });
+          setLocal(novo);
+          // Also update runtime FEATURES
+          Object.keys(novo).forEach(k=>{FEATURES[k]={...FEATURES[k],min:novo[k].min};});
+        }
+      }catch(e){}
+      setCarregado(true);
+    })();
+  },[]);
+
+  const setMin=(feat,newMin)=>{
+    setLocal(l=>({...l,[feat]:{...l[feat],min:newMin}}));
+  };
+
+  const salvar=async()=>{
+    setSalvando(true);
+    try{
+      const toSave={};
+      Object.entries(local).forEach(([k,v])=>{toSave[k]={min:v.min};});
+      await window.fb.setDoc(window.fb.doc(window.db,'config','permissoes'),{features:toSave,atualizadoEm:new Date().toISOString()});
+      // Update runtime FEATURES immediately
+      Object.entries(local).forEach(([k,v])=>{FEATURES[k]={...FEATURES[k],min:v.min};});
+      setSaved(true);setTimeout(()=>setSaved(false),2500);
+    }catch(e){alert('Erro ao salvar permissões.');}
+    setSalvando(false);
+  };
+
+  const resetar=()=>{
+    const r={};Object.entries(FEATURES_DEFAULT).forEach(([k,v])=>{r[k]={...v};});
+    setLocal(r);
+  };
+
+  // Group features by category
+  const grupos={
+    'QG Mental':['sos','mantra','zoneReset','particles'],
+    'Pré-Jogo':['checklist'],
+    'Pós-Jogo':['raioX','relatos'],
+    'Analytics':['analytics','graficosEvo','trofeus','comparativo'],
+    'Wellness':['wellness','sonoFadiga','riscoLesao','lesoes','hidratacao','macros'],
+    'Metas':['metas','calendario','okr'],
+    'Psicólogo':['videoUpload','pdfExport'],
+  };
+
+  const planColors={'starter':'var(--starter)','pro':'var(--pro)','elite':'var(--elite)'};
+  const planBg={'starter':'rgba(96,165,250,.12)','pro':'rgba(212,255,0,.12)','elite':'rgba(245,158,11,.12)'};
+  const planBorder={'starter':'rgba(96,165,250,.35)','pro':'rgba(212,255,0,.35)','elite':'rgba(245,158,11,.35)'};
+
+  if(!carregado) return <div style={{textAlign:'center',padding:40,color:'var(--muted)'}}><span className="slbl">Carregando permissões...</span></div>;
+
+  return (
+    <div style={{marginTop:20}}>
+      {/* Header */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,flexWrap:'wrap',gap:10}}>
+        <div>
+          <p className="slbl" style={{marginBottom:4}}>Configuração de Acesso por Plano</p>
+          <p style={{fontSize:12,color:'var(--muted)',margin:0}}>Defina o plano mínimo para cada funcionalidade. Clique nos botões para alterar.</p>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={resetar} className="btn-sec" style={{padding:'7px 14px',fontSize:11}}>↺ Resetar</button>
+          <button onClick={salvar} disabled={salvando} className="btn-y" style={{padding:'8px 18px',fontSize:12,gap:6}}>
+            {salvando?'Salvando...':(saved?'✓ Salvo!':'Salvar Permissões')}
+          </button>
         </div>
       </div>
+
+      {/* Plan legend */}
+      <div style={{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap'}}>
+        {Object.entries(PLANS).map(([k,p])=>(
+          <div key={k} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 11px',borderRadius:99,background:planBg[k],border:`1px solid ${planBorder[k]}`}}>
+            <span style={{width:7,height:7,borderRadius:'50%',background:planColors[k],boxShadow:`0 0 6px ${planColors[k]}`}}/>
+            <span style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',color:planColors[k]}}>{p.emoji} {p.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Feature groups */}
+      {Object.entries(grupos).map(([grupo,keys])=>(
+        <div key={grupo} style={{background:'rgba(11,18,32,.5)',border:'1px solid rgba(255,255,255,.05)',borderRadius:16,padding:'14px 18px',marginBottom:10}}>
+          <p style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:12,letterSpacing:'.15em',textTransform:'uppercase',color:'rgba(212,255,0,.6)',margin:'0 0 12px'}}>{grupo}</p>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {keys.filter(k=>local[k]).map(k=>{
+              const feat=local[k];
+              const isDefault=feat.min===FEATURES_DEFAULT[k]?.min;
+              return (
+                <div key={k} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:10,background:'rgba(0,0,0,.2)',border:'1px solid rgba(255,255,255,.04)'}}>
+                  {/* Feature name */}
+                  <div style={{flex:1,minWidth:0}}>
+                    <span style={{fontSize:12,color:isDefault?'var(--dim)':'var(--txt)',fontWeight:isDefault?400:600}}>{feat.label}</span>
+                    {!isDefault&&<span style={{fontFamily:'Barlow Condensed',fontSize:8,fontWeight:700,letterSpacing:'.15em',textTransform:'uppercase',color:'#fb923c',marginLeft:7}}>MODIFICADO</span>}
+                  </div>
+                  {/* Plan toggle buttons */}
+                  <div style={{display:'flex',gap:5,flexShrink:0}}>
+                    {Object.entries(PLANS).map(([pk,p])=>{
+                      const isActive=feat.min===pk;
+                      return (
+                        <button key={pk} onClick={()=>setMin(k,pk)} style={{
+                          padding:'4px 10px',borderRadius:8,cursor:'pointer',
+                          fontFamily:'Barlow Condensed',fontWeight:700,fontSize:10,
+                          letterSpacing:'.1em',textTransform:'uppercase',
+                          border:`1px solid ${isActive?planBorder[pk]:'rgba(255,255,255,.08)'}`,
+                          background:isActive?planBg[pk]:'transparent',
+                          color:isActive?planColors[pk]:'var(--muted)',
+                          transition:'all .15s',
+                        }}>
+                          {p.emoji}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Current min plan badge */}
+                  <span style={{fontFamily:'Barlow Condensed',fontSize:9,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:planColors[feat.min],background:planBg[feat.min],border:`1px solid ${planBorder[feat.min]}`,borderRadius:99,padding:'2px 8px',flexShrink:0,minWidth:52,textAlign:'center'}}>{PLANS[feat.min].label}+</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -2075,7 +2267,7 @@ function DashboardPsicologo({isAdmin}){
         </aside>
 
         {/* MAIN CONTENT */}
-        <main className="cs psico-main" className="cs psico-main main-pad" style={{flex:1,overflowY:'auto',padding:'28px 32px',width:0,transition:'padding .28s'}}>
+        <main className="cs psico-main main-pad" style={{flex:1,overflowY:'auto',padding:'28px 32px',width:0,transition:'padding .28s'}}>
 
           {/* Mobile hamburger bar at top of content */}
           <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
