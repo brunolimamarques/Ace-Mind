@@ -11,6 +11,7 @@
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
   --y:#d4ff00;--bg0:#030508;--bg1:#060b12;--bg2:#0b1220;--bgc:#0e1628;
@@ -221,6 +222,28 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25)}
   transition:all .18s;z-index:200;
 }
 .nav-item-wrap:hover .nav-tooltip{opacity:1;transform:translateY(-50%) translateX(0)}
+
+/* ═══ NOVOS MÓDULOS ═══ */
+.tab-pill{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.tab-pill button{fontFamily:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:99px;cursor:pointer;border:1px solid;transition:all .2s;background:transparent;color:var(--dim);border-color:var(--b2)}
+.tab-pill button.on{background:rgba(212,255,0,.1);color:var(--y);border-color:rgba(212,255,0,.35)}
+.trophy-card{background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(212,255,0,.04));border:1px solid rgba(245,158,11,.2);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;transition:all .2s}
+.trophy-card:hover{border-color:rgba(245,158,11,.4);transform:translateY(-2px)}
+.okr-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:8px}
+.okr-fill{height:100%;border-radius:99px;background:var(--y);box-shadow:0 0 8px rgba(212,255,0,.4);transition:width 1s cubic-bezier(.19,1,.22,1)}
+.cal-day{border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s;border:1px solid transparent;position:relative}
+.cal-day:hover{background:rgba(255,255,255,.04)}
+.cal-day.today{border-color:rgba(212,255,0,.35);background:rgba(212,255,0,.06)}
+.cal-day.has-treino::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--y)}
+.cal-day.concluido::after{background:#4ade80}
+.cal-day.faltou::after{background:#f87171}
+.water-btn{width:38px;height:38px;border-radius:50%;border:2px solid rgba(96,165,250,.3);background:rgba(96,165,250,.08);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:16px}
+.water-btn.filled{border-color:#60a5fa;background:rgba(96,165,250,.2);box-shadow:0 0 12px rgba(96,165,250,.3)}
+.lesao-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.lesao-ativa{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.lesao-ok{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+.macro-bar{height:10px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.06)}
+
 </style>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -537,7 +560,7 @@ function MobileApp({user,userPlan,onPlanChange}){
         </div>
         {/* ABAS — sempre visíveis */}
         <div style={{display:'flex',gap:7,marginTop:14,overflowX:'auto',paddingBottom:2}} className="ae2">
-          {[{id:'home',l:'QG Mental'},{id:'pre',l:'Pré-Jogo'},{id:'pos',l:'Pós-Jogo'}].map(t=>(
+          {[{id:'home',l:'QG Mental'},{id:'pre',l:'Pré-Jogo'},{id:'pos',l:'Pós-Jogo'},{id:'analytics',l:'📊 Stats'},{id:'wellness',l:'💊 Saúde'},{id:'metas',l:'🎯 Metas'}].map(t=>(
             <button key={t.id} onClick={()=>setAba(t.id)} style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:11,letterSpacing:'.12em',textTransform:'uppercase',padding:'6px 14px',borderRadius:99,cursor:'pointer',transition:'all .2s',border:'1px solid',background:aba===t.id?'rgba(212,255,0,.12)':'transparent',borderColor:aba===t.id?'rgba(212,255,0,.35)':'rgba(255,255,255,.08)',color:aba===t.id?'#d4ff00':'rgba(255,255,255,.4)',whiteSpace:'nowrap',flexShrink:0}}>{t.l}</button>
           ))}
         </div>
@@ -553,7 +576,7 @@ function MobileApp({user,userPlan,onPlanChange}){
           <button onClick={()=>setMenu(false)} style={{background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.08)',borderRadius:8,padding:7,cursor:'pointer',color:'var(--dim)',display:'flex'}}><I.Close/></button>
         </div>
         <nav style={{display:'flex',flexDirection:'column',gap:4}}>
-          {[{id:'home',l:'QG Mental',ic:I.Home},{id:'pre',l:'Pré-Jogo',ic:I.Target},{id:'pos',l:'Raio-X Pós-Jogo',ic:I.Trophy}].map(item=>(
+          {[{id:'home',l:'QG Mental',ic:I.Home},{id:'pre',l:'Pré-Jogo',ic:I.Target},{id:'pos',l:'Raio-X Pós-Jogo',ic:I.Trophy},{id:'analytics',l:'Analytics & Stats',ic:I.Chart},{id:'wellness',l:'Saúde & Recuperação',ic:I.Check},{id:'metas',l:'Metas & Calendário',ic:I.Target}].map(item=>(
             <button key={item.id} onClick={()=>{setAba(item.id);setMenu(false);}} className={`nav-item${aba===item.id?' active':''}`}><item.ic/>{item.l}</button>
           ))}
         </nav>
@@ -728,7 +751,625 @@ function MobileApp({user,userPlan,onPlanChange}){
               </PlanGate>
             </div>
           )}
+
+          {/* ── ANALYTICS & STATS ── */}
+          {aba==='analytics'&&<TabAnalytics uid={user.uid}/>}
+
+          {/* ── SAÚDE & RECUPERAÇÃO ── */}
+          {aba==='wellness'&&<TabWellness uid={user.uid}/>}
+
+          {/* ── METAS & CALENDÁRIO ── */}
+          {aba==='metas'&&<TabMetas uid={user.uid}/>}
+
         </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════
+   TAB ANALYTICS — Gráficos & Troféus
+══════════════════════════════════════ */
+function TabAnalytics({uid}){
+  const [periodo,setPeriodo]=useState('7d');
+  const [checkins,setCheckins]=useState([]);
+  const [prs,setPRs]=useState([]);
+  const [novoPR,setNovoPR]=useState({metrica:'',valor:'',unidade:'',data:''});
+  const [addingPR,setAddingPR]=useState(false);
+  const chartRef=useRef(null);
+  const chartInst=useRef(null);
+
+  useEffect(()=>{
+    (async()=>{
+      const q=window.fb.query(window.fb.collection(window.db,'checkins'),window.fb.where('pacienteId','==',uid),window.fb.orderBy('data','asc'),window.fb.limit(60));
+      const s=await window.fb.getDocs(q);
+      setCheckins(s.docs.map(d=>d.data()));
+    })();
+    (async()=>{
+      const q=window.fb.query(window.fb.collection(window.db,`atletas/${uid}/prs`),window.fb.orderBy('data','desc'));
+      const s=await window.fb.getDocs(q);
+      setPRs(s.docs.map(d=>({id:d.id,...d.data()})));
+    })();
+  },[uid]);
+
+  // Filter by period
+  const now=new Date();
+  const dias=periodo==='7d'?7:periodo==='30d'?30:90;
+  const corte=new Date(now.getTime()-dias*86400000);
+  const filtered=checkins.filter(c=>new Date(c.data)>=corte);
+  const labels=filtered.map(c=>new Date(c.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}));
+  const focoData=filtered.map(c=>c.foco||0);
+  const energiaData=filtered.map(c=>c.energia||0);
+  const sonoData=filtered.map(c=>c.sono||0);
+
+  useEffect(()=>{
+    const cv=chartRef.current;if(!cv||!window.Chart)return;
+    if(chartInst.current){chartInst.current.destroy();}
+    chartInst.current=new window.Chart(cv,{
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          {label:'Foco',data:focoData,borderColor:'#d4ff00',backgroundColor:'rgba(212,255,0,.08)',tension:.4,pointRadius:3,pointBackgroundColor:'#d4ff00'},
+          {label:'Energia',data:energiaData,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,.06)',tension:.4,pointRadius:3,pointBackgroundColor:'#60a5fa'},
+          {label:'Sono',data:sonoData,borderColor:'#818cf8',backgroundColor:'rgba(129,140,248,.06)',tension:.4,pointRadius:3,pointBackgroundColor:'#818cf8'},
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{labels:{color:'#8896b3',font:{family:"'DM Sans',sans-serif",size:11},boxWidth:12}},tooltip:{backgroundColor:'rgba(11,18,32,.95)',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#f0f4ff',bodyColor:'#8896b3'}},
+        scales:{
+          x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#4a5568',font:{size:10},maxTicksLimit:8}},
+          y:{min:0,max:10,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#4a5568',font:{size:10},stepSize:2}}
+        }
+      }
+    });
+    return()=>{if(chartInst.current)chartInst.current.destroy();};
+  },[checkins,periodo]);
+
+  // Averages
+  const avg=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length*10)/10:'-';
+
+  const salvarPR=async()=>{
+    if(!novoPR.metrica||!novoPR.valor)return;
+    const doc={...novoPR,criadoEm:new Date().toISOString()};
+    const r=await window.fb.addDoc(window.fb.collection(window.db,`atletas/${uid}/prs`),doc);
+    setPRs([{id:r.id,...doc},...prs]);
+    setNovoPR({metrica:'',valor:'',unidade:'',data:''});setAddingPR(false);
+  };
+
+  const deletePR=async id=>{
+    await window.fb.deleteDoc(window.fb.doc(window.db,`atletas/${uid}/prs`,id));
+    setPRs(prs.filter(p=>p.id!==id));
+  };
+
+  // Seasonal comparison (current month vs last month)
+  const thisMonth=checkins.filter(c=>{const d=new Date(c.data);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  const lastMonth=checkins.filter(c=>{const d=new Date(c.data);const lm=new Date(now.getFullYear(),now.getMonth()-1);return d.getMonth()===lm.getMonth()&&d.getFullYear()===lm.getFullYear();});
+  const comp=[
+    {l:'Foco',cur:avg(thisMonth.map(c=>c.foco)),prev:avg(lastMonth.map(c=>c.foco))},
+    {l:'Energia',cur:avg(thisMonth.map(c=>c.energia)),prev:avg(lastMonth.map(c=>c.energia))},
+    {l:'Sono',cur:avg(thisMonth.map(c=>c.sono)),prev:avg(lastMonth.map(c=>c.sono))},
+  ];
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      {/* Header */}
+      <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14,flexWrap:'wrap',gap:8}}>
+          <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:15,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0'}}>📊 Evolução de Métricas</span>
+          <div style={{display:'flex',gap:6}}>
+            {['7d','30d','90d'].map(p=>(
+              <button key={p} onClick={()=>setPeriodo(p)} style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',padding:'5px 11px',borderRadius:99,cursor:'pointer',border:'1px solid',transition:'all .2s',background:periodo===p?'rgba(212,255,0,.1)':'transparent',borderColor:periodo===p?'rgba(212,255,0,.35)':'rgba(255,255,255,.1)',color:periodo===p?'var(--y)':'var(--muted)'}}>{p}</button>
+            ))}
+          </div>
+        </div>
+        {filtered.length===0
+          ?<p style={{fontSize:12,color:'var(--muted)',textAlign:'center',padding:'24px 0'}}>Nenhum check-in nesse período.</p>
+          :<div style={{height:200}}><canvas ref={chartRef}/></div>
+        }
+        {/* Averages strip */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1,background:'rgba(255,255,255,.04)',borderRadius:10,overflow:'hidden',marginTop:12}}>
+          {[{l:'Foco méd.',v:avg(focoData),c:'var(--y)'},{l:'Energia méd.',v:avg(energiaData),c:'#60a5fa'},{l:'Sono méd.',v:avg(sonoData),c:'#818cf8'}].map((s,i)=>(
+            <div key={i} style={{background:'var(--bgc)',padding:'10px 8px',textAlign:'center'}}>
+              <span className="slbl" style={{display:'block',marginBottom:3,fontSize:9}}>{s.l}</span>
+              <strong style={{fontFamily:'DM Mono',fontSize:20,color:s.c}}>{s.v}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Seasonal comparison */}
+      <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
+        <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0',display:'block',marginBottom:14}}>📅 Comparativo de Meses</span>
+        {comp.map((c,i)=>{
+          const diff=typeof c.cur==='number'&&typeof c.prev==='number'?c.cur-c.prev:null;
+          return (
+            <div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:i<2?'1px solid rgba(255,255,255,.04)':'none'}}>
+              <span className="slbl" style={{width:60}}>{c.l}</span>
+              <div style={{flex:1,display:'flex',alignItems:'center',gap:10,justifyContent:'flex-end'}}>
+                <span style={{fontSize:11,color:'var(--muted)'}}>Mês ant: <strong style={{color:'var(--dim)',fontFamily:'DM Mono'}}>{c.prev}</strong></span>
+                <span style={{fontSize:11,color:'var(--muted)'}}>Atual: <strong style={{color:'var(--y)',fontFamily:'DM Mono'}}>{c.cur}</strong></span>
+                {diff!==null&&<span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:12,color:diff>0?'#4ade80':diff<0?'#f87171':'var(--muted)'}}>{diff>0?'▲':diff<0?'▼':'='}{Math.abs(diff).toFixed(1)}</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Trophy Room */}
+      <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+          <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0'}}>🏆 Sala de Troféus</span>
+          <button onClick={()=>setAddingPR(true)} style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',padding:'5px 11px',borderRadius:8,cursor:'pointer',border:'1px solid rgba(245,158,11,.3)',background:'rgba(245,158,11,.08)',color:'#fbbf24',transition:'all .2s'}}>+ PR</button>
+        </div>
+        {addingPR&&(
+          <div style={{background:'rgba(0,0,0,.35)',border:'1px solid rgba(255,255,255,.08)',borderRadius:14,padding:14,marginBottom:12}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8}}>
+              <input type="text" placeholder="Métrica (ex: Saque km/h)" value={novoPR.metrica} onChange={e=>setNovoPR({...novoPR,metrica:e.target.value})} style={{fontSize:12}}/>
+              <div style={{display:'flex',gap:6}}>
+                <input type="number" placeholder="Valor" value={novoPR.valor} onChange={e=>setNovoPR({...novoPR,valor:e.target.value})} style={{fontSize:12,flex:1}}/>
+                <input type="text" placeholder="un." value={novoPR.unidade} onChange={e=>setNovoPR({...novoPR,unidade:e.target.value})} style={{fontSize:12,width:48}}/>
+              </div>
+            </div>
+            <input type="date" value={novoPR.data} onChange={e=>setNovoPR({...novoPR,data:e.target.value})} style={{fontSize:12,marginBottom:8}}/>
+            <div style={{display:'flex',gap:7}}>
+              <button onClick={salvarPR} className="btn-y" style={{flex:1,padding:'8px',fontSize:11}}>Salvar PR</button>
+              <button onClick={()=>setAddingPR(false)} className="btn-sec" style={{padding:'8px 14px',fontSize:11}}>Cancelar</button>
+            </div>
+          </div>
+        )}
+        {prs.length===0&&!addingPR&&<p style={{fontSize:12,color:'var(--muted)',textAlign:'center',padding:'20px 0'}}>Nenhum recorde registrado ainda.</p>}
+        <div style={{display:'flex',flexDirection:'column',gap:9}}>
+          {prs.map(pr=>(
+            <div key={pr.id} className="trophy-card">
+              <span style={{fontSize:26,flexShrink:0}}>🏅</span>
+              <div style={{flex:1,minWidth:0}}>
+                <p style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:15,textTransform:'uppercase',color:'#e2e8f0',margin:'0 0 2px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{pr.metrica}</p>
+                <p style={{fontFamily:'DM Mono',fontSize:20,color:'#f59e0b',margin:0,lineHeight:1}}>{pr.valor}<span style={{fontSize:12,color:'var(--dim)',marginLeft:4}}>{pr.unidade}</span></p>
+                {pr.data&&<p style={{fontSize:10,color:'var(--muted)',margin:'3px 0 0',fontWeight:600}}>{new Date(pr.data+'T12:00').toLocaleDateString('pt-BR')}</p>}
+              </div>
+              <button onClick={()=>deletePR(pr.id)} style={{background:'none',border:'none',color:'var(--muted)',cursor:'pointer',padding:4,display:'flex',flexShrink:0,opacity:.5}}><I.Trash/></button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════
+   TAB WELLNESS — Saúde & Recuperação
+══════════════════════════════════════ */
+function TabWellness({uid}){
+  const [subAba,setSubAba]=useState('sono');
+  // Sono/fadiga diária
+  const [bem,setBem]=useState({acordei:7,fadiga:3,dor:0,nota:''});
+  const [salvandoBem,setSalvandoBem]=useState(false);
+  const [riscoLesao,setRiscoLesao]=useState(null);
+  // Lesões
+  const [lesoes,setLesoes]=useState([]);
+  const [novaLesao,setNovaLesao]=useState({local:'',descricao:'',inicio:'',status:'ativa',fisioterapeuta:''});
+  const [addLesao,setAddLesao]=useState(false);
+  // Hidratação
+  const [coposAgua,setCoposAgua]=useState([]);
+  const [macros,setMacros]=useState({proteina:0,carbo:0,gordura:0,caloria:0});
+  const metaCopos=8;
+
+  useEffect(()=>{
+    const hoje=new Date().toISOString().split('T')[0];
+    (async()=>{
+      const q=window.fb.query(window.fb.collection(window.db,`atletas/${uid}/lesoes`),window.fb.orderBy('inicio','desc'));
+      const s=await window.fb.getDocs(q);setLesoes(s.docs.map(d=>({id:d.id,...d.data()})));
+      // Load today's hydration
+      const dh=await window.fb.getDoc(window.fb.doc(window.db,`atletas/${uid}/hidratacao/${hoje}`));
+      if(dh.exists()){setCoposAgua(dh.data().copos||[]);setMacros(dh.data().macros||{proteina:0,carbo:0,gordura:0,caloria:0});}
+    })();
+  },[uid]);
+
+  const salvarBem=async()=>{
+    setSalvandoBem(true);
+    const risco=bem.acordei<=4||bem.fadiga>=8||bem.dor>=6?'alto':bem.acordei<=6||bem.fadiga>=6||bem.dor>=4?'moderado':'baixo';
+    setRiscoLesao(risco);
+    await window.fb.addDoc(window.fb.collection(window.db,`atletas/${uid}/wellness`),{...bem,data:new Date().toISOString(),riscoLesao:risco});
+    setSalvandoBem(false);
+    alert('Avaliação salva!');
+  };
+
+  const toggleCopo=async idx=>{
+    const novo=[...coposAgua];
+    if(novo.includes(idx))novo.splice(novo.indexOf(idx),1); else novo.push(idx);
+    setCoposAgua(novo);
+    const hoje=new Date().toISOString().split('T')[0];
+    await window.fb.setDoc(window.fb.doc(window.db,`atletas/${uid}/hidratacao/${hoje}`),{copos:novo,macros},{merge:true});
+  };
+
+  const salvarMacros=async()=>{
+    const hoje=new Date().toISOString().split('T')[0];
+    await window.fb.setDoc(window.fb.doc(window.db,`atletas/${uid}/hidratacao/${hoje}`),{copos:coposAgua,macros},{merge:true});
+    alert('Macros salvos!');
+  };
+
+  const salvarLesao=async()=>{
+    if(!novaLesao.local)return;
+    const r=await window.fb.addDoc(window.fb.collection(window.db,`atletas/${uid}/lesoes`),{...novaLesao,criadoEm:new Date().toISOString()});
+    setLesoes([{id:r.id,...novaLesao},...lesoes]);
+    setNovaLesao({local:'',descricao:'',inicio:'',status:'ativa',fisioterapeuta:''});setAddLesao(false);
+  };
+
+  const updateLesaoStatus=async(id,status)=>{
+    await window.fb.updateDoc(window.fb.doc(window.db,`atletas/${uid}/lesoes`,id),{status});
+    setLesoes(lesoes.map(l=>l.id===id?{...l,status}:l));
+  };
+
+  const riscoColor=r=>r==='alto'?'#f87171':r==='moderado'?'#fbbf24':'#4ade80';
+  const riscoBg=r=>r==='alto'?'rgba(239,68,68,.1)':r==='moderado'?'rgba(251,191,36,.1)':'rgba(34,197,94,.1)';
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      {/* Sub-tabs */}
+      <div className="tab-pill">
+        {[{id:'sono',l:'😴 Sono & Fadiga'},{id:'lesoes',l:'🩹 Lesões'},{id:'nutri',l:'💧 Nutrição'}].map(t=>(
+          <button key={t.id} onClick={()=>setSubAba(t.id)} className={subAba===t.id?'on':''} style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:11,letterSpacing:'.1em',textTransform:'uppercase',padding:'6px 14px',borderRadius:99,cursor:'pointer',border:'1px solid',transition:'all .2s',background:subAba===t.id?'rgba(212,255,0,.1)':'transparent',borderColor:subAba===t.id?'rgba(212,255,0,.35)':'rgba(255,255,255,.1)',color:subAba===t.id?'var(--y)':'var(--muted)'}}>{t.l}</button>
+        ))}
+      </div>
+
+      {/* SONO & FADIGA */}
+      {subAba==='sono'&&(
+        <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
+          <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0',display:'block',marginBottom:16}}>Avaliação de Hoje</span>
+          {riscoLesao&&(
+            <div style={{background:riscoBg(riscoLesao),border:`1px solid ${riscoColor(riscoLesao)}44`,borderRadius:12,padding:'11px 14px',marginBottom:14,display:'flex',alignItems:'center',gap:10}}>
+              <span style={{fontSize:20}}>{riscoLesao==='alto'?'⚠️':riscoLesao==='moderado'?'🟡':'✅'}</span>
+              <div><p style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:13,textTransform:'uppercase',color:riscoColor(riscoLesao),margin:0}}>Risco de Lesão: {riscoLesao.toUpperCase()}</p><p style={{fontSize:11,color:'var(--dim)',margin:'3px 0 0'}}>{riscoLesao==='alto'?'Considere descanso ou sessão leve.':riscoLesao==='moderado'?'Atenção redobrada no treino.':'Ótimo! Pode treinar em alta intensidade.'}</p></div>
+            </div>
+          )}
+          <div style={{display:'flex',flexDirection:'column',gap:18}}>
+            {[
+              {l:'Como acordei hoje',sub:'Qualidade geral do sono',v:bem.acordei,set:v=>setBem({...bem,acordei:v}),lo:'Terrível',hi:'Excelente',c:'#818cf8'},
+              {l:'Nível de Fadiga',sub:'0 = sem fadiga, 10 = exausto',v:bem.fadiga,set:v=>setBem({...bem,fadiga:v}),lo:'Zero',hi:'Exausto',c:'#f87171'},
+              {l:'Dor Muscular',sub:'0 = sem dor, 10 = intensa',v:bem.dor,set:v=>setBem({...bem,dor:v}),lo:'Sem dor',hi:'Intensa',c:'#fb923c'},
+            ].map((item,i)=>(
+              <div key={i}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+                  <div><span className="slbl">{item.l}</span><p style={{fontSize:10,color:'var(--muted)',marginTop:2}}>{item.sub}</p></div>
+                  <span style={{fontFamily:'DM Mono',fontSize:22,color:item.c,lineHeight:1,alignSelf:'flex-start'}}>{item.v}</span>
+                </div>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+                  <span style={{fontSize:10,color:'var(--muted)'}}>{item.lo}</span><span style={{fontSize:10,color:item.c}}>{item.hi}</span>
+                </div>
+                <input type="range" min="0" max="10" value={item.v} style={{'--val':`${item.v*10}%`}} onChange={e=>item.set(+e.target.value)}/>
+              </div>
+            ))}
+            <div>
+              <label className="slbl" style={{display:'block',marginBottom:7}}>Observações</label>
+              <textarea value={bem.nota} onChange={e=>setBem({...bem,nota:e.target.value})} placeholder="Como está seu corpo hoje?" className="cs" style={{height:64,fontSize:13,resize:'none',display:'block'}}/>
+            </div>
+            <button onClick={e=>{addRipple(e);salvarBem();}} disabled={salvandoBem} className="btn-y" style={{width:'100%',position:'relative',overflow:'hidden'}}>{salvandoBem?'Salvando...':'Registrar Avaliação'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* LESÕES */}
+      {subAba==='lesoes'&&(
+        <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+            <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0'}}>🩹 Histórico de Lesões</span>
+            <button onClick={()=>setAddLesao(true)} style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',padding:'5px 11px',borderRadius:8,cursor:'pointer',border:'1px solid rgba(239,68,68,.3)',background:'rgba(239,68,68,.07)',color:'#f87171'}}>+ Registrar</button>
+          </div>
+          {addLesao&&(
+            <div style={{background:'rgba(0,0,0,.3)',border:'1px solid rgba(255,255,255,.07)',borderRadius:14,padding:14,marginBottom:12}}>
+              <div style={{display:'flex',flexDirection:'column',gap:9}}>
+                <input type="text" placeholder="Local da dor (ex: Joelho direito)" value={novaLesao.local} onChange={e=>setNovaLesao({...novaLesao,local:e.target.value})} style={{fontSize:13}}/>
+                <textarea value={novaLesao.descricao} onChange={e=>setNovaLesao({...novaLesao,descricao:e.target.value})} placeholder="Descrição e sintomas..." style={{height:64,fontSize:13,resize:'none',display:'block'}}/>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                  <div><label className="slbl" style={{display:'block',marginBottom:5}}>Data início</label><input type="date" value={novaLesao.inicio} onChange={e=>setNovaLesao({...novaLesao,inicio:e.target.value})} style={{fontSize:13}}/></div>
+                  <div><label className="slbl" style={{display:'block',marginBottom:5}}>Fisioterapeuta</label><input type="text" placeholder="Nome" value={novaLesao.fisioterapeuta} onChange={e=>setNovaLesao({...novaLesao,fisioterapeuta:e.target.value})} style={{fontSize:13}}/></div>
+                </div>
+                <select value={novaLesao.status} onChange={e=>setNovaLesao({...novaLesao,status:e.target.value})} style={{fontSize:13,fontFamily:'Barlow Condensed',fontWeight:700,textTransform:'uppercase'}}>
+                  <option value="ativa">🔴 Ativa</option>
+                  <option value="tratamento">🟡 Em Tratamento</option>
+                  <option value="recuperado">🟢 Recuperado</option>
+                </select>
+                <div style={{display:'flex',gap:7}}>
+                  <button onClick={salvarLesao} className="btn-y" style={{flex:1,padding:'8px',fontSize:11}}>Salvar</button>
+                  <button onClick={()=>setAddLesao(false)} className="btn-sec" style={{padding:'8px 14px',fontSize:11}}>Cancelar</button>
+                </div>
+              </div>
+            </div>
+          )}
+          {lesoes.length===0&&!addLesao&&<p style={{fontSize:12,color:'var(--muted)',textAlign:'center',padding:'20px 0'}}>Nenhuma lesão registrada. 💪</p>}
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {lesoes.map(l=>(
+              <div key={l.id} style={{background:'rgba(0,0,0,.25)',border:'1px solid rgba(255,255,255,.06)',borderRadius:14,padding:14}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                  <div>
+                    <p style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:15,textTransform:'uppercase',color:'#e2e8f0',margin:'0 0 4px'}}>{l.local}</p>
+                    {l.inicio&&<p style={{fontSize:10,color:'var(--muted)',fontWeight:600,margin:0}}>Desde {new Date(l.inicio+'T12:00').toLocaleDateString('pt-BR')}</p>}
+                  </div>
+                  <span className={`lesao-tag ${l.status==='recuperado'?'lesao-ok':'lesao-ativa'}`}>{l.status==='ativa'?'🔴 Ativa':l.status==='tratamento'?'🟡 Tratamento':'🟢 Recuperado'}</span>
+                </div>
+                {l.descricao&&<p style={{fontSize:12,color:'#94a3b8',marginBottom:8,lineHeight:1.5}}>{l.descricao}</p>}
+                {l.fisioterapeuta&&<p style={{fontSize:11,color:'var(--dim)',marginBottom:10}}>Fisio: <strong>{l.fisioterapeuta}</strong></p>}
+                {l.status!=='recuperado'&&(
+                  <button onClick={()=>updateLesaoStatus(l.id,'recuperado')} style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',padding:'5px 12px',borderRadius:8,cursor:'pointer',border:'1px solid rgba(34,197,94,.3)',background:'rgba(34,197,94,.07)',color:'#4ade80'}}>✓ Marcar como recuperado</button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* NUTRIÇÃO */}
+      {subAba==='nutri'&&(
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {/* Água */}
+          <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+              <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0'}}>💧 Hidratação</span>
+              <span style={{fontFamily:'DM Mono',fontSize:18,color:'#60a5fa'}}>{coposAgua.length}/{metaCopos}</span>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(8,1fr)',gap:8,marginBottom:12}}>
+              {Array.from({length:metaCopos},(_,i)=>(
+                <button key={i} onClick={()=>toggleCopo(i)} className={`water-btn${coposAgua.includes(i)?' filled':''}`}>💧</button>
+              ))}
+            </div>
+            <div style={{height:6,borderRadius:99,background:'rgba(255,255,255,.06)',overflow:'hidden'}}>
+              <div style={{height:'100%',borderRadius:99,background:'#60a5fa',width:`${Math.min(coposAgua.length/metaCopos*100,100)}%`,transition:'width .4s',boxShadow:'0 0 10px rgba(96,165,250,.4)'}}/>
+            </div>
+            <p style={{fontSize:11,color:'var(--muted)',marginTop:7}}>{coposAgua.length>=metaCopos?'🎉 Meta de hidratação atingida!':coposAgua.length>=metaCopos/2?'Boa! Continue hidratando.':'Lembre-se de beber água.'}</p>
+          </div>
+          {/* Macros */}
+          <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
+            <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0',display:'block',marginBottom:14}}>🍽️ Macronutrientes do Dia</span>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              {[
+                {l:'Proteínas',k:'proteina',meta:150,un:'g',c:'#60a5fa'},
+                {l:'Carboidratos',k:'carbo',meta:300,un:'g',c:'var(--y)'},
+                {l:'Gorduras',k:'gordura',meta:70,un:'g',c:'#f59e0b'},
+                {l:'Calorias',k:'caloria',meta:2500,un:'kcal',c:'#f87171'},
+              ].map((m,i)=>(
+                <div key={i}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                    <span className="slbl">{m.l}</span>
+                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                      <input type="number" value={macros[m.k]} onChange={e=>setMacros({...macros,[m.k]:+e.target.value})} style={{width:70,fontSize:13,padding:'5px 8px',textAlign:'right',fontFamily:'DM Mono'}}/>
+                      <span style={{fontSize:11,color:'var(--muted)'}}>/{m.meta}{m.un}</span>
+                    </div>
+                  </div>
+                  <div className="macro-bar">
+                    <div style={{height:'100%',borderRadius:99,background:m.c,width:`${Math.min(macros[m.k]/m.meta*100,100)}%`,transition:'width .4s',boxShadow:`0 0 8px ${m.c}55`}}/>
+                  </div>
+                </div>
+              ))}
+              <button onClick={salvarMacros} className="btn-y" style={{width:'100%',fontSize:12}}>Salvar Macros do Dia</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════
+   TAB METAS — Calendário & OKRs
+══════════════════════════════════════ */
+function TabMetas({uid}){
+  const [subAba,setSubAba]=useState('cal');
+  const [semana,setSemana]=useState(0); // 0=current week offset
+  const [treinos,setTreinos]=useState({});
+  const [metas,setMetas]=useState([]);
+  const [novoTreino,setNovoTreino]=useState({titulo:'',tipo:'treino',horario:''});
+  const [diaSel,setDiaSel]=useState(null);
+  const [novaMeta,setNovaMeta]=useState({titulo:'',prazo:'curto',descricao:'',progresso:0,meta:100});
+  const [addMeta,setAddMeta]=useState(false);
+
+  useEffect(()=>{
+    (async()=>{
+      const q=window.fb.query(window.fb.collection(window.db,`atletas/${uid}/treinos`));
+      const s=await window.fb.getDocs(q);
+      const map={};s.docs.forEach(d=>{map[d.id]={...d.data(),id:d.id};});setTreinos(map);
+      const qm=window.fb.query(window.fb.collection(window.db,`atletas/${uid}/metas`),window.fb.orderBy('criadoEm','desc'));
+      const sm=await window.fb.getDocs(qm);setMetas(sm.docs.map(d=>({id:d.id,...d.data()})));
+    })();
+  },[uid]);
+
+  // Generate week days
+  const hoje=new Date();
+  const startOfWeek=new Date(hoje);
+  startOfWeek.setDate(hoje.getDate()-hoje.getDay()+1+semana*7); // Monday
+  const dias=Array.from({length:7},(_,i)=>{
+    const d=new Date(startOfWeek);d.setDate(startOfWeek.getDate()+i);return d;
+  });
+  const fmtKey=d=>d.toISOString().split('T')[0];
+  const isHoje=d=>fmtKey(d)===fmtKey(hoje);
+
+  const addTreino=async()=>{
+    if(!diaSel||!novoTreino.titulo)return;
+    const key=fmtKey(diaSel);
+    const doc={...novoTreino,data:key,status:'pendente',criadoEm:new Date().toISOString()};
+    await window.fb.setDoc(window.fb.doc(window.db,`atletas/${uid}/treinos/${key}`),doc);
+    setTreinos({...treinos,[key]:{...doc,id:key}});setDiaSel(null);setNovoTreino({titulo:'',tipo:'treino',horario:''});
+  };
+
+  const updateStatus=async(key,status)=>{
+    await window.fb.updateDoc(window.fb.doc(window.db,`atletas/${uid}/treinos/${key}`),{status});
+    setTreinos({...treinos,[key]:{...treinos[key],status}});
+  };
+
+  const salvarMeta=async()=>{
+    if(!novaMeta.titulo)return;
+    const doc={...novaMeta,criadoEm:new Date().toISOString()};
+    const r=await window.fb.addDoc(window.fb.collection(window.db,`atletas/${uid}/metas`),doc);
+    setMetas([{id:r.id,...doc},...metas]);setNovaMeta({titulo:'',prazo:'curto',descricao:'',progresso:0,meta:100});setAddMeta(false);
+  };
+
+  const updateProgresso=async(id,progresso)=>{
+    await window.fb.updateDoc(window.fb.doc(window.db,`atletas/${uid}/metas`,id),{progresso:+progresso});
+    setMetas(metas.map(m=>m.id===id?{...m,progresso:+progresso}:m));
+  };
+
+  const deleteMeta=async id=>{
+    await window.fb.deleteDoc(window.fb.doc(window.db,`atletas/${uid}/metas`,id));
+    setMetas(metas.filter(m=>m.id!==id));
+  };
+
+  const statusColor={concluido:'#4ade80',pendente:'var(--y)',faltou:'#f87171'};
+  const statusLabel={concluido:'✓ Concluído',pendente:'⏳ Pendente',faltou:'✗ Faltou'};
+  const prazoColor={curto:'#60a5fa',medio:'var(--y)',longo:'#f59e0b'};
+  const prazoLabel={curto:'Curto Prazo',medio:'Médio Prazo',longo:'Longo Prazo'};
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      {/* Sub-tabs */}
+      <div className="tab-pill">
+        {[{id:'cal',l:'📅 Calendário'},{id:'okr',l:'🎯 Metas (OKR)'}].map(t=>(
+          <button key={t.id} onClick={()=>setSubAba(t.id)} style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:11,letterSpacing:'.1em',textTransform:'uppercase',padding:'6px 14px',borderRadius:99,cursor:'pointer',border:'1px solid',transition:'all .2s',background:subAba===t.id?'rgba(212,255,0,.1)':'transparent',borderColor:subAba===t.id?'rgba(212,255,0,.35)':'rgba(255,255,255,.1)',color:subAba===t.id?'var(--y)':'var(--muted)'}}>{t.l}</button>
+        ))}
+      </div>
+
+      {/* CALENDÁRIO */}
+      {subAba==='cal'&&(
+        <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
+          {/* Week nav */}
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+            <button onClick={()=>setSemana(s=>s-1)} style={{background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.08)',borderRadius:8,padding:'6px 12px',cursor:'pointer',color:'var(--dim)',fontFamily:'Barlow Condensed',fontWeight:700,fontSize:12,letterSpacing:'.1em'}}>‹ Ant.</button>
+            <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:13,letterSpacing:'.1em',textTransform:'uppercase',color:'#e2e8f0'}}>{dias[0].toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})} – {dias[6].toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</span>
+            <button onClick={()=>setSemana(s=>s+1)} style={{background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.08)',borderRadius:8,padding:'6px 12px',cursor:'pointer',color:'var(--dim)',fontFamily:'Barlow Condensed',fontWeight:700,fontSize:12,letterSpacing:'.1em'}}>Próx. ›</button>
+          </div>
+          {/* Day grid */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:6,marginBottom:16}}>
+            {dias.map((d,i)=>{
+              const key=fmtKey(d);
+              const t=treinos[key];
+              const sc=t?.status;
+              return (
+                <div key={i} onClick={()=>setDiaSel(d)} className={`cal-day${isHoje(d)?' today':''}${t?' has-treino':''}${sc==='concluido'?' concluido':sc==='faltou'?' faltou':''}`} style={{background:diaSel&&fmtKey(diaSel)===key?'rgba(212,255,0,.1)':'rgba(0,0,0,.2)',border:`1px solid ${diaSel&&fmtKey(diaSel)===key?'rgba(212,255,0,.4)':'rgba(255,255,255,.05)'}`,borderRadius:10,padding:'8px 4px',textAlign:'center',cursor:'pointer',transition:'all .2s',position:'relative'}}>
+                  <p style={{fontFamily:'Barlow Condensed',fontWeight:700,fontSize:9,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--muted)',margin:'0 0 2px'}}>{'Dom Seg Ter Qua Qui Sex Sáb'.split(' ')[d.getDay()]}</p>
+                  <p style={{fontFamily:'DM Mono',fontWeight:500,fontSize:16,color:isHoje(d)?'var(--y)':'#e2e8f0',lineHeight:1}}>{d.getDate()}</p>
+                  {t&&<div style={{width:6,height:6,borderRadius:'50%',background:sc==='concluido'?'#4ade80':sc==='faltou'?'#f87171':'var(--y)',margin:'4px auto 0',boxShadow:`0 0 6px ${sc==='concluido'?'#4ade8088':sc==='faltou'?'#f8717188':'rgba(212,255,0,.6)'}`}}/>}
+                </div>
+              );
+            })}
+          </div>
+          {/* Selected day detail */}
+          {diaSel&&(
+            <div style={{background:'rgba(0,0,0,.3)',border:'1px solid rgba(255,255,255,.07)',borderRadius:14,padding:14}}>
+              <p style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,textTransform:'uppercase',color:'#e2e8f0',marginBottom:12}}>{diaSel.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</p>
+              {treinos[fmtKey(diaSel)]?(
+                <div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+                    <div>
+                      <p style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:16,color:statusColor[treinos[fmtKey(diaSel)].status]||'var(--y)',margin:0,textTransform:'uppercase'}}>{treinos[fmtKey(diaSel)].titulo}</p>
+                      {treinos[fmtKey(diaSel)].horario&&<p style={{fontSize:11,color:'var(--dim)',margin:'3px 0 0'}}>⏰ {treinos[fmtKey(diaSel)].horario}</p>}
+                    </div>
+                    <span style={{fontFamily:'Barlow Condensed',fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:statusColor[treinos[fmtKey(diaSel)].status],background:`${statusColor[treinos[fmtKey(diaSel)].status]}22`,border:`1px solid ${statusColor[treinos[fmtKey(diaSel)].status]}44`,borderRadius:99,padding:'3px 10px'}}>{statusLabel[treinos[fmtKey(diaSel)].status]}</span>
+                  </div>
+                  <div style={{display:'flex',gap:7}}>
+                    {['concluido','faltou'].map(s=>(
+                      <button key={s} onClick={()=>updateStatus(fmtKey(diaSel),s)} style={{flex:1,padding:'8px',borderRadius:10,cursor:'pointer',fontFamily:'Barlow Condensed',fontWeight:700,fontSize:11,letterSpacing:'.1em',textTransform:'uppercase',border:'1px solid',transition:'all .2s',background:s==='concluido'?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)',borderColor:s==='concluido'?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)',color:s==='concluido'?'#4ade80':'#f87171'}}>{s==='concluido'?'✓ Concluí':'✗ Faltei'}</button>
+                    ))}
+                  </div>
+                </div>
+              ):(
+                <div>
+                  <p style={{fontSize:12,color:'var(--muted)',marginBottom:12}}>Nenhum treino neste dia. Adicionar?</p>
+                  <input type="text" placeholder="Título do treino (ex: Treino de saque)" value={novoTreino.titulo} onChange={e=>setNovoTreino({...novoTreino,titulo:e.target.value})} style={{fontSize:13,marginBottom:8}}/>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8}}>
+                    <select value={novoTreino.tipo} onChange={e=>setNovoTreino({...novoTreino,tipo:e.target.value})} style={{fontSize:12,fontFamily:'Barlow Condensed',fontWeight:700}}><option value="treino">🎾 Treino</option><option value="fisico">💪 Físico</option><option value="mental">🧠 Mental</option><option value="descanso">😴 Descanso</option></select>
+                    <input type="time" value={novoTreino.horario} onChange={e=>setNovoTreino({...novoTreino,horario:e.target.value})} style={{fontSize:13}}/>
+                  </div>
+                  <button onClick={addTreino} className="btn-y" style={{width:'100%',fontSize:12}}>Adicionar ao Calendário</button>
+                </div>
+              )}
+            </div>
+          )}
+          {/* Legend */}
+          <div style={{display:'flex',gap:12,marginTop:12,flexWrap:'wrap'}}>
+            {[{c:'var(--y)',l:'Pendente'},{c:'#4ade80',l:'Concluído'},{c:'#f87171',l:'Faltou'}].map((item,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:5}}>
+                <div style={{width:8,height:8,borderRadius:'50%',background:item.c,flexShrink:0}}/>
+                <span className="slbl" style={{fontSize:9}}>{item.l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* OKRs */}
+      {subAba==='okr'&&(
+        <div style={{background:'rgba(11,18,32,.6)',border:'1px solid rgba(255,255,255,.06)',borderRadius:18,padding:16}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+            <span style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:14,letterSpacing:'.08em',textTransform:'uppercase',color:'#e2e8f0'}}>🎯 Mural de Objetivos</span>
+            <button onClick={()=>setAddMeta(true)} className="btn-y" style={{padding:'6px 14px',fontSize:11}}>+ Meta</button>
+          </div>
+          {addMeta&&(
+            <div style={{background:'rgba(0,0,0,.3)',border:'1px solid rgba(255,255,255,.07)',borderRadius:14,padding:14,marginBottom:12}}>
+              <div style={{display:'flex',flexDirection:'column',gap:9}}>
+                <input type="text" placeholder="Objetivo (ex: Melhorar primeiro saque)" value={novaMeta.titulo} onChange={e=>setNovaMeta({...novaMeta,titulo:e.target.value})} style={{fontSize:13}}/>
+                <textarea value={novaMeta.descricao} onChange={e=>setNovaMeta({...novaMeta,descricao:e.target.value})} placeholder="Resultado esperado..." style={{height:56,fontSize:13,resize:'none',display:'block'}}/>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+                  <div>
+                    <label className="slbl" style={{display:'block',marginBottom:5}}>Prazo</label>
+                    <select value={novaMeta.prazo} onChange={e=>setNovaMeta({...novaMeta,prazo:e.target.value})} style={{fontSize:12,fontFamily:'Barlow Condensed',fontWeight:700}}>
+                      <option value="curto">Curto (1 mês)</option>
+                      <option value="medio">Médio (3 meses)</option>
+                      <option value="longo">Longo (+6 meses)</option>
+                    </select>
+                  </div>
+                  <div><label className="slbl" style={{display:'block',marginBottom:5}}>Progresso</label><input type="number" min="0" max="100" value={novaMeta.progresso} onChange={e=>setNovaMeta({...novaMeta,progresso:+e.target.value})} style={{fontSize:13,fontFamily:'DM Mono'}}/></div>
+                  <div><label className="slbl" style={{display:'block',marginBottom:5}}>Meta total</label><input type="number" min="1" value={novaMeta.meta} onChange={e=>setNovaMeta({...novaMeta,meta:+e.target.value})} style={{fontSize:13,fontFamily:'DM Mono'}}/></div>
+                </div>
+                <div style={{display:'flex',gap:7}}>
+                  <button onClick={salvarMeta} className="btn-y" style={{flex:1,padding:'8px',fontSize:11}}>Salvar Meta</button>
+                  <button onClick={()=>setAddMeta(false)} className="btn-sec" style={{padding:'8px 14px',fontSize:11}}>Cancelar</button>
+                </div>
+              </div>
+            </div>
+          )}
+          {metas.length===0&&!addMeta&&<p style={{fontSize:12,color:'var(--muted)',textAlign:'center',padding:'20px 0'}}>Nenhuma meta definida ainda. Adicione seu primeiro objetivo!</p>}
+          {/* Group by prazo */}
+          {['curto','medio','longo'].map(prazo=>{
+            const grupo=metas.filter(m=>m.prazo===prazo);
+            if(grupo.length===0)return null;
+            return (
+              <div key={prazo} style={{marginBottom:16}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                  <div style={{width:3,height:16,borderRadius:99,background:prazoColor[prazo],boxShadow:`0 0 8px ${prazoColor[prazo]}88`}}/>
+                  <span className="slbl" style={{color:prazoColor[prazo]}}>{prazoLabel[prazo]}</span>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                  {grupo.map(m=>{
+                    const pct=Math.min(Math.round(m.progresso/m.meta*100),100);
+                    return (
+                      <div key={m.id} style={{background:'rgba(0,0,0,.25)',border:'1px solid rgba(255,255,255,.06)',borderRadius:14,padding:14}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
+                          <p style={{fontFamily:'Barlow Condensed',fontWeight:800,fontSize:15,textTransform:'uppercase',color:'#e2e8f0',margin:0,flex:1,paddingRight:8}}>{m.titulo}</p>
+                          <div style={{display:'flex',alignItems:'center',gap:6,flexShrink:0}}>
+                            <span style={{fontFamily:'DM Mono',fontSize:14,color:pct>=100?'#4ade80':prazoColor[prazo]}}>{pct}%</span>
+                            <button onClick={()=>deleteMeta(m.id)} style={{background:'none',border:'none',color:'var(--muted)',cursor:'pointer',padding:2,display:'flex',opacity:.5}}><I.Trash/></button>
+                          </div>
+                        </div>
+                        {m.descricao&&<p style={{fontSize:12,color:'var(--dim)',marginBottom:10,lineHeight:1.5}}>{m.descricao}</p>}
+                        <div className="okr-bar">
+                          <div className="okr-fill" style={{width:`${pct}%`,background:pct>=100?'#4ade80':prazoColor[prazo],boxShadow:`0 0 8px ${pct>=100?'#4ade8088':prazoColor[prazo]+'88'}`}}/>
+                        </div>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:10}}>
+                          <span style={{fontSize:10,color:'var(--muted)'}}>{m.progresso} / {m.meta}</span>
+                          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                            <span className="slbl" style={{fontSize:9}}>Atualizar:</span>
+                            <input type="number" min="0" max={m.meta} defaultValue={m.progresso} onBlur={e=>updateProgresso(m.id,e.target.value)} style={{width:60,fontSize:12,padding:'4px 8px',fontFamily:'DM Mono',textAlign:'right'}}/>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
