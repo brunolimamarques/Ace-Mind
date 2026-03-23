@@ -1192,7 +1192,8 @@ function renderDashboard(root) {
   topBar.appendChild(ham); main.appendChild(topBar);
   if (window.innerWidth <= 768) ham.style.display = "flex";
 
-  async function loadData() {
+  let dataLoaded = false;
+  async function loadData(forceRender) {
     try {
       const [cc, aa, ss] = await Promise.all([
         FB.query("checkins", "data", ">", "2000-01-01", "data", "DESCENDING", 20),
@@ -1203,9 +1204,13 @@ function renderDashboard(root) {
       atletas = (aa || []).filter(u => u.cargo === "paciente").sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
       alertas = ss || [];
     } catch (e) { console.error("[AceMind] Erro:", e); }
-    renderMain();
+    // Only auto-render on first load or if on dashboard tab (not editing forms)
+    if (!dataLoaded || forceRender || aba === "dashboard") {
+      dataLoaded = true;
+      renderMain();
+    }
   }
-  loadData(); setInterval(loadData, 30000);
+  loadData(true); setInterval(() => loadData(false), 30000);
 
   function renderMain() {
     while (main.children.length > 1) main.removeChild(main.lastChild);
@@ -1592,12 +1597,6 @@ function modAdmin(c, atletas) {
   // Load all users
   let allUsers = [], planos = {};
 
-  FB.getDocs("usuarios").then(users => {
-    allUsers = users || [];
-    allUsers.forEach(u => { planos[u._id] = u.plano || "starter"; });
-    drawAdminTabs();
-  });
-
   function drawAdminTabs() {
     tabWrap.innerHTML = `<div class="tab-switch" style="max-width:480px">
       <button class="tab-btn${adminTab === "atletas" ? " active" : ""}" id="at-tab-atl">Atletas</button>
@@ -1612,6 +1611,18 @@ function modAdmin(c, atletas) {
     else if (adminTab === "staff") drawUserTable(contentWrap, allUsers.filter(u => isStaff(u.cargo) && u.cargo !== "admin"), "Staff");
     else renderPermissoesEditor(contentWrap);
   }
+
+  // Render tabs immediately (empty user list), then fill when data arrives
+  drawAdminTabs();
+
+  FB.getDocs("usuarios").then(users => {
+    allUsers = users || [];
+    allUsers.forEach(u => { planos[u._id] = u.plano || "starter"; });
+    // Only re-render if user is on a tab that needs user data (not perms)
+    if (adminTab !== "perms") drawAdminTabs();
+  }).catch(err => {
+    console.error("[AceMind] Erro ao carregar usuários:", err);
+  });
 
   function drawUserTable(container, users, tipo) {
     const PC = { starter:"#60a5fa", pro:"#d4ff00", elite:"#f59e0b" };
@@ -1682,15 +1693,20 @@ function modAdmin(c, atletas) {
     Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { localStaff[k] = STAFF_FEAT_MIN[k] || STAFF_FEATURES_DEFAULT[k].min; });
     let salvando = false, saved = false;
 
+    const wrap = el("div"); container.appendChild(wrap);
+
+    // Draw immediately with current defaults
+    draw();
+
+    // Then try to load saved overrides from Firestore
     FB.getDoc("config/permissoes").then(d => {
       if (d) {
-        if (d.features) Object.keys(FEATURES_DEFAULT).forEach(k => { if (d.features[k]) localAtl[k] = d.features[k]; });
-        if (d.staffFeatures) Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { if (d.staffFeatures[k]) localStaff[k] = d.staffFeatures[k]; });
+        let changed = false;
+        if (d.features) Object.keys(FEATURES_DEFAULT).forEach(k => { if (d.features[k] && d.features[k] !== localAtl[k]) { localAtl[k] = d.features[k]; changed = true; } });
+        if (d.staffFeatures) Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { if (d.staffFeatures[k] && d.staffFeatures[k] !== localStaff[k]) { localStaff[k] = d.staffFeatures[k]; changed = true; } });
+        if (changed) draw();
       }
-      draw();
-    }).catch(() => draw());
-
-    const wrap = el("div"); container.appendChild(wrap);
+    }).catch(err => { console.warn("[AceMind] config/permissoes não encontrado, usando padrões.", err); });
 
     function draw() {
       wrap.innerHTML = "";
