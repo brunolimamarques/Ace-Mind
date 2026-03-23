@@ -645,29 +645,27 @@ const PLANS = {
   elite: { level: 3, label: "Elite", color: "#f59e0b", emoji: "👑" }
 };
 const FEATURES_DEFAULT = {
-  // QG Mental
-  sos:         { min:"pro",     label:"S.O.S Mental"               },
-  mantra:      { min:"starter", label:"Frase Âncora / Mantra"      },
-  zoneReset:   { min:"starter", label:"Zone Reset (Respiração)"     },
-  // Pré-Jogo
-  checklist:   { min:"starter", label:"Checklist Pré-Jogo"          },
-  // Pós-Jogo
-  raioX:       { min:"pro",     label:"Raio-X Pós-Jogo"             },
-  relatos:     { min:"pro",     label:"Ver Relatos do Atleta"        },
-  // Prontuário
-  videoUpload: { min:"elite",   label:"Upload de Vídeo"             },
-  pdfExport:   { min:"pro",     label:"Exportar PDF"                },
+  sos:              { min:"pro",     label:"S.O.S Mental"                    },
+  mantra:           { min:"starter", label:"Frase Âncora / Mantra"           },
+  zoneReset:        { min:"starter", label:"Zone Reset (Respiração)"          },
+  checklist:        { min:"starter", label:"Checklist Pré-Jogo"               },
+  raioX:            { min:"pro",     label:"Raio-X Pós-Jogo"                  },
+  relatos:          { min:"pro",     label:"Ver Relatos do Atleta"             },
+  videoUpload:      { min:"elite",   label:"Upload de Vídeo"                  },
+  pdfExport:        { min:"pro",     label:"Exportar PDF / Dossiê"             },
+  staffCalendario:  { min:"starter", label:"Adicionar Eventos no Calendário"   },
+  staffAquecimento: { min:"starter", label:"Criar Protocolo de Aquecimento"    },
+  staffCheckins:    { min:"starter", label:"Ver Check-ins dos Atletas"         },
+  staffSoap:        { min:"pro",     label:"Registros SOAP / Prontuário"       },
+  staffRelatorios:  { min:"pro",     label:"Exportar Relatórios PDF"           },
 };
-// Runtime — substituído pelo Firestore se admin tiver editado
-let FEAT_MIN = Object.fromEntries(Object.entries(FEATURES_DEFAULT).map(([k,v]) => [k, v.min]));
+let FEAT_MIN = Object.fromEntries(Object.entries(FEATURES_DEFAULT).map(([k,v])=>[k,v.min]));
 const canAccess = (plan, feat) => (PLANS[plan]?.level || 1) >= (PLANS[FEAT_MIN[feat]]?.level || 1);
-// Carrega permissões salvas no Firestore (não-bloqueante)
+// Load saved permissions from Firestore
 (async () => {
   try {
     const d = await FB.getDoc("config/permissoes");
-    if (d && d.features) {
-      Object.keys(FEATURES_DEFAULT).forEach(k => { if (d.features[k]) FEAT_MIN[k] = d.features[k]; });
-    }
+    if (d && d.features) Object.keys(FEATURES_DEFAULT).forEach(k => { if (d.features[k]) FEAT_MIN[k] = d.features[k]; });
   } catch(e) {}
 })();
 const isStaff = cargo => ["assistente", "treinador", "admin"].includes(cargo);
@@ -1911,99 +1909,71 @@ function modRelatorios(c, atletas) {
 function modAdmin(c, atletas) {
   phdr(c, "Controle de acessos", "Gestão de Planos");
   const planos = {};
-  const box = el("div"); c.appendChild(box);
+  // Separate containers — never wipe each other
+  const athleteBox = el("div"); c.appendChild(athleteBox);
+  const permBox    = el("div"); c.appendChild(permBox);
 
   Promise.all(atletas.map(a =>
     FB.getDoc(`usuarios/${a._id}`)
-      .then(d => planos[a._id] = d?.plano || "starter")
+      .then(d  => { planos[a._id] = d?.plano || "starter"; })
       .catch(() => { planos[a._id] = "starter"; })
-  )).then(drawAdmin);
+  )).then(() => {
+    drawAthletes();
+    renderPermissoesEditor(permBox);
+  });
 
-  function drawAdmin() {
+  function drawAthletes() {
     const PC = { starter:"#60a5fa", pro:"#d4ff00", elite:"#f59e0b" };
     const PB = { starter:"rgba(96,165,250,.08)", pro:"rgba(212,255,0,.08)", elite:"rgba(245,158,11,.08)" };
-    box.innerHTML = `
-      <!-- Stats -->
+
+    athleteBox.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
-        ${Object.entries(PLANS).map(([k,p]) => `
-          <div style="background:${PB[k]};border:1px solid ${PC[k]}33;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px">
-            <strong style="font-family:DM Mono,sans-serif;font-size:36px;color:${PC[k]};line-height:1">${atletas.filter(a => planos[a._id] === k).length}</strong>
-            <div><span class="slbl" style="color:${PC[k]};display:block">${p.label}</span><p style="font-size:11px;color:var(--muted);margin:3px 0 0">atletas</p></div>
-          </div>`).join("")}
+        ${Object.entries(PLANS).map(([k,p]) => `<div style="background:${PB[k]};border:1px solid ${PC[k]}33;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px"><strong style="font-family:DM Mono,sans-serif;font-size:36px;color:${PC[k]};line-height:1">${atletas.filter(a => planos[a._id] === k).length}</strong><div><span class="slbl" style="color:${PC[k]};display:block">${p.label}</span><p style="font-size:11px;color:var(--muted);margin:3px 0 0">atletas</p></div></div>`).join("")}
       </div>
-
-      <!-- Busca -->
-      <div style="margin-bottom:14px">
-        <input type="text" id="adm-search" placeholder="Buscar atleta por nome ou e-mail..." style="font-size:13px">
-      </div>
-
-      <!-- Tabela -->
+      <div style="margin-bottom:14px"><input type="text" id="adm-s" placeholder="Buscar atleta por nome ou e-mail..." style="font-size:13px"></div>
       <div class="glass" style="border-radius:18px;overflow:hidden;margin-bottom:32px">
         <div style="display:grid;grid-template-columns:1fr auto;gap:14px;padding:11px 20px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2)">
           <span class="slbl">Atleta</span><span class="slbl">Plano</span>
         </div>
         <div id="adm-rows">
-          ${atletas.length === 0 ? '<p style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Nenhum atleta cadastrado ainda.</p>' :
-            atletas.map((a, i) => {
-              const pa = planos[a._id] || "starter";
-              return `<div class="adm-row" data-uid="${a._id}" data-nome="${(a.nome||"").toLowerCase()}" data-email="${(a.email||"").toLowerCase()}"
-                style="display:grid;grid-template-columns:1fr auto;gap:14px;padding:13px 20px;align-items:center;border-bottom:${i < atletas.length-1 ? "1px solid rgba(255,255,255,.04)" : "none"};transition:background .15s">
-                <div style="display:flex;align-items:center;gap:11px">
-                  <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;color:${PC[pa]};flex-shrink:0">${(a.nome||a.email||"?")[0].toUpperCase()}</div>
-                  <div style="min-width:0">
-                    <p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:15px;color:#e2e8f0;margin:0 0 2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nome||"—"}</p>
-                    <p style="font-size:11px;color:var(--muted);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.email||""}</p>
+          ${atletas.length===0
+            ? '<p style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Nenhum atleta cadastrado.</p>'
+            : atletas.map((a,i) => {
+                const pa = planos[a._id] || "starter";
+                return `<div class="adm-row" data-uid="${a._id}" data-n="${(a.nome||"").toLowerCase()}" data-e="${(a.email||"").toLowerCase()}" style="display:grid;grid-template-columns:1fr auto;gap:14px;padding:13px 20px;align-items:center;border-bottom:${i<atletas.length-1?"1px solid rgba(255,255,255,.04)":"none"};transition:background .15s">
+                  <div style="display:flex;align-items:center;gap:11px">
+                    <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;color:${PC[pa]};flex-shrink:0">${(a.nome||a.email||"?")[0].toUpperCase()}</div>
+                    <div style="min-width:0"><p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:15px;color:#e2e8f0;margin:0 0 2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nome||"—"}</p><p style="font-size:11px;color:var(--muted);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.email||""}</p></div>
                   </div>
-                </div>
-                <div style="display:flex;gap:5px;align-items:center">
-                  ${Object.entries(PLANS).map(([k,p]) => `
-                    <button data-plan-btn="${a._id}" data-plan="${k}" style="
-                      padding:6px 13px;border-radius:9px;cursor:pointer;
-                      font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
-                      border:1px solid;transition:all .2s;
-                      background:${pa===k?"rgba(255,255,255,.1)":"rgba(0,0,0,.3)"};
-                      border-color:${pa===k?PC[k]+"88":"rgba(255,255,255,.08)"};
-                      color:${pa===k?PC[k]:"var(--muted)"};
-                      box-shadow:${pa===k?`0 0 12px ${PC[k]}33`:"none"};
-                    ">${p.label}</button>`).join("")}
-                  <div id="spin-${a._id}" style="display:none;width:14px;height:14px;border-radius:50%;border:2px solid rgba(212,255,0,.2);border-top:2px solid var(--y);animation:orbit 1s linear infinite;flex-shrink:0"></div>
-                </div>
-              </div>`;
-            }).join("")}
+                  <div style="display:flex;gap:5px;align-items:center">
+                    ${Object.entries(PLANS).map(([k,p])=>`<button data-pb="${a._id}" data-pl="${k}" style="padding:6px 13px;border-radius:9px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid;transition:all .2s;background:${pa===k?"rgba(255,255,255,.1)":"rgba(0,0,0,.3)"};border-color:${pa===k?PC[k]+"88":"rgba(255,255,255,.08)"};color:${pa===k?PC[k]:"var(--muted)"};box-shadow:${pa===k?`0 0 12px ${PC[k]}33`:"none"}">${p.label}</button>`).join("")}
+                    <div id="sp-${a._id}" style="display:none;width:14px;height:14px;border-radius:50%;border:2px solid rgba(212,255,0,.2);border-top:2px solid var(--y);animation:orbit 1s linear infinite;flex-shrink:0"></div>
+                  </div>
+                </div>`;
+              }).join("")}
         </div>
       </div>`;
 
-    // Search filter
-    box.querySelector("#adm-search")?.addEventListener("input", e => {
+    athleteBox.querySelector("#adm-s")?.addEventListener("input", e => {
       const q = e.target.value.toLowerCase();
-      box.querySelectorAll(".adm-row").forEach(row => {
-        const match = !q || row.dataset.nome.includes(q) || row.dataset.email.includes(q);
-        row.style.display = match ? "" : "none";
+      athleteBox.querySelectorAll(".adm-row").forEach(r => {
+        r.style.display = (!q || r.dataset.n.includes(q) || r.dataset.e.includes(q)) ? "" : "none";
       });
     });
-
-    // Plan buttons
-    box.querySelectorAll("[data-plan-btn]").forEach(btn => {
-      btn.addEventListener("mouseenter", e => { e.currentTarget.closest(".adm-row").style.background = "rgba(255,255,255,.02)"; });
-      btn.addEventListener("mouseleave", e => { e.currentTarget.closest(".adm-row").style.background = "transparent"; });
+    athleteBox.querySelectorAll("[data-pb]").forEach(btn => {
+      btn.onmouseenter = e => e.currentTarget.closest(".adm-row").style.background = "rgba(255,255,255,.02)";
+      btn.onmouseleave = e => e.currentTarget.closest(".adm-row").style.background = "";
       btn.onclick = async () => {
-        const uid = btn.dataset.planBtn, plan = btn.dataset.plan;
+        const uid = btn.dataset.pb, plan = btn.dataset.pl;
         if (planos[uid] === plan) return;
-        const spin = box.querySelector(`#spin-${uid}`);
-        if (spin) spin.style.display = "block";
+        const sp = athleteBox.querySelector("#sp-"+uid);
+        if (sp) sp.style.display = "block";
         try {
-          await FB.updateDoc(`usuarios/${uid}`, { plano: plan });
-          planos[uid] = plan;
-          drawAdmin();
-        } catch(e) {
-          alert("Erro ao salvar plano.");
-          if (spin) spin.style.display = "none";
-        }
+          await FB.updateDoc("usuarios/"+uid, { plano: plan });
+          planos[uid] = plan; drawAthletes();
+        } catch(e) { alert("Erro ao salvar."); if (sp) sp.style.display = "none"; }
       };
     });
-
-    // Render permissions editor below
-    renderPermissoesEditor(box);
   }
 }
 
@@ -2013,148 +1983,129 @@ function renderPermissoesEditor(container) {
   const PBR = { starter:"rgba(96,165,250,.35)", pro:"rgba(212,255,0,.35)", elite:"rgba(245,158,11,.35)" };
 
   const GRUPOS = [
-    { label:"QG Mental",  keys:["sos","mantra","zoneReset"] },
-    { label:"Pré-Jogo",   keys:["checklist"] },
-    { label:"Pós-Jogo",   keys:["raioX","relatos"] },
-    { label:"Prontuário", keys:["videoUpload","pdfExport"] },
+    { label:"Atleta · QG Mental",  keys:["sos","mantra","zoneReset"] },
+    { label:"Atleta · Pré-Jogo",   keys:["checklist"] },
+    { label:"Atleta · Pós-Jogo",   keys:["raioX","relatos"] },
+    { label:"Staff · Prontuário",  keys:["videoUpload","pdfExport"] },
+    { label:"Staff · Funções",     keys:["staffCalendario","staffAquecimento","staffCheckins","staffSoap","staffRelatorios"] },
   ];
 
-  // Local working copy
   let local = {};
   Object.keys(FEATURES_DEFAULT).forEach(k => { local[k] = FEAT_MIN[k] || FEATURES_DEFAULT[k].min; });
-
   let salvando = false, saved = false;
 
-  // ── Wrapper
-  const wrap = el("div");
-  wrap.style.cssText = "margin-top:8px";
+  // Load saved
+  FB.getDoc("config/permissoes").then(d => {
+    if (d && d.features) Object.keys(FEATURES_DEFAULT).forEach(k => { if (d.features[k]) local[k] = d.features[k]; });
+    draw();
+  }).catch(() => draw());
+
+  const wrap = el("div"); wrap.style.cssText = "padding-bottom:48px";
   container.appendChild(wrap);
 
   function draw() {
     wrap.innerHTML = "";
 
-    // ── Section header
-    const hdr = el("div");
-    hdr.style.cssText = "display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px";
-    hdr.innerHTML = `
-      <div>
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px">
-          <div class="section-accent"></div>
-          <span class="slbl" style="letter-spacing:.22em">Permissões por Plano</span>
-        </div>
-        <p style="font-size:12px;color:var(--muted);margin:0">Defina qual plano mínimo libera cada funcionalidade.</p>
-      </div>`;
-    const btnWrap = el("div");
-    btnWrap.style.cssText = "display:flex;gap:8px";
-    const btnReset = el("button","btn-sec","↺ Resetar");
-    btnReset.style.cssText = "padding:8px 16px;font-size:11px;width:auto";
-    const btnSave  = el("button","btn-y", salvando ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Permissões");
-    btnSave.style.cssText  = "width:auto;padding:9px 20px;font-size:12px";
-    if (salvando) btnSave.disabled = true;
-    btnWrap.appendChild(btnReset);
-    btnWrap.appendChild(btnSave);
-    hdr.appendChild(btnWrap);
-    wrap.appendChild(hdr);
+    // Header
+    const hdrRow = el("div");
+    hdrRow.style.cssText = "display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px";
 
-    // ── Plan legend
-    const leg = el("div");
-    leg.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px";
+    const titleSide = el("div");
+    const accentRow = el("div"); accentRow.style.cssText = "display:flex;align-items:center;gap:9px;margin-bottom:6px";
+    const accent = el("div","section-accent"); accentRow.appendChild(accent);
+    const lbl = el("span","slbl","Permissões por Plano"); lbl.style.letterSpacing=".22em"; accentRow.appendChild(lbl);
+    titleSide.appendChild(accentRow);
+    const desc = el("p"); desc.style.cssText = "font-size:12px;color:rgba(255,255,255,.4);margin:0;line-height:1.5";
+    desc.innerHTML = "Defina o plano mínimo para cada funcionalidade.<br>Aplicado em tempo real para todos os usuários.";
+    titleSide.appendChild(desc);
+    hdrRow.appendChild(titleSide);
+
+    const btnRow = el("div"); btnRow.style.cssText = "display:flex;gap:8px;flex-shrink:0";
+    const btnReset = el("button","btn-sec","↺ Padrão"); btnReset.style.cssText = "padding:8px 16px;font-size:11px;width:auto";
+    const btnSave  = el("button","btn-y", salvando ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Permissões");
+    btnSave.style.cssText = "width:auto;padding:10px 22px;font-size:12px";
+    if (salvando) btnSave.disabled = true;
+    btnRow.appendChild(btnReset); btnRow.appendChild(btnSave); hdrRow.appendChild(btnRow);
+    wrap.appendChild(hdrRow);
+
+    // Legend
+    const leg = el("div"); leg.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px";
     Object.entries(PLANS).forEach(([k,p]) => {
-      const d = el("div");
-      d.style.cssText = "display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;background:" + PBG[k] + ";border:1px solid " + PBR[k];
-      d.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:' + PC[k] + ';box-shadow:0 0 6px ' + PC[k] + ';display:inline-block"></span><span style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:' + PC[k] + '">' + p.label + '</span>';
-      leg.appendChild(d);
+      const pill = el("div"); pill.style.cssText = "display:flex;align-items:center;gap:6px;padding:5px 13px;border-radius:99px;background:"+PBG[k]+";border:1px solid "+PBR[k];
+      const dot = el("span"); dot.style.cssText = "width:7px;height:7px;border-radius:50%;background:"+PC[k]+";box-shadow:0 0 8px "+PC[k]+";display:inline-block;flex-shrink:0";
+      const t = el("span"); t.style.cssText = "font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:"+PC[k];
+      t.textContent = p.label;
+      pill.appendChild(dot); pill.appendChild(t); leg.appendChild(pill);
     });
     wrap.appendChild(leg);
 
-    // ── Feature groups
+    // Groups
     GRUPOS.forEach(grupo => {
       const block = el("div");
-      block.style.cssText = "background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:14px 18px;margin-bottom:10px";
+      block.style.cssText = "background:rgba(11,18,32,.55);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px 20px;margin-bottom:12px";
 
-      const glbl = el("p");
-      glbl.style.cssText = "font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(212,255,0,.55);margin:0 0 12px";
-      glbl.textContent = grupo.label;
-      block.appendChild(glbl);
+      const glbl = el("p"); glbl.style.cssText = "font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(212,255,0,.6);margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.05)";
+      glbl.textContent = grupo.label; block.appendChild(glbl);
 
-      const rows = el("div");
-      rows.style.cssText = "display:flex;flex-direction:column;gap:8px";
+      const rows = el("div"); rows.style.cssText = "display:flex;flex-direction:column;gap:9px";
 
       grupo.keys.forEach(k => {
-        const feat = FEATURES_DEFAULT[k];
-        if (!feat) return;
+        const feat = FEATURES_DEFAULT[k]; if (!feat) return;
         const cur = local[k] || feat.min;
-        const isDefault = cur === feat.min;
+        const isDef = cur === feat.min;
 
         const row = el("div");
-        row.style.cssText = "display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.05)";
+        row.style.cssText = "display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06)";
 
-        // Feature name
-        const nameDiv = el("div");
-        nameDiv.style.cssText = "flex:1;min-width:0;display:flex;align-items:center;gap:8px";
-        const nameSpan = el("span");
-        nameSpan.style.cssText = "font-size:13px;color:" + (isDefault ? "var(--dim)" : "#e2e8f0") + ";font-weight:" + (isDefault ? 400 : 600);
-        nameSpan.textContent = feat.label;
-        nameDiv.appendChild(nameSpan);
-        if (!isDefault) {
-          const badge = el("span");
-          badge.style.cssText = "font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.25);border-radius:99px;padding:2px 7px";
-          badge.textContent = "MODIFICADO";
-          nameDiv.appendChild(badge);
+        const nm = el("div"); nm.style.cssText = "flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap";
+        const ns = el("span"); ns.style.cssText = "font-size:13px;color:"+(isDef?"rgba(200,210,230,.65)":"#e2e8f0")+";font-weight:"+(isDef?400:600);
+        ns.textContent = feat.label; nm.appendChild(ns);
+        if (!isDef) {
+          const mb = el("span","","MODIFICADO");
+          mb.style.cssText = "font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.25);border-radius:99px;padding:2px 8px";
+          nm.appendChild(mb);
         }
-        row.appendChild(nameDiv);
+        row.appendChild(nm);
 
-        // Plan toggle buttons
-        const btnGroup = el("div");
-        btnGroup.style.cssText = "display:flex;gap:5px;flex-shrink:0";
-        Object.entries(PLANS).forEach(([pk, p]) => {
-          const active = cur === pk;
+        const bg = el("div"); bg.style.cssText = "display:flex;gap:5px;flex-shrink:0";
+        Object.entries(PLANS).forEach(([pk,p]) => {
+          const active = cur===pk;
           const b = el("button");
-          b.style.cssText = "padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid;transition:all .18s;background:" + (active ? PBG[pk] : "transparent") + ";border-color:" + (active ? PBR[pk] : "rgba(255,255,255,.08)") + ";color:" + (active ? PC[pk] : "var(--muted)") + ";box-shadow:" + (active ? "0 0 10px " + PBG[pk] : "none");
+          b.style.cssText = "padding:5px 13px;border-radius:8px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid;transition:all .18s;background:"+(active?PBG[pk]:"transparent")+";border-color:"+(active?PBR[pk]:"rgba(255,255,255,.1)")+";color:"+(active?PC[pk]:"rgba(200,210,230,.4)")+";box-shadow:"+(active?"0 0 12px "+PBG[pk]:"none");
           b.textContent = p.label;
           b.onclick = () => { local[k] = pk; draw(); };
-          btnGroup.appendChild(b);
+          bg.appendChild(b);
         });
-        row.appendChild(btnGroup);
+        row.appendChild(bg);
 
-        // Current plan badge
-        const badge = el("span");
-        badge.style.cssText = "font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:" + PC[cur] + ";background:" + PBG[cur] + ";border:1px solid " + PBR[cur] + ";border-radius:99px;padding:3px 10px;flex-shrink:0;min-width:58px;text-align:center";
-        badge.textContent = PLANS[cur].label + "+";
-        row.appendChild(badge);
+        const cb = el("span"); cb.style.cssText = "font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:"+PC[cur]+";background:"+PBG[cur]+";border:1px solid "+PBR[cur]+";border-radius:99px;padding:3px 11px;flex-shrink:0;min-width:60px;text-align:center";
+        cb.textContent = PLANS[cur].label+"+"; row.appendChild(cb);
 
         rows.appendChild(row);
       });
 
-      block.appendChild(rows);
-      wrap.appendChild(block);
+      block.appendChild(rows); wrap.appendChild(block);
     });
 
-    // ── Button handlers
-    btnReset.onclick = () => {
-      Object.keys(FEATURES_DEFAULT).forEach(k => { local[k] = FEATURES_DEFAULT[k].min; });
-      draw();
-    };
-
-    btnSave.onclick = async () => {
+    // Handlers
+    btnReset.onclick = () => { Object.keys(FEATURES_DEFAULT).forEach(k => { local[k] = FEATURES_DEFAULT[k].min; }); draw(); };
+    btnSave.onclick  = async () => {
       salvando = true; draw();
       try {
         await FB.setDoc("config/permissoes", { features: local, atualizadoEm: new Date().toISOString() });
         Object.entries(local).forEach(([k,v]) => { FEAT_MIN[k] = v; });
         salvando = false; saved = true; draw();
         setTimeout(() => { saved = false; draw(); }, 2500);
-      } catch(e) {
-        alert("Erro ao salvar permissões: " + e.message);
-        salvando = false; draw();
-      }
+      } catch(e) { alert("Erro: "+e.message); salvando = false; draw(); }
     };
   }
-
-  draw();
 }
 
 
 
+/* ═══════════════════════════════════════════
+   PARTICLE CANVAS — Effect #7
+═══════════════════════════════════════════ */
 function ParticleCanvas(container, h = 120) {
   const cv = document.createElement('canvas');
   cv.style.cssText = `width:100%;height:${h}px;display:block`;
