@@ -1044,7 +1044,7 @@ function tabPos(c) {
 ═══════════════════════════════════════════ */
 function renderCal(container, uid, staffMode) {
   let semana = 0, diaSel = null, events = {}, editEvt = null, showForm = false;
-  let form = { titulo: "", tipo: "treino", horario: "", notas: "" };
+  let form = { titulo: "", tipo: "treino", horario: "", horarioFim: "", notas: "" };
   const wrap = el("div"); wrap.style.cssText = "display:flex;flex-direction:column;gap:11px";
   container.appendChild(wrap);
 
@@ -1091,7 +1091,10 @@ function renderCal(container, uid, staffMode) {
             <input type="text" id="ef-t" value="${form.titulo}" placeholder="Título do evento" style="font-size:13px">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
               <select id="ef-tp" style="font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700">${Object.entries(TIPO_NM).map(([k, v]) => `<option value="${k}"${form.tipo === k ? " selected" : ""}>${v}</option>`).join("")}</select>
-              <input type="time" id="ef-h" value="${form.horario}" style="font-size:13px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+                <div><label class="slbl" style="display:block;margin-bottom:3px;font-size:8px">Início</label><input type="time" id="ef-h" value="${form.horario}" style="font-size:12px;padding:8px 10px"></div>
+                <div><label class="slbl" style="display:block;margin-bottom:3px;font-size:8px">Fim</label><input type="time" id="ef-hf" value="${form.horarioFim || ""}" style="font-size:12px;padding:8px 10px"></div>
+              </div>
             </div>
             <textarea id="ef-n" class="cs" placeholder="Observações..." style="height:55px;font-size:12px;resize:none;display:block">${form.notas}</textarea>
             <div style="display:flex;gap:8px">
@@ -1109,7 +1112,7 @@ function renderCal(container, uid, staffMode) {
                   <p style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;color:#e2e8f0;text-transform:uppercase;margin:0 0 4px">${ev.titulo}</p>
                   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                     <span style="background:${TIPO_COR[ev.tipo] || "var(--y)"}22;color:${TIPO_COR[ev.tipo] || "var(--y)"};border-radius:99px;padding:2px 8px;font-size:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.1em;text-transform:uppercase">${TIPO_NM[ev.tipo] || ev.tipo}</span>
-                    ${ev.horario ? `<span style="font-size:11px;color:var(--dim)">⏰ ${ev.horario}</span>` : ""}
+                    ${ev.horario ? `<span style="font-size:11px;color:var(--dim)">⏰ ${ev.horario}${ev.horarioFim ? " → " + ev.horarioFim : ""}</span>` : ""}
                   </div>
                 </div>
                 <div style="display:flex;gap:5px;flex-shrink:0">
@@ -1124,11 +1127,11 @@ function renderCal(container, uid, staffMode) {
     wrap.querySelector("#cal-p").onclick = () => { semana--; draw(); };
     wrap.querySelector("#cal-n").onclick = () => { semana++; draw(); };
     wrap.querySelectorAll(".cal-day").forEach(d => d.onclick = () => { diaSel = new Date(d.dataset.k + "T12:00:00"); draw(); });
-    wrap.querySelector("#add-evt")?.addEventListener("click", () => { editEvt = null; form = { titulo: "", tipo: "treino", horario: "", notas: "" }; showForm = true; draw(); });
+    wrap.querySelector("#add-evt")?.addEventListener("click", () => { editEvt = null; form = { titulo: "", tipo: "treino", horario: "", horarioFim: "", notas: "" }; showForm = true; draw(); });
     wrap.querySelector("#ef-cancel")?.addEventListener("click", () => { showForm = false; editEvt = null; draw(); });
     wrap.querySelector("#ef-save")?.addEventListener("click", async () => {
       const t = wrap.querySelector("#ef-t").value.trim(); if (!t) return;
-      form = { titulo: t, tipo: wrap.querySelector("#ef-tp").value, horario: wrap.querySelector("#ef-h").value, notas: wrap.querySelector("#ef-n").value };
+      form = { titulo: t, tipo: wrap.querySelector("#ef-tp").value, horario: wrap.querySelector("#ef-h").value, horarioFim: wrap.querySelector("#ef-hf")?.value || "", notas: wrap.querySelector("#ef-n").value };
       const k = fk(diaSel);
       const data = { ...form, data: k, criadoEm: new Date().toISOString(), criadoPor: staffMode ? "staff" : "atleta" };
       try {
@@ -1140,7 +1143,7 @@ function renderCal(container, uid, staffMode) {
     wrap.querySelectorAll("[data-edit]").forEach(b => b.onclick = e => {
       e.stopPropagation(); const k = fk(diaSel);
       const ev = (events[k] || []).find(x => x._id === b.dataset.edit); if (!ev) return;
-      editEvt = ev._id; form = { titulo: ev.titulo || "", tipo: ev.tipo || "treino", horario: ev.horario || "", notas: ev.notas || "" };
+      editEvt = ev._id; form = { titulo: ev.titulo || "", tipo: ev.tipo || "treino", horario: ev.horario || "", horarioFim: ev.horarioFim || "", notas: ev.notas || "" };
       showForm = true; draw();
     });
     wrap.querySelectorAll("[data-del]").forEach(b => b.onclick = async e => {
@@ -1463,47 +1466,118 @@ function modAgenda(c, atletas) {
     sessoes = ss || []; torneios = tt || []; drawAg();
   }
   load();
+
+  function fmtHora(dt) {
+    if (!dt) return "";
+    return new Date(dt).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+  function fmtDuracao(ini, fim) {
+    if (!ini || !fim) return "";
+    const ms = new Date(fim) - new Date(ini);
+    if (ms <= 0) return "";
+    const min = Math.round(ms / 60000);
+    if (min < 60) return min + "min";
+    const h = Math.floor(min / 60), m = min % 60;
+    return h + "h" + (m > 0 ? m + "min" : "");
+  }
+
   function drawAg() {
     box.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-      <div class="glass" style="border-radius:18px;padding:24px;display:flex;flex-direction:column;max-height:660px">
+      <div class="glass" style="border-radius:18px;padding:24px;display:flex;flex-direction:column;max-height:720px">
         <h3 style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;text-transform:uppercase;color:var(--y);margin:0 0 18px">Sessões Clínicas</h3>
         <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:13px;padding:14px;margin-bottom:14px;flex-shrink:0;display:flex;flex-direction:column;gap:8px">
           <select id="ag-atl" style="font-size:13px"><option value="">Paciente...</option>${atletas.map(a => `<option value="${a._id}">${a.nome}</option>`).join("")}</select>
-          <input type="datetime-local" id="ag-dt" style="font-size:13px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label class="slbl" style="display:block;margin-bottom:5px;font-size:9px">Início</label>
+              <input type="datetime-local" id="ag-dt-ini" style="font-size:12px;padding:10px 12px">
+            </div>
+            <div>
+              <label class="slbl" style="display:block;margin-bottom:5px;font-size:9px">Fim</label>
+              <input type="datetime-local" id="ag-dt-fim" style="font-size:12px;padding:10px 12px">
+            </div>
+          </div>
           <button class="btn-y" id="ag-save" style="font-size:12px">Confirmar Sessão</button>
         </div>
         <div class="cs" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
-          ${sessoes.map(s => `<div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.05);border-radius:13px;padding:13px 14px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:9px"><div><p style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:#e2e8f0;margin:0 0 2px;text-transform:uppercase">${s.nome || "—"}</p><p style="font-size:11px;color:var(--muted);margin:0">${new Date(s.dataHora).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p></div><button data-del-s="${s._id}" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:7px;padding:7px;cursor:pointer;color:#f87171;display:flex"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+          ${sessoes.length === 0 ? `<p style="text-align:center;color:var(--muted);font-size:12px;margin-top:20px">Nenhuma sessão agendada.</p>` : ""}
+          ${sessoes.map(s => {
+            const dur = fmtDuracao(s.dataHora, s.dataHoraFim);
+            return `<div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.05);border-radius:13px;padding:13px 14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:9px">
+              <div style="flex:1;min-width:0">
+                <p style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:#e2e8f0;margin:0 0 4px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.nome || "—"}</p>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="font-size:11px;color:var(--y);font-family:'DM Mono',sans-serif">${fmtHora(s.dataHora)}</span>
+                  ${s.dataHoraFim ? `<span style="font-size:10px;color:var(--muted)">→</span><span style="font-size:11px;color:#818cf8;font-family:'DM Mono',sans-serif">${fmtHora(s.dataHoraFim)}</span>` : ""}
+                  ${dur ? `<span style="font-size:9px;color:#fb923c;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:99px;padding:2px 8px">${dur}</span>` : ""}
+                </div>
+              </div>
+              <button data-del-s="${s._id}" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:7px;padding:7px;cursor:pointer;color:#f87171;display:flex;flex-shrink:0;margin-left:8px"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
             <a href="${s.link}" target="_blank" class="sess-link">Entrar na Sala Virtual →</a>
-          </div>`).join("")}
+          </div>`; }).join("")}
         </div>
       </div>
-      <div class="glass" style="border-radius:18px;padding:24px;display:flex;flex-direction:column;max-height:660px">
+      <div class="glass" style="border-radius:18px;padding:24px;display:flex;flex-direction:column;max-height:720px">
         <h3 style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;text-transform:uppercase;color:#e2e8f0;margin:0 0 18px">Radar de Torneios</h3>
         <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:13px;padding:14px;margin-bottom:14px;flex-shrink:0;display:flex;flex-direction:column;gap:8px">
           <input type="text" id="tn-nome" placeholder="Nome do Torneio" style="font-size:13px">
-          <input type="date" id="tn-data" style="font-size:13px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label class="slbl" style="display:block;margin-bottom:5px;font-size:9px">Data Início</label>
+              <input type="date" id="tn-data" style="font-size:12px;padding:10px 12px">
+            </div>
+            <div>
+              <label class="slbl" style="display:block;margin-bottom:5px;font-size:9px">Data Fim</label>
+              <input type="date" id="tn-data-fim" style="font-size:12px;padding:10px 12px">
+            </div>
+          </div>
           <button class="btn-sec" id="tn-save" style="font-size:12px">Registrar Competição</button>
         </div>
         <div class="cs" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
-          ${torneios.map(t => `<div class="tourn-card"><div><p style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:#e2e8f0;margin:0 0 2px;text-transform:uppercase">${t.nome}</p><p style="font-size:11px;color:var(--muted);margin:0">${new Date(t.data + "T12:00:00").toLocaleDateString("pt-BR")}</p></div><button data-del-t="${t._id}" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:7px;padding:7px;cursor:pointer;color:#f87171;display:flex"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join("")}
+          ${torneios.length === 0 ? `<p style="text-align:center;color:var(--muted);font-size:12px;margin-top:20px">Nenhum torneio registrado.</p>` : ""}
+          ${torneios.map(t => `<div class="tourn-card">
+            <div style="flex:1;min-width:0">
+              <p style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:#e2e8f0;margin:0 0 3px;text-transform:uppercase">${t.nome}</p>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;color:var(--y);font-family:'DM Mono',sans-serif">${new Date(t.data + "T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"short"})}</span>
+                ${t.dataFim ? `<span style="font-size:10px;color:var(--muted)">→</span><span style="font-size:11px;color:#818cf8;font-family:'DM Mono',sans-serif">${new Date(t.dataFim + "T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"short"})}</span>` : ""}
+              </div>
+            </div>
+            <button data-del-t="${t._id}" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:7px;padding:7px;cursor:pointer;color:#f87171;display:flex;flex-shrink:0"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>`).join("")}
         </div>
       </div>
     </div>`;
+    // Auto-set end time 1h after start
+    const iniInp = box.querySelector("#ag-dt-ini");
+    if (iniInp) iniInp.addEventListener("change", () => {
+      const fimInp = box.querySelector("#ag-dt-fim");
+      if (fimInp && !fimInp.value && iniInp.value) {
+        const d = new Date(iniInp.value);
+        d.setHours(d.getHours() + 1);
+        fimInp.value = d.toISOString().slice(0, 16);
+      }
+    });
     box.querySelector("#ag-save").onclick = async () => {
-      const aid = box.querySelector("#ag-atl").value, dt = box.querySelector("#ag-dt").value;
-      if (!aid || !dt) return alert("Preencha atleta e data.");
+      const aid = box.querySelector("#ag-atl").value;
+      const dtIni = box.querySelector("#ag-dt-ini").value;
+      const dtFim = box.querySelector("#ag-dt-fim").value;
+      if (!aid || !dtIni) return alert("Preencha atleta e horário de início.");
       const a = atletas.find(x => x._id === aid);
       const link = `https://meet.google.com/acemind-${Math.floor(Math.random() * 9000 + 1000)}`;
-      const r = await FB.addDoc("agenda", { atletaId: a._id, nome: a.nome, email: a.email || "", dataHora: dt, link }).catch(() => null);
-      if (r) sessoes.push({ _id: r.id, atletaId: a._id, nome: a.nome, dataHora: dt, link }); drawAg();
+      const data = { atletaId: a._id, nome: a.nome, email: a.email || "", dataHora: dtIni, dataHoraFim: dtFim || "", link };
+      const r = await FB.addDoc("agenda", data).catch(() => null);
+      if (r) sessoes.push({ _id: r.id, ...data }); drawAg();
     };
     box.querySelector("#tn-save").onclick = async () => {
-      const nome = box.querySelector("#tn-nome").value.trim(), data = box.querySelector("#tn-data").value;
-      if (!nome || !data) return alert("Preencha.");
-      const r = await FB.addDoc("torneios", { nome, data }).catch(() => null);
-      if (r) torneios.push({ _id: r.id, nome, data }); drawAg();
+      const nome = box.querySelector("#tn-nome").value.trim();
+      const data = box.querySelector("#tn-data").value;
+      const dataFim = box.querySelector("#tn-data-fim")?.value || "";
+      if (!nome || !data) return alert("Preencha nome e data.");
+      const r = await FB.addDoc("torneios", { nome, data, dataFim }).catch(() => null);
+      if (r) torneios.push({ _id: r.id, nome, data, dataFim }); drawAg();
     };
     box.querySelectorAll("[data-del-s]").forEach(b => b.onclick = async () => { if (!confirm("Desmarcar?")) return; await FB.deleteDoc(`agenda/${b.dataset.delS}`).catch(() => {}); sessoes = sessoes.filter(s => s._id !== b.dataset.delS); drawAg(); });
     box.querySelectorAll("[data-del-t]").forEach(b => b.onclick = async () => { if (!confirm("Apagar?")) return; await FB.deleteDoc(`torneios/${b.dataset.delT}`).catch(() => {}); torneios = torneios.filter(t => t._id !== b.dataset.delT); drawAg(); });
@@ -1692,7 +1766,6 @@ function modAdmin(c, atletas) {
     const PBR = { starter:"rgba(96,165,250,.35)", pro:"rgba(212,255,0,.35)", elite:"rgba(245,158,11,.35)" };
     const PE  = { starter:"🎾", pro:"⚡", elite:"👑" };
 
-    // ─── ALL GROUPS (Atleta + Staff) ───
     const GRUPOS = [
       { section:"atleta", label:"QG Mental",    keys:["sos","visaoTunel","zoneReset","painelParticulas","mantra","diarioPerf"] },
       { section:"atleta", label:"Pré-Jogo",     keys:["checklist","cofreTatico","aquecAtleta"] },
@@ -1711,7 +1784,6 @@ function modAdmin(c, atletas) {
     Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { localStaff[k] = STAFF_FEAT_MIN[k] || STAFF_FEATURES_DEFAULT[k].min; });
     let salvando = false, saved = false;
 
-    const wrap = el("div"); container.appendChild(wrap);
     draw();
 
     FB.getDoc("config/permissoes").then(d => {
@@ -1721,121 +1793,97 @@ function modAdmin(c, atletas) {
         if (d.staffFeatures) Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { if (d.staffFeatures[k] && d.staffFeatures[k] !== localStaff[k]) { localStaff[k] = d.staffFeatures[k]; changed = true; } });
         if (changed) draw();
       }
-    }).catch(err => { console.warn("[AceMind] config/permissoes padrões.", err); });
+    }).catch(() => {});
+
+    function buildRow(k, feat, cur, isStaffRow) {
+      const dataAttr = `data-pk="${k}" data-staff="${isStaffRow ? 1 : 0}"`;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s" onmouseenter="this.style.background='rgba(255,255,255,.025)'" onmouseleave="this.style.background=''">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+          <span style="font-size:15px;flex-shrink:0;opacity:.65">${feat.icon || "●"}</span>
+          <span style="font-size:13px;color:#c8d4e8">${feat.label}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+          ${Object.entries(PLANS).map(([pk,p]) => {
+            const active = cur === pk;
+            return `<button class="perm-btn" ${dataAttr} data-plan="${pk}" style="width:32px;height:32px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid ${active ? PBR[pk] : "rgba(255,255,255,.08)"};background:${active ? PBG[pk] : "rgba(0,0,0,.3)"};opacity:${active ? 1 : .4};transition:all .15s">${PE[pk]}</button>`;
+          }).join("")}
+          <span style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${PC[cur]};background:${PBG[cur]};border:1px solid ${PBR[cur]};border-radius:7px;padding:4px 10px;min-width:62px;text-align:center;margin-left:4px">${PLANS[cur].label}+</span>
+        </div>
+      </div>`;
+    }
 
     function draw() {
-      wrap.innerHTML = "";
-
-      // ═══ HEADER ═══
-      const hdr = el("div"); hdr.style.cssText = "margin-bottom:24px";
-      hdr.innerHTML = `
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:18px">
+      let html = `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px">
           <div>
             <p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:rgba(212,255,0,.6);margin:0 0 6px">Configuração de Acesso por Plano</p>
-            <p style="font-size:13px;color:rgba(255,255,255,.45);margin:0">Defina o plano mínimo para cada funcionalidade. Clique nos botões para alterar.</p>
+            <p style="font-size:13px;color:rgba(255,255,255,.4);margin:0">Defina o plano mínimo para cada funcionalidade. Clique nos ícones para alterar.</p>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">
-            <button id="perm-reset" class="btn-sec" style="padding:9px 18px;font-size:11px;width:auto;gap:6px">↺ Resetar</button>
+            <button id="perm-reset" class="btn-sec" style="padding:9px 18px;font-size:11px;width:auto">↺ Resetar</button>
             <button id="perm-save" class="btn-y" style="width:auto;padding:10px 24px;font-size:12px" ${salvando?"disabled":""}>${salvando ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Permissões"}</button>
           </div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          ${Object.entries(PLANS).map(([k,p]) => `
-            <div style="display:inline-flex;align-items:center;gap:7px;padding:6px 16px;border-radius:99px;background:${PBG[k]};border:1px solid ${PBR[k]}">
-              <span style="width:8px;height:8px;border-radius:50%;background:${PC[k]};box-shadow:0 0 8px ${PC[k]}"></span>
-              <span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${PC[k]}">${p.emoji} ${p.label}</span>
-            </div>`).join("")}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          ${Object.entries(PLANS).map(([k,p]) => `<div style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;border-radius:99px;background:${PBG[k]};border:1px solid ${PBR[k]}"><span style="font-size:12px">${p.emoji}</span><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${PC[k]}">${p.label}</span></div>`).join("")}
         </div>`;
-      wrap.appendChild(hdr);
 
-      // ═══ SECTION SEPARATOR: ATLETA ═══
-      const atlSep = el("div"); atlSep.style.cssText = "display:flex;align-items:center;gap:12px;margin:28px 0 16px";
-      atlSep.innerHTML = `<div style="width:4px;height:20px;border-radius:99px;background:linear-gradient(180deg,#d4ff00,#a8ff00);box-shadow:0 0 12px rgba(212,255,0,.5)"></div>
-        <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;letter-spacing:.15em;text-transform:uppercase;color:var(--y)">🎾 Funcionalidades do Atleta</span>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,255,0,.2),transparent)"></div>`;
-      wrap.appendChild(atlSep);
+      // ATLETA SEPARATOR
+      html += `<div style="display:flex;align-items:center;gap:12px;margin:26px 0 14px">
+        <div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#d4ff00,#a8ff00);box-shadow:0 0 10px rgba(212,255,0,.5)"></div>
+        <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:var(--y)">🎾 Funcionalidades do Atleta</span>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,255,0,.2),transparent)"></div>
+      </div>`;
 
-      // ═══ RENDER GROUPS ═══
-      let lastSection = "atleta";
+      let prevSection = "atleta";
       GRUPOS.forEach(grupo => {
-        // Insert staff separator
-        if (grupo.section === "staff" && lastSection === "atleta") {
-          lastSection = "staff";
-          const staffSep = el("div"); staffSep.style.cssText = "display:flex;align-items:center;gap:12px;margin:32px 0 16px";
-          staffSep.innerHTML = `<div style="width:4px;height:20px;border-radius:99px;background:linear-gradient(180deg,#818cf8,#6366f1);box-shadow:0 0 12px rgba(129,140,248,.5)"></div>
-            <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;letter-spacing:.15em;text-transform:uppercase;color:#818cf8">🏥 Funcionalidades do Staff</span>
-            <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(129,140,248,.2),transparent)"></div>`;
-          wrap.appendChild(staffSep);
+        if (grupo.section === "staff" && prevSection === "atleta") {
+          prevSection = "staff";
+          html += `<div style="display:flex;align-items:center;gap:12px;margin:30px 0 14px">
+            <div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#818cf8,#6366f1);box-shadow:0 0 10px rgba(129,140,248,.5)"></div>
+            <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#818cf8">🏥 Funcionalidades do Staff</span>
+            <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(129,140,248,.2),transparent)"></div>
+          </div>`;
         }
 
-        const isStaffGroup = grupo.section === "staff";
-        const accentColor = isStaffGroup ? "#818cf8" : "#d4ff00";
+        const isS = grupo.section === "staff";
+        const ac = isS ? "#818cf8" : "#d4ff00";
+        html += `<div style="background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.06);border-left:3px solid ${ac};border-radius:0 14px 14px 0;margin-bottom:12px;overflow:hidden">
+          <div style="padding:12px 18px 8px;border-bottom:1px solid rgba(255,255,255,.04)">
+            <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:${isS ? "rgba(129,140,248,.8)" : "rgba(212,255,0,.75)"}">${grupo.label}</span>
+          </div>`;
 
-        const block = el("div"); block.style.cssText = `background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.06);border-left:3px solid ${accentColor};border-radius:0 14px 14px 0;padding:0;margin-bottom:14px;overflow:hidden`;
-
-        // Group header
-        const gHead = el("div"); gHead.style.cssText = `padding:14px 20px 10px;border-bottom:1px solid rgba(255,255,255,.04)`;
-        gHead.innerHTML = `<span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:${isStaffGroup ? "rgba(129,140,248,.8)" : "rgba(212,255,0,.75)"}">${grupo.label}</span>`;
-        block.appendChild(gHead);
-
-        // Feature rows
-        grupo.keys.forEach((k, idx) => {
-          const feat = isStaffGroup ? STAFF_FEATURES_DEFAULT[k] : FEATURES_DEFAULT[k];
+        grupo.keys.forEach(k => {
+          const feat = isS ? STAFF_FEATURES_DEFAULT[k] : FEATURES_DEFAULT[k];
           if (!feat) return;
-          const local = isStaffGroup ? localStaff : localAtl;
+          const local = isS ? localStaff : localAtl;
           const cur = local[k] || feat.min;
-
-          const row = el("div"); row.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:${idx < grupo.keys.length - 1 ? "1px solid rgba(255,255,255,.04)" : "none"};transition:background .15s;cursor:default`;
-          row.onmouseenter = () => row.style.background = "rgba(255,255,255,.02)";
-          row.onmouseleave = () => row.style.background = "";
-
-          // Left: icon + label
-          const left = el("div"); left.style.cssText = "display:flex;align-items:center;gap:10px;flex:1;min-width:0";
-          left.innerHTML = `${feat.icon ? `<span style="font-size:15px;opacity:.7;flex-shrink:0">${feat.icon}</span>` : ""}
-            <span style="font-size:13.5px;color:#c8d4e8;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${feat.label}</span>`;
-          row.appendChild(left);
-
-          // Right: plan buttons + badge
-          const right = el("div"); right.style.cssText = "display:flex;align-items:center;gap:6px;flex-shrink:0";
-
-          Object.entries(PLANS).forEach(([pk, p]) => {
-            const active = cur === pk;
-            const btn = el("button");
-            btn.style.cssText = `width:34px;height:34px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;border:1.5px solid;transition:all .18s cubic-bezier(.22,1,.36,1);
-              background:${active ? PBG[pk] : "rgba(0,0,0,.3)"};
-              border-color:${active ? PBR[pk] : "rgba(255,255,255,.08)"};
-              box-shadow:${active ? `0 0 14px ${PBG[pk]},inset 0 0 10px ${PBG[pk].replace('.12','.06')}` : "none"};
-              opacity:${active ? 1 : .45}`;
-            btn.innerHTML = PE[pk];
-            btn.onmouseenter = () => { if (!active) btn.style.opacity = ".8"; btn.style.transform = "scale(1.12)"; };
-            btn.onmouseleave = () => { if (!active) btn.style.opacity = ".45"; btn.style.transform = ""; };
-            btn.onclick = () => { local[k] = pk; draw(); };
-            right.appendChild(btn);
-          });
-
-          // Badge showing current plan
-          const badge = el("span");
-          badge.style.cssText = `font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-            color:${PC[cur]};background:${PBG[cur]};border:1px solid ${PBR[cur]};
-            border-radius:8px;padding:5px 12px;margin-left:6px;min-width:68px;text-align:center;
-            box-shadow:0 0 10px ${PBG[cur]}`;
-          badge.textContent = PLANS[cur].label + "+";
-          right.appendChild(badge);
-
-          row.appendChild(right);
-          block.appendChild(row);
+          html += buildRow(k, feat, cur, isS);
         });
 
-        wrap.appendChild(block);
+        html += `</div>`;
       });
 
-      // ═══ BUTTON HANDLERS ═══
-      wrap.querySelector("#perm-reset").onclick = () => {
+      container.innerHTML = html;
+
+      // Attach click handlers
+      container.querySelectorAll(".perm-btn").forEach(btn => {
+        btn.onclick = () => {
+          const key = btn.dataset.pk, plan = btn.dataset.plan, isStaff = btn.dataset.staff === "1";
+          if (isStaff) localStaff[key] = plan;
+          else localAtl[key] = plan;
+          draw();
+        };
+        btn.onmouseenter = () => { if (btn.style.opacity !== "1") btn.style.opacity = ".75"; btn.style.transform = "scale(1.15)"; };
+        btn.onmouseleave = () => { if (btn.style.opacity !== "1") btn.style.opacity = ".4"; btn.style.transform = ""; };
+      });
+
+      container.querySelector("#perm-reset").onclick = () => {
         Object.keys(FEATURES_DEFAULT).forEach(k => { localAtl[k] = FEATURES_DEFAULT[k].min; });
         Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { localStaff[k] = STAFF_FEATURES_DEFAULT[k].min; });
         draw();
       };
-      wrap.querySelector("#perm-save").onclick = async () => {
+      container.querySelector("#perm-save").onclick = async () => {
         salvando = true; draw();
         try {
           await FB.setDoc("config/permissoes", { features: localAtl, staffFeatures: localStaff, atualizadoEm: new Date().toISOString() });
