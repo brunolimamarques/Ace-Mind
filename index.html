@@ -614,16 +614,22 @@ const FB = {
     const ops = { "==": "EQUAL", "<": "LESS_THAN", ">": "GREATER_THAN", ">=": "GREATER_THAN_OR_EQUAL" };
     const colId = colPath.split("/").pop();
     const parent = colPath.split("/").slice(0, -1).join("/");
-    const body = {
-      structuredQuery: {
-        from: [{ collectionId: colId }],
-        where: { fieldFilter: { field: { fieldPath: field }, op: ops[op] || "EQUAL", value: this.toV(value) } },
-        limit: lim
-      }
+    // Build structured query — only add WHERE if field is provided
+    const sq = {
+      from: [{ collectionId: colId }],
+      limit: lim
     };
-    if (orderBy) body.structuredQuery.orderBy = [{ field: { fieldPath: orderBy }, direction: dir }];
+    if (field) {
+      sq.where = { fieldFilter: { field: { fieldPath: field }, op: ops[op] || "EQUAL", value: this.toV(value) } };
+    }
+    // Only add orderBy if there's no WHERE (avoids composite index requirement)
+    // or if field and orderBy are the SAME field (single-field index, auto-created)
+    if (orderBy && (!field || orderBy === field)) {
+      sq.orderBy = [{ field: { fieldPath: orderBy }, direction: dir }];
+    }
+    const body = { structuredQuery: sq };
     try {
-      const url = `${this.FS}${parent ? "/" + parent : ""}:runQuery`;
+      const url = parent ? `${this.FS}/${parent}:runQuery` : `${this.FS}:runQuery`;
       const j = await this.req(url, "POST", body);
       return (j || []).filter(r => r.document).map(r => this.fromDoc(r.document));
     } catch (e) { return []; }
@@ -1461,11 +1467,19 @@ function renderDashboard(root) {
     try {
       const [cc, aa, ss] = await Promise.all([
         FB.query("checkins", "data", ">", "2000-01-01", "data", "DESCENDING", 20),
-        FB.query("usuarios", "cargo", "==", "paciente", "nome", "ASCENDING", 100),
-        FB.query("sos_alertas", "status", "==", "pendente", "data", "DESCENDING", 10)
+        FB.getDocs("usuarios"),
+        FB.query("sos_alertas", "status", "==", "pendente", null, "DESCENDING", 10)
       ]);
-      checkins = cc || []; atletas = aa || []; alertas = ss || [];
-    } catch (e) { }
+      checkins = cc || [];
+      // Filter pacientes client-side (avoid composite index issue entirely)
+      atletas = (aa || [])
+        .filter(u => u.cargo === "paciente")
+        .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
+      alertas = ss || [];
+      console.log("[AceMind] Atletas carregados:", atletas.length);
+    } catch (e) {
+      console.error("[AceMind] Erro ao carregar dados:", e);
+    }
     renderMain();
   }
   loadData(); setInterval(loadData, 30000);
