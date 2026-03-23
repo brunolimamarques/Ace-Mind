@@ -445,31 +445,44 @@ const PLANS = {
 
 // ─── FEATURES DO ATLETA ───
 const FEATURES_DEFAULT = {
-  sos:              { min:"pro",     label:"S.O.S Mental"                    },
-  mantra:           { min:"starter", label:"Frase Âncora / Mantra"           },
-  zoneReset:        { min:"starter", label:"Zone Reset (Respiração)"          },
-  checklist:        { min:"starter", label:"Checklist Pré-Jogo"               },
-  raioX:            { min:"pro",     label:"Raio-X Pós-Jogo"                  },
-  relatos:          { min:"pro",     label:"Ver Relatos do Atleta"             },
-  videoUpload:      { min:"elite",   label:"Upload de Vídeo"                  },
-  pdfExport:        { min:"pro",     label:"Exportar PDF / Dossiê"             },
+  sos:              { min:"pro",     label:"S.O.S Mental",            icon:"🚨" },
+  visaoTunel:       { min:"starter", label:"Visão de Túnel",          icon:"🎯" },
+  zoneReset:        { min:"starter", label:"Zone Reset",              icon:"🌬️" },
+  painelParticulas: { min:"starter", label:"Painel de Partículas",    icon:"✨" },
+  mantra:           { min:"starter", label:"Frase Âncora / Mantra",   icon:"💬" },
+  diarioPerf:       { min:"starter", label:"Diário de Performance",   icon:"📓" },
+  checklist:        { min:"starter", label:"Checklist Pré-Jogo",      icon:"✅" },
+  cofreTatico:      { min:"starter", label:"Cofre Tático",            icon:"🔐" },
+  aquecAtleta:      { min:"starter", label:"Ver Protocolo Aquecimento",icon:"🔥" },
+  raioX:            { min:"pro",     label:"Raio-X Pós-Jogo",         icon:"🏆" },
+  relatos:          { min:"pro",     label:"Ver Relatos do Atleta",    icon:"📝" },
+  analytics:        { min:"starter", label:"Analytics & Stats",        icon:"📊" },
+  graficoEvolucao:  { min:"pro",     label:"Gráfico de Evolução",     icon:"📈" },
+  salaTrofeus:      { min:"pro",     label:"Sala de Troféus (PRs)",   icon:"🏅" },
+  videoUpload:      { min:"elite",   label:"Upload de Vídeo",         icon:"🎬" },
+  pdfExport:        { min:"pro",     label:"Exportar PDF / Dossiê",   icon:"📄" },
+  iaFeedback:       { min:"elite",   label:"Feedback IA Personalizado",icon:"🤖" },
+  calendario:       { min:"starter", label:"Agenda / Calendário",     icon:"📅" },
 };
 
 // ─── FEATURES DO STAFF (Treinador / Assistente Terapêutico) ───
 const STAFF_FEATURES_DEFAULT = {
-  staffDashboard:     { min:"starter", label:"Visão Geral / Dashboard"         },
-  staffPerfil:        { min:"starter", label:"Perfil Esportivo do Atleta"      },
-  staffProntuario:    { min:"pro",     label:"Prontuário / SOAP"              },
-  staffCriticos:      { min:"pro",     label:"Pressão em Jogo (Momentos Críticos)" },
-  staffAgenda:        { min:"starter", label:"Agenda & Sessões"                },
-  staffCalendario:    { min:"starter", label:"Calendários dos Atletas"         },
-  staffAquecimento:   { min:"starter", label:"Protocolo de Aquecimento"        },
-  staffRelatorios:    { min:"pro",     label:"Exportar Relatórios PDF"         },
-  staffCheckins:      { min:"starter", label:"Ver Check-ins dos Atletas"       },
-  staffSoap:          { min:"pro",     label:"Registros SOAP / Prontuário"     },
-  staffVideoAnalise:  { min:"elite",   label:"Análise de Vídeo Avançada"       },
-  staffIAInsights:    { min:"elite",   label:"Insights IA (Tendências)"        },
-  staffMultiAtleta:   { min:"pro",     label:"Comparativo Multi-Atleta"        },
+  staffDashboard:     { min:"starter", label:"Visão Geral / Dashboard",       icon:"📡" },
+  staffCheckins:      { min:"starter", label:"Ver Check-ins dos Atletas",     icon:"📋" },
+  staffPerfil:        { min:"starter", label:"Perfil Esportivo do Atleta",    icon:"🎾" },
+  staffAgenda:        { min:"starter", label:"Agenda & Sessões",              icon:"📅" },
+  staffCalendario:    { min:"starter", label:"Calendários dos Atletas",       icon:"🗓️" },
+  staffAquecimento:   { min:"starter", label:"Protocolo de Aquecimento",      icon:"🔥" },
+  staffProntuario:    { min:"pro",     label:"Prontuário / SOAP",            icon:"🩺" },
+  staffSoap:          { min:"pro",     label:"Registros SOAP Clínicos",       icon:"📋" },
+  staffCriticos:      { min:"pro",     label:"Pressão em Jogo (Choking)",     icon:"🎯" },
+  staffRelatorios:    { min:"pro",     label:"Exportar Relatórios PDF",       icon:"📄" },
+  staffMultiAtleta:   { min:"pro",     label:"Comparativo Multi-Atleta",      icon:"👥" },
+  staffRotinas:       { min:"pro",     label:"Editar Rotinas do Atleta",      icon:"🔄" },
+  staffVideoAnalise:  { min:"elite",   label:"Análise de Vídeo Avançada",     icon:"🎬" },
+  staffIAInsights:    { min:"elite",   label:"Insights IA (Tendências)",      icon:"🤖" },
+  staffNotificacoes:  { min:"elite",   label:"Alertas & Notificações Push",   icon:"🔔" },
+  staffExportData:    { min:"elite",   label:"Exportar Dados Brutos (CSV)",   icon:"💾" },
 };
 
 let FEAT_MIN = {};
@@ -1674,18 +1687,23 @@ function modAdmin(c, atletas) {
   }
 
   function renderPermissoesEditor(container) {
-    const PC  = { starter:"var(--starter)", pro:"var(--pro)", elite:"var(--elite)" };
+    const PC  = { starter:"#60a5fa", pro:"#d4ff00", elite:"#f59e0b" };
     const PBG = { starter:"rgba(96,165,250,.12)", pro:"rgba(212,255,0,.12)", elite:"rgba(245,158,11,.12)" };
     const PBR = { starter:"rgba(96,165,250,.35)", pro:"rgba(212,255,0,.35)", elite:"rgba(245,158,11,.35)" };
+    const PE  = { starter:"🎾", pro:"⚡", elite:"👑" };
 
+    // ─── ALL GROUPS (Atleta + Staff) ───
     const GRUPOS = [
-      { label:"🎾 Atleta · QG Mental",  keys:["sos","mantra","zoneReset"], isStaff: false },
-      { label:"🎾 Atleta · Pré-Jogo",   keys:["checklist"], isStaff: false },
-      { label:"🎾 Atleta · Pós-Jogo",   keys:["raioX","relatos","videoUpload","pdfExport"], isStaff: false },
-      { label:"🏥 Staff · Dashboard & Perfil", keys:["staffDashboard","staffPerfil","staffCheckins"], isStaff: true },
-      { label:"🏥 Staff · Clínico",     keys:["staffProntuario","staffSoap","staffCriticos"], isStaff: true },
-      { label:"🏥 Staff · Operacional", keys:["staffAgenda","staffCalendario","staffAquecimento"], isStaff: true },
-      { label:"🏥 Staff · Avançado",    keys:["staffRelatorios","staffVideoAnalise","staffIAInsights","staffMultiAtleta"], isStaff: true },
+      { section:"atleta", label:"QG Mental",    keys:["sos","visaoTunel","zoneReset","painelParticulas","mantra","diarioPerf"] },
+      { section:"atleta", label:"Pré-Jogo",     keys:["checklist","cofreTatico","aquecAtleta"] },
+      { section:"atleta", label:"Pós-Jogo",     keys:["raioX","relatos"] },
+      { section:"atleta", label:"Analytics",     keys:["analytics","graficoEvolucao","salaTrofeus"] },
+      { section:"atleta", label:"Ferramentas",   keys:["calendario","pdfExport","videoUpload","iaFeedback"] },
+      { section:"staff",  label:"Painel & Monitoramento", keys:["staffDashboard","staffCheckins","staffPerfil"] },
+      { section:"staff",  label:"Agenda & Operacional",   keys:["staffAgenda","staffCalendario","staffAquecimento"] },
+      { section:"staff",  label:"Clínico",                keys:["staffProntuario","staffSoap","staffCriticos","staffRotinas"] },
+      { section:"staff",  label:"Relatórios & Export",    keys:["staffRelatorios","staffMultiAtleta","staffExportData"] },
+      { section:"staff",  label:"Avançado & IA",          keys:["staffVideoAnalise","staffIAInsights","staffNotificacoes"] },
     ];
 
     let localAtl = {}, localStaff = {};
@@ -1694,11 +1712,8 @@ function modAdmin(c, atletas) {
     let salvando = false, saved = false;
 
     const wrap = el("div"); container.appendChild(wrap);
-
-    // Draw immediately with current defaults
     draw();
 
-    // Then try to load saved overrides from Firestore
     FB.getDoc("config/permissoes").then(d => {
       if (d) {
         let changed = false;
@@ -1706,63 +1721,121 @@ function modAdmin(c, atletas) {
         if (d.staffFeatures) Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { if (d.staffFeatures[k] && d.staffFeatures[k] !== localStaff[k]) { localStaff[k] = d.staffFeatures[k]; changed = true; } });
         if (changed) draw();
       }
-    }).catch(err => { console.warn("[AceMind] config/permissoes não encontrado, usando padrões.", err); });
+    }).catch(err => { console.warn("[AceMind] config/permissoes padrões.", err); });
 
     function draw() {
       wrap.innerHTML = "";
-      const hdrRow = el("div"); hdrRow.style.cssText = "display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px";
-      const titleSide = el("div");
-      titleSide.innerHTML = `<div style="display:flex;align-items:center;gap:9px;margin-bottom:6px"><div class="section-accent"></div><span class="slbl" style="letter-spacing:.22em">Permissões por Plano</span></div>
-        <p style="font-size:12px;color:rgba(255,255,255,.4);margin:0;line-height:1.5">Defina o plano mínimo para cada funcionalidade — tanto de <strong style="color:var(--y)">Atleta</strong> quanto de <strong style="color:#818cf8">Staff</strong>.</p>`;
-      hdrRow.appendChild(titleSide);
-      const btnRow = el("div"); btnRow.style.cssText = "display:flex;gap:8px;flex-shrink:0";
-      const btnReset = el("button","btn-sec","↺ Padrão"); btnReset.style.cssText = "padding:8px 16px;font-size:11px;width:auto";
-      const btnSave  = el("button","btn-y", salvando ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Permissões");
-      btnSave.style.cssText = "width:auto;padding:10px 22px;font-size:12px"; if (salvando) btnSave.disabled = true;
-      btnRow.appendChild(btnReset); btnRow.appendChild(btnSave); hdrRow.appendChild(btnRow);
-      wrap.appendChild(hdrRow);
 
+      // ═══ HEADER ═══
+      const hdr = el("div"); hdr.style.cssText = "margin-bottom:24px";
+      hdr.innerHTML = `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:18px">
+          <div>
+            <p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:rgba(212,255,0,.6);margin:0 0 6px">Configuração de Acesso por Plano</p>
+            <p style="font-size:13px;color:rgba(255,255,255,.45);margin:0">Defina o plano mínimo para cada funcionalidade. Clique nos botões para alterar.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button id="perm-reset" class="btn-sec" style="padding:9px 18px;font-size:11px;width:auto;gap:6px">↺ Resetar</button>
+            <button id="perm-save" class="btn-y" style="width:auto;padding:10px 24px;font-size:12px" ${salvando?"disabled":""}>${salvando ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Permissões"}</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${Object.entries(PLANS).map(([k,p]) => `
+            <div style="display:inline-flex;align-items:center;gap:7px;padding:6px 16px;border-radius:99px;background:${PBG[k]};border:1px solid ${PBR[k]}">
+              <span style="width:8px;height:8px;border-radius:50%;background:${PC[k]};box-shadow:0 0 8px ${PC[k]}"></span>
+              <span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:${PC[k]}">${p.emoji} ${p.label}</span>
+            </div>`).join("")}
+        </div>`;
+      wrap.appendChild(hdr);
+
+      // ═══ SECTION SEPARATOR: ATLETA ═══
+      const atlSep = el("div"); atlSep.style.cssText = "display:flex;align-items:center;gap:12px;margin:28px 0 16px";
+      atlSep.innerHTML = `<div style="width:4px;height:20px;border-radius:99px;background:linear-gradient(180deg,#d4ff00,#a8ff00);box-shadow:0 0 12px rgba(212,255,0,.5)"></div>
+        <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;letter-spacing:.15em;text-transform:uppercase;color:var(--y)">🎾 Funcionalidades do Atleta</span>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,255,0,.2),transparent)"></div>`;
+      wrap.appendChild(atlSep);
+
+      // ═══ RENDER GROUPS ═══
+      let lastSection = "atleta";
       GRUPOS.forEach(grupo => {
-        const block = el("div"); block.style.cssText = "background:rgba(11,18,32,.55);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px 20px;margin-bottom:12px";
-        const glbl = el("p"); glbl.style.cssText = `font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${grupo.isStaff ? "rgba(129,140,248,.7)" : "rgba(212,255,0,.6)"};margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.05)`;
-        glbl.textContent = grupo.label; block.appendChild(glbl);
-        const rows = el("div"); rows.style.cssText = "display:flex;flex-direction:column;gap:9px";
+        // Insert staff separator
+        if (grupo.section === "staff" && lastSection === "atleta") {
+          lastSection = "staff";
+          const staffSep = el("div"); staffSep.style.cssText = "display:flex;align-items:center;gap:12px;margin:32px 0 16px";
+          staffSep.innerHTML = `<div style="width:4px;height:20px;border-radius:99px;background:linear-gradient(180deg,#818cf8,#6366f1);box-shadow:0 0 12px rgba(129,140,248,.5)"></div>
+            <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;letter-spacing:.15em;text-transform:uppercase;color:#818cf8">🏥 Funcionalidades do Staff</span>
+            <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(129,140,248,.2),transparent)"></div>`;
+          wrap.appendChild(staffSep);
+        }
 
-        grupo.keys.forEach(k => {
-          const feat = grupo.isStaff ? STAFF_FEATURES_DEFAULT[k] : FEATURES_DEFAULT[k]; if (!feat) return;
-          const local = grupo.isStaff ? localStaff : localAtl;
+        const isStaffGroup = grupo.section === "staff";
+        const accentColor = isStaffGroup ? "#818cf8" : "#d4ff00";
+
+        const block = el("div"); block.style.cssText = `background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.06);border-left:3px solid ${accentColor};border-radius:0 14px 14px 0;padding:0;margin-bottom:14px;overflow:hidden`;
+
+        // Group header
+        const gHead = el("div"); gHead.style.cssText = `padding:14px 20px 10px;border-bottom:1px solid rgba(255,255,255,.04)`;
+        gHead.innerHTML = `<span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:${isStaffGroup ? "rgba(129,140,248,.8)" : "rgba(212,255,0,.75)"}">${grupo.label}</span>`;
+        block.appendChild(gHead);
+
+        // Feature rows
+        grupo.keys.forEach((k, idx) => {
+          const feat = isStaffGroup ? STAFF_FEATURES_DEFAULT[k] : FEATURES_DEFAULT[k];
+          if (!feat) return;
+          const local = isStaffGroup ? localStaff : localAtl;
           const cur = local[k] || feat.min;
-          const isDef = cur === feat.min;
 
-          const row = el("div"); row.style.cssText = "display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06)";
-          const nm = el("div"); nm.style.cssText = "flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap";
-          nm.innerHTML = `<span style="font-size:13px;color:${isDef?"rgba(200,210,230,.65)":"#e2e8f0"};font-weight:${isDef?400:600}">${feat.label}</span>
-            ${!isDef ? `<span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.25);border-radius:99px;padding:2px 8px">MODIFICADO</span>` : ""}`;
-          row.appendChild(nm);
+          const row = el("div"); row.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:${idx < grupo.keys.length - 1 ? "1px solid rgba(255,255,255,.04)" : "none"};transition:background .15s;cursor:default`;
+          row.onmouseenter = () => row.style.background = "rgba(255,255,255,.02)";
+          row.onmouseleave = () => row.style.background = "";
 
-          const bg = el("div"); bg.style.cssText = "display:flex;gap:5px;flex-shrink:0";
-          Object.entries(PLANS).forEach(([pk,p]) => {
-            const active = cur===pk;
-            const b = el("button"); b.style.cssText = `padding:5px 13px;border-radius:8px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid;transition:all .18s;background:${active?PBG[pk]:"transparent"};border-color:${active?PBR[pk]:"rgba(255,255,255,.1)"};color:${active?PC[pk]:"rgba(200,210,230,.4)"};box-shadow:${active?"0 0 12px "+PBG[pk]:"none"}`;
-            b.textContent = p.label;
-            b.onclick = () => { local[k] = pk; draw(); };
-            bg.appendChild(b);
+          // Left: icon + label
+          const left = el("div"); left.style.cssText = "display:flex;align-items:center;gap:10px;flex:1;min-width:0";
+          left.innerHTML = `${feat.icon ? `<span style="font-size:15px;opacity:.7;flex-shrink:0">${feat.icon}</span>` : ""}
+            <span style="font-size:13.5px;color:#c8d4e8;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${feat.label}</span>`;
+          row.appendChild(left);
+
+          // Right: plan buttons + badge
+          const right = el("div"); right.style.cssText = "display:flex;align-items:center;gap:6px;flex-shrink:0";
+
+          Object.entries(PLANS).forEach(([pk, p]) => {
+            const active = cur === pk;
+            const btn = el("button");
+            btn.style.cssText = `width:34px;height:34px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;border:1.5px solid;transition:all .18s cubic-bezier(.22,1,.36,1);
+              background:${active ? PBG[pk] : "rgba(0,0,0,.3)"};
+              border-color:${active ? PBR[pk] : "rgba(255,255,255,.08)"};
+              box-shadow:${active ? `0 0 14px ${PBG[pk]},inset 0 0 10px ${PBG[pk].replace('.12','.06')}` : "none"};
+              opacity:${active ? 1 : .45}`;
+            btn.innerHTML = PE[pk];
+            btn.onmouseenter = () => { if (!active) btn.style.opacity = ".8"; btn.style.transform = "scale(1.12)"; };
+            btn.onmouseleave = () => { if (!active) btn.style.opacity = ".45"; btn.style.transform = ""; };
+            btn.onclick = () => { local[k] = pk; draw(); };
+            right.appendChild(btn);
           });
-          row.appendChild(bg);
 
-          const cb = el("span"); cb.style.cssText = `font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${PC[cur]};background:${PBG[cur]};border:1px solid ${PBR[cur]};border-radius:99px;padding:3px 11px;flex-shrink:0;min-width:60px;text-align:center`;
-          cb.textContent = PLANS[cur].label+"+"; row.appendChild(cb);
-          rows.appendChild(row);
+          // Badge showing current plan
+          const badge = el("span");
+          badge.style.cssText = `font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+            color:${PC[cur]};background:${PBG[cur]};border:1px solid ${PBR[cur]};
+            border-radius:8px;padding:5px 12px;margin-left:6px;min-width:68px;text-align:center;
+            box-shadow:0 0 10px ${PBG[cur]}`;
+          badge.textContent = PLANS[cur].label + "+";
+          right.appendChild(badge);
+
+          row.appendChild(right);
+          block.appendChild(row);
         });
-        block.appendChild(rows); wrap.appendChild(block);
+
+        wrap.appendChild(block);
       });
 
-      btnReset.onclick = () => {
+      // ═══ BUTTON HANDLERS ═══
+      wrap.querySelector("#perm-reset").onclick = () => {
         Object.keys(FEATURES_DEFAULT).forEach(k => { localAtl[k] = FEATURES_DEFAULT[k].min; });
         Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { localStaff[k] = STAFF_FEATURES_DEFAULT[k].min; });
         draw();
       };
-      btnSave.onclick = async () => {
+      wrap.querySelector("#perm-save").onclick = async () => {
         salvando = true; draw();
         try {
           await FB.setDoc("config/permissoes", { features: localAtl, staffFeatures: localStaff, atualizadoEm: new Date().toISOString() });
