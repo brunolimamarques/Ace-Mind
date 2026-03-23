@@ -644,8 +644,32 @@ const PLANS = {
   pro: { level: 2, label: "Pro", color: "#d4ff00", emoji: "⚡" },
   elite: { level: 3, label: "Elite", color: "#f59e0b", emoji: "👑" }
 };
-const FEAT_MIN = { sos: "pro", mantra: "starter", zoneReset: "starter", checklist: "starter", raioX: "pro", relatos: "pro", videoUpload: "elite", pdfExport: "pro" };
+const FEATURES_DEFAULT = {
+  // QG Mental
+  sos:         { min:"pro",     label:"S.O.S Mental"               },
+  mantra:      { min:"starter", label:"Frase Âncora / Mantra"      },
+  zoneReset:   { min:"starter", label:"Zone Reset (Respiração)"     },
+  // Pré-Jogo
+  checklist:   { min:"starter", label:"Checklist Pré-Jogo"          },
+  // Pós-Jogo
+  raioX:       { min:"pro",     label:"Raio-X Pós-Jogo"             },
+  relatos:     { min:"pro",     label:"Ver Relatos do Atleta"        },
+  // Prontuário
+  videoUpload: { min:"elite",   label:"Upload de Vídeo"             },
+  pdfExport:   { min:"pro",     label:"Exportar PDF"                },
+};
+// Runtime — substituído pelo Firestore se admin tiver editado
+let FEAT_MIN = Object.fromEntries(Object.entries(FEATURES_DEFAULT).map(([k,v]) => [k, v.min]));
 const canAccess = (plan, feat) => (PLANS[plan]?.level || 1) >= (PLANS[FEAT_MIN[feat]]?.level || 1);
+// Carrega permissões salvas no Firestore (não-bloqueante)
+(async () => {
+  try {
+    const d = await FB.getDoc("config/permissoes");
+    if (d && d.features) {
+      Object.keys(FEATURES_DEFAULT).forEach(k => { if (d.features[k]) FEAT_MIN[k] = d.features[k]; });
+    }
+  } catch(e) {}
+})();
 const isStaff = cargo => ["assistente", "treinador", "admin"].includes(cargo);
 
 const TIPO_COR = { treino: "#d4ff00", fisico: "#60a5fa", mental: "#818cf8", jogo: "#f59e0b", sessao: "#4ade80", descanso: "#4a5568" };
@@ -1886,38 +1910,218 @@ function modRelatorios(c, atletas) {
 /* ADMIN */
 function modAdmin(c, atletas) {
   phdr(c, "Controle de acessos", "Gestão de Planos");
-  const planos = {}, loading = {};
+  const planos = {};
   const box = el("div"); c.appendChild(box);
-  Promise.all(atletas.map(a => FB.getDoc(`usuarios/${a._id}`).then(d => planos[a._id] = d?.plano || "starter").catch(() => { planos[a._id] = "starter"; }))).then(drawAdmin);
+
+  Promise.all(atletas.map(a =>
+    FB.getDoc(`usuarios/${a._id}`)
+      .then(d => planos[a._id] = d?.plano || "starter")
+      .catch(() => { planos[a._id] = "starter"; })
+  )).then(drawAdmin);
+
   function drawAdmin() {
-    box.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:24px">
-      ${[["Starter", "starter", "#60a5fa", "rgba(96,165,250,.08)"], ["Pro", "pro", "#d4ff00", "rgba(212,255,0,.08)"], ["Elite", "elite", "#f59e0b", "rgba(245,158,11,.08)"]].map(([l, k, col, bg]) => `<div style="background:${bg};border:1px solid ${col}33;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px"><strong style="font-family:'DM Mono',sans-serif;font-size:36px;color:${col};line-height:1">${atletas.filter(a => planos[a._id] === k).length}</strong><div><span class="slbl" style="color:${col}">${l}</span><p style="font-size:11px;color:var(--muted);margin:3px 0 0">atletas</p></div></div>`).join("")}
-    </div>
-    <div class="glass" style="border-radius:18px;overflow:hidden">
-      <div style="display:grid;grid-template-columns:1fr auto;gap:14px;padding:11px 20px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2)"><span class="slbl">Atleta</span><span class="slbl">Plano</span></div>
-      ${atletas.map((a, i) => { const pa = planos[a._id] || "starter"; return `<div style="display:grid;grid-template-columns:1fr auto;gap:14px;padding:13px 20px;align-items:center;border-bottom:${i < atletas.length - 1 ? "1px solid rgba(255,255,255,.04)" : "none"}">
-        <div style="display:flex;align-items:center;gap:11px">
-          <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;color:var(--y);font-size:14px;flex-shrink:0">${(a.nome || "?")[0].toUpperCase()}</div>
-          <div><p style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:#e2e8f0;margin:0 0 2px;text-transform:uppercase">${a.nome || "—"}</p><p style="font-size:11px;color:var(--muted);margin:0">${a.email || ""}</p></div>
+    const PC = { starter:"#60a5fa", pro:"#d4ff00", elite:"#f59e0b" };
+    const PB = { starter:"rgba(96,165,250,.08)", pro:"rgba(212,255,0,.08)", elite:"rgba(245,158,11,.08)" };
+    box.innerHTML = `
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+        ${Object.entries(PLANS).map(([k,p]) => `
+          <div style="background:${PB[k]};border:1px solid ${PC[k]}33;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px">
+            <strong style="font-family:DM Mono,sans-serif;font-size:36px;color:${PC[k]};line-height:1">${atletas.filter(a => planos[a._id] === k).length}</strong>
+            <div><span class="slbl" style="color:${PC[k]};display:block">${p.label}</span><p style="font-size:11px;color:var(--muted);margin:3px 0 0">atletas</p></div>
+          </div>`).join("")}
+      </div>
+
+      <!-- Busca -->
+      <div style="margin-bottom:14px">
+        <input type="text" id="adm-search" placeholder="Buscar atleta por nome ou e-mail..." style="font-size:13px">
+      </div>
+
+      <!-- Tabela -->
+      <div class="glass" style="border-radius:18px;overflow:hidden;margin-bottom:32px">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:14px;padding:11px 20px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2)">
+          <span class="slbl">Atleta</span><span class="slbl">Plano</span>
         </div>
-        <div style="display:flex;gap:5px">
-          ${Object.entries(PLANS).map(([k, p]) => `<button data-uid="${a._id}" data-plan="${k}" style="padding:6px 13px;border-radius:9px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:1px solid;background:${pa === k ? "rgba(255,255,255,.1)" : "rgba(0,0,0,.3)"};border-color:${pa === k ? "rgba(255,255,255,.28)" : "rgba(255,255,255,.08)"};color:${pa === k ? p.color : "var(--muted)"}">${p.label}</button>`).join("")}
+        <div id="adm-rows">
+          ${atletas.length === 0 ? '<p style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Nenhum atleta cadastrado ainda.</p>' :
+            atletas.map((a, i) => {
+              const pa = planos[a._id] || "starter";
+              return `<div class="adm-row" data-uid="${a._id}" data-nome="${(a.nome||"").toLowerCase()}" data-email="${(a.email||"").toLowerCase()}"
+                style="display:grid;grid-template-columns:1fr auto;gap:14px;padding:13px 20px;align-items:center;border-bottom:${i < atletas.length-1 ? "1px solid rgba(255,255,255,.04)" : "none"};transition:background .15s">
+                <div style="display:flex;align-items:center;gap:11px">
+                  <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;color:${PC[pa]};flex-shrink:0">${(a.nome||a.email||"?")[0].toUpperCase()}</div>
+                  <div style="min-width:0">
+                    <p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:15px;color:#e2e8f0;margin:0 0 2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nome||"—"}</p>
+                    <p style="font-size:11px;color:var(--muted);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.email||""}</p>
+                  </div>
+                </div>
+                <div style="display:flex;gap:5px;align-items:center">
+                  ${Object.entries(PLANS).map(([k,p]) => `
+                    <button data-plan-btn="${a._id}" data-plan="${k}" style="
+                      padding:6px 13px;border-radius:9px;cursor:pointer;
+                      font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+                      border:1px solid;transition:all .2s;
+                      background:${pa===k?"rgba(255,255,255,.1)":"rgba(0,0,0,.3)"};
+                      border-color:${pa===k?PC[k]+"88":"rgba(255,255,255,.08)"};
+                      color:${pa===k?PC[k]:"var(--muted)"};
+                      box-shadow:${pa===k?`0 0 12px ${PC[k]}33`:"none"};
+                    ">${p.label}</button>`).join("")}
+                  <div id="spin-${a._id}" style="display:none;width:14px;height:14px;border-radius:50%;border:2px solid rgba(212,255,0,.2);border-top:2px solid var(--y);animation:orbit 1s linear infinite;flex-shrink:0"></div>
+                </div>
+              </div>`;
+            }).join("")}
         </div>
-      </div>`;}).join("")}
-    </div>`;
-    box.querySelectorAll("[data-uid]").forEach(b => b.onclick = async () => {
-      const uid = b.dataset.uid, plan = b.dataset.plan;
-      if (planos[uid] === plan) return;
-      await FB.updateDoc(`usuarios/${uid}`, { plano: plan }).catch(() => { });
-      planos[uid] = plan; drawAdmin();
+      </div>`;
+
+    // Search filter
+    box.querySelector("#adm-search")?.addEventListener("input", e => {
+      const q = e.target.value.toLowerCase();
+      box.querySelectorAll(".adm-row").forEach(row => {
+        const match = !q || row.dataset.nome.includes(q) || row.dataset.email.includes(q);
+        row.style.display = match ? "" : "none";
+      });
     });
+
+    // Plan buttons
+    box.querySelectorAll("[data-plan-btn]").forEach(btn => {
+      btn.addEventListener("mouseenter", e => { e.currentTarget.closest(".adm-row").style.background = "rgba(255,255,255,.02)"; });
+      btn.addEventListener("mouseleave", e => { e.currentTarget.closest(".adm-row").style.background = "transparent"; });
+      btn.onclick = async () => {
+        const uid = btn.dataset.planBtn, plan = btn.dataset.plan;
+        if (planos[uid] === plan) return;
+        const spin = box.querySelector(`#spin-${uid}`);
+        if (spin) spin.style.display = "block";
+        try {
+          await FB.updateDoc(`usuarios/${uid}`, { plano: plan });
+          planos[uid] = plan;
+          drawAdmin();
+        } catch(e) {
+          alert("Erro ao salvar plano.");
+          if (spin) spin.style.display = "none";
+        }
+      };
+    });
+
+    // Render permissions editor below
+    renderPermissoesEditor(box);
   }
 }
 
+function renderPermissoesEditor(container) {
+  const PC = { starter:"var(--starter)", pro:"var(--pro)", elite:"var(--elite)" };
+  const PB = { starter:"rgba(96,165,250,.12)", pro:"rgba(212,255,0,.12)", elite:"rgba(245,158,11,.12)" };
+  const PBR= { starter:"rgba(96,165,250,.35)", pro:"rgba(212,255,0,.35)", elite:"rgba(245,158,11,.35)" };
 
-/* ═══════════════════════════════════════════
-   PARTICLE CANVAS — Effect #7
-═══════════════════════════════════════════ */
+  const GRUPOS = {
+    "QG Mental":   ["sos","mantra","zoneReset"],
+    "Pré-Jogo":    ["checklist"],
+    "Pós-Jogo":    ["raioX","relatos"],
+    "Prontuário":  ["videoUpload","pdfExport"],
+  };
+
+  // Local copy to edit before saving
+  let local = Object.fromEntries(Object.entries(FEATURES_DEFAULT).map(([k,v]) => [k, FEAT_MIN[k] || v.min]));
+  let salvando = false, saved = false;
+
+  const wrap = el("div"); wrap.style.cssText = "margin-top:8px";
+  container.appendChild(wrap);
+
+  function drawEditor() {
+    wrap.innerHTML = `
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+        <div>
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px">
+            <div class="section-accent"></div>
+            <span class="slbl" style="letter-spacing:.22em">Permissões por Plano</span>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin:0">Defina qual plano mínimo dá acesso a cada funcionalidade.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="perm-reset" class="btn-sec" style="padding:8px 16px;font-size:11px;width:auto">↺ Resetar</button>
+          <button id="perm-save" class="btn-y" style="width:auto;padding:9px 20px;font-size:12px">${salvando ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Permissões"}</button>
+        </div>
+      </div>
+
+      <!-- Plan legend -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        ${Object.entries(PLANS).map(([k,p]) => `
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;background:${PB[k]};border:1px solid ${PBR[k]}">
+            <span style="width:7px;height:7px;border-radius:50%;background:${PC[k]};box-shadow:0 0 6px ${PC[k]};display:inline-block"></span>
+            <span style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:${PC[k]}">${p.label}</span>
+          </div>`).join("")}
+      </div>
+
+      <!-- Feature groups -->
+      ${Object.entries(GRUPOS).map(([grupo, keys]) => `
+        <div style="background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:14px 18px;margin-bottom:10px">
+          <p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(212,255,0,.55);margin:0 0 12px">${grupo}</p>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${keys.filter(k => FEATURES_DEFAULT[k]).map(k => {
+              const feat = FEATURES_DEFAULT[k];
+              const cur = local[k] || feat.min;
+              const isDefault = cur === feat.min;
+              return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.05)">
+                <div style="flex:1;min-width:0">
+                  <span style="font-size:13px;color:${isDefault ? "var(--dim)" : "#e2e8f0"};font-weight:${isDefault ? 400 : 600}">${feat.label}</span>
+                  ${!isDefault ? `<span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fb923c;margin-left:8px">MODIFICADO</span>` : ""}
+                </div>
+                <div style="display:flex;gap:5px;flex-shrink:0">
+                  ${Object.entries(PLANS).map(([pk, p]) => `
+                    <button data-feat="${k}" data-lvl="${pk}" style="
+                      padding:5px 12px;border-radius:8px;cursor:pointer;
+                      font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+                      border:1px solid;transition:all .18s;
+                      background:${cur===pk ? PB[pk] : "transparent"};
+                      border-color:${cur===pk ? PBR[pk] : "rgba(255,255,255,.08)"};
+                      color:${cur===pk ? PC[pk] : "var(--muted)"};
+                      box-shadow:${cur===pk ? `0 0 10px ${PB[pk]}` : "none"};
+                    ">${p.label}</button>`).join("")}
+                </div>
+                <span style="
+                  font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+                  color:${PC[cur]};background:${PB[cur]};border:1px solid ${PBR[cur]};
+                  border-radius:99px;padding:3px 10px;flex-shrink:0;min-width:56px;text-align:center;
+                ">${PLANS[cur].label}+</span>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>`).join("")}`;
+
+    // Feature toggle buttons
+    wrap.querySelectorAll("[data-feat]").forEach(btn => {
+      btn.onclick = () => {
+        local[btn.dataset.feat] = btn.dataset.lvl;
+        drawEditor();
+      };
+    });
+
+    // Save
+    wrap.querySelector("#perm-save").onclick = async () => {
+      salvando = true; drawEditor();
+      try {
+        await FB.setDoc("config/permissoes", { features: local, atualizadoEm: new Date().toISOString() });
+        // Apply to runtime
+        Object.entries(local).forEach(([k,v]) => { FEAT_MIN[k] = v; });
+        saved = true; salvando = false; drawEditor();
+        setTimeout(() => { saved = false; drawEditor(); }, 2500);
+      } catch(e) {
+        alert("Erro ao salvar permissões.");
+        salvando = false; drawEditor();
+      }
+    };
+
+    // Reset
+    wrap.querySelector("#perm-reset").onclick = () => {
+      local = Object.fromEntries(Object.entries(FEATURES_DEFAULT).map(([k,v]) => [k, v.min]));
+      drawEditor();
+    };
+  }
+
+  drawEditor();
+}
+
+
 function ParticleCanvas(container, h = 120) {
   const cv = document.createElement('canvas');
   cv.style.cssText = `width:100%;height:${h}px;display:block`;
