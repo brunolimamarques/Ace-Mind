@@ -2008,118 +2008,151 @@ function modAdmin(c, atletas) {
 }
 
 function renderPermissoesEditor(container) {
-  const PC = { starter:"var(--starter)", pro:"var(--pro)", elite:"var(--elite)" };
-  const PB = { starter:"rgba(96,165,250,.12)", pro:"rgba(212,255,0,.12)", elite:"rgba(245,158,11,.12)" };
-  const PBR= { starter:"rgba(96,165,250,.35)", pro:"rgba(212,255,0,.35)", elite:"rgba(245,158,11,.35)" };
+  const PC  = { starter:"var(--starter)", pro:"var(--pro)", elite:"var(--elite)" };
+  const PBG = { starter:"rgba(96,165,250,.12)", pro:"rgba(212,255,0,.12)", elite:"rgba(245,158,11,.12)" };
+  const PBR = { starter:"rgba(96,165,250,.35)", pro:"rgba(212,255,0,.35)", elite:"rgba(245,158,11,.35)" };
 
-  const GRUPOS = {
-    "QG Mental":   ["sos","mantra","zoneReset"],
-    "Pré-Jogo":    ["checklist"],
-    "Pós-Jogo":    ["raioX","relatos"],
-    "Prontuário":  ["videoUpload","pdfExport"],
-  };
+  const GRUPOS = [
+    { label:"QG Mental",  keys:["sos","mantra","zoneReset"] },
+    { label:"Pré-Jogo",   keys:["checklist"] },
+    { label:"Pós-Jogo",   keys:["raioX","relatos"] },
+    { label:"Prontuário", keys:["videoUpload","pdfExport"] },
+  ];
 
-  // Local copy to edit before saving
-  let local = Object.fromEntries(Object.entries(FEATURES_DEFAULT).map(([k,v]) => [k, FEAT_MIN[k] || v.min]));
+  // Local working copy
+  let local = {};
+  Object.keys(FEATURES_DEFAULT).forEach(k => { local[k] = FEAT_MIN[k] || FEATURES_DEFAULT[k].min; });
+
   let salvando = false, saved = false;
 
-  const wrap = el("div"); wrap.style.cssText = "margin-top:8px";
+  // ── Wrapper
+  const wrap = el("div");
+  wrap.style.cssText = "margin-top:8px";
   container.appendChild(wrap);
 
-  function drawEditor() {
-    wrap.innerHTML = `
-      <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
-        <div>
-          <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px">
-            <div class="section-accent"></div>
-            <span class="slbl" style="letter-spacing:.22em">Permissões por Plano</span>
-          </div>
-          <p style="font-size:12px;color:var(--muted);margin:0">Defina qual plano mínimo dá acesso a cada funcionalidade.</p>
+  function draw() {
+    wrap.innerHTML = "";
+
+    // ── Section header
+    const hdr = el("div");
+    hdr.style.cssText = "display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px";
+    hdr.innerHTML = `
+      <div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px">
+          <div class="section-accent"></div>
+          <span class="slbl" style="letter-spacing:.22em">Permissões por Plano</span>
         </div>
-        <div style="display:flex;gap:8px">
-          <button id="perm-reset" class="btn-sec" style="padding:8px 16px;font-size:11px;width:auto">↺ Resetar</button>
-          <button id="perm-save" class="btn-y" style="width:auto;padding:9px 20px;font-size:12px">${salvando ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Permissões"}</button>
-        </div>
-      </div>
+        <p style="font-size:12px;color:var(--muted);margin:0">Defina qual plano mínimo libera cada funcionalidade.</p>
+      </div>`;
+    const btnWrap = el("div");
+    btnWrap.style.cssText = "display:flex;gap:8px";
+    const btnReset = el("button","btn-sec","↺ Resetar");
+    btnReset.style.cssText = "padding:8px 16px;font-size:11px;width:auto";
+    const btnSave  = el("button","btn-y", salvando ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Permissões");
+    btnSave.style.cssText  = "width:auto;padding:9px 20px;font-size:12px";
+    if (salvando) btnSave.disabled = true;
+    btnWrap.appendChild(btnReset);
+    btnWrap.appendChild(btnSave);
+    hdr.appendChild(btnWrap);
+    wrap.appendChild(hdr);
 
-      <!-- Plan legend -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-        ${Object.entries(PLANS).map(([k,p]) => `
-          <div style="display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;background:${PB[k]};border:1px solid ${PBR[k]}">
-            <span style="width:7px;height:7px;border-radius:50%;background:${PC[k]};box-shadow:0 0 6px ${PC[k]};display:inline-block"></span>
-            <span style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:${PC[k]}">${p.label}</span>
-          </div>`).join("")}
-      </div>
+    // ── Plan legend
+    const leg = el("div");
+    leg.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px";
+    Object.entries(PLANS).forEach(([k,p]) => {
+      const d = el("div");
+      d.style.cssText = "display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;background:" + PBG[k] + ";border:1px solid " + PBR[k];
+      d.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:' + PC[k] + ';box-shadow:0 0 6px ' + PC[k] + ';display:inline-block"></span><span style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:' + PC[k] + '">' + p.label + '</span>';
+      leg.appendChild(d);
+    });
+    wrap.appendChild(leg);
 
-      <!-- Feature groups -->
-      ${Object.entries(GRUPOS).map(([grupo, keys]) => `
-        <div style="background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:14px 18px;margin-bottom:10px">
-          <p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(212,255,0,.55);margin:0 0 12px">${grupo}</p>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            ${keys.filter(k => FEATURES_DEFAULT[k]).map(k => {
-              const feat = FEATURES_DEFAULT[k];
-              const cur = local[k] || feat.min;
-              const isDefault = cur === feat.min;
-              return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.05)">
-                <div style="flex:1;min-width:0">
-                  <span style="font-size:13px;color:${isDefault ? "var(--dim)" : "#e2e8f0"};font-weight:${isDefault ? 400 : 600}">${feat.label}</span>
-                  ${!isDefault ? `<span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fb923c;margin-left:8px">MODIFICADO</span>` : ""}
-                </div>
-                <div style="display:flex;gap:5px;flex-shrink:0">
-                  ${Object.entries(PLANS).map(([pk, p]) => `
-                    <button data-feat="${k}" data-lvl="${pk}" style="
-                      padding:5px 12px;border-radius:8px;cursor:pointer;
-                      font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
-                      border:1px solid;transition:all .18s;
-                      background:${cur===pk ? PB[pk] : "transparent"};
-                      border-color:${cur===pk ? PBR[pk] : "rgba(255,255,255,.08)"};
-                      color:${cur===pk ? PC[pk] : "var(--muted)"};
-                      box-shadow:${cur===pk ? `0 0 10px ${PB[pk]}` : "none"};
-                    ">${p.label}</button>`).join("")}
-                </div>
-                <span style="
-                  font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-                  color:${PC[cur]};background:${PB[cur]};border:1px solid ${PBR[cur]};
-                  border-radius:99px;padding:3px 10px;flex-shrink:0;min-width:56px;text-align:center;
-                ">${PLANS[cur].label}+</span>
-              </div>`;
-            }).join("")}
-          </div>
-        </div>`).join("")}`;
+    // ── Feature groups
+    GRUPOS.forEach(grupo => {
+      const block = el("div");
+      block.style.cssText = "background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:14px 18px;margin-bottom:10px";
 
-    // Feature toggle buttons
-    wrap.querySelectorAll("[data-feat]").forEach(btn => {
-      btn.onclick = () => {
-        local[btn.dataset.feat] = btn.dataset.lvl;
-        drawEditor();
-      };
+      const glbl = el("p");
+      glbl.style.cssText = "font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(212,255,0,.55);margin:0 0 12px";
+      glbl.textContent = grupo.label;
+      block.appendChild(glbl);
+
+      const rows = el("div");
+      rows.style.cssText = "display:flex;flex-direction:column;gap:8px";
+
+      grupo.keys.forEach(k => {
+        const feat = FEATURES_DEFAULT[k];
+        if (!feat) return;
+        const cur = local[k] || feat.min;
+        const isDefault = cur === feat.min;
+
+        const row = el("div");
+        row.style.cssText = "display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.05)";
+
+        // Feature name
+        const nameDiv = el("div");
+        nameDiv.style.cssText = "flex:1;min-width:0;display:flex;align-items:center;gap:8px";
+        const nameSpan = el("span");
+        nameSpan.style.cssText = "font-size:13px;color:" + (isDefault ? "var(--dim)" : "#e2e8f0") + ";font-weight:" + (isDefault ? 400 : 600);
+        nameSpan.textContent = feat.label;
+        nameDiv.appendChild(nameSpan);
+        if (!isDefault) {
+          const badge = el("span");
+          badge.style.cssText = "font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.25);border-radius:99px;padding:2px 7px";
+          badge.textContent = "MODIFICADO";
+          nameDiv.appendChild(badge);
+        }
+        row.appendChild(nameDiv);
+
+        // Plan toggle buttons
+        const btnGroup = el("div");
+        btnGroup.style.cssText = "display:flex;gap:5px;flex-shrink:0";
+        Object.entries(PLANS).forEach(([pk, p]) => {
+          const active = cur === pk;
+          const b = el("button");
+          b.style.cssText = "padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid;transition:all .18s;background:" + (active ? PBG[pk] : "transparent") + ";border-color:" + (active ? PBR[pk] : "rgba(255,255,255,.08)") + ";color:" + (active ? PC[pk] : "var(--muted)") + ";box-shadow:" + (active ? "0 0 10px " + PBG[pk] : "none");
+          b.textContent = p.label;
+          b.onclick = () => { local[k] = pk; draw(); };
+          btnGroup.appendChild(b);
+        });
+        row.appendChild(btnGroup);
+
+        // Current plan badge
+        const badge = el("span");
+        badge.style.cssText = "font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:" + PC[cur] + ";background:" + PBG[cur] + ";border:1px solid " + PBR[cur] + ";border-radius:99px;padding:3px 10px;flex-shrink:0;min-width:58px;text-align:center";
+        badge.textContent = PLANS[cur].label + "+";
+        row.appendChild(badge);
+
+        rows.appendChild(row);
+      });
+
+      block.appendChild(rows);
+      wrap.appendChild(block);
     });
 
-    // Save
-    wrap.querySelector("#perm-save").onclick = async () => {
-      salvando = true; drawEditor();
-      try {
-        await FB.setDoc("config/permissoes", { features: local, atualizadoEm: new Date().toISOString() });
-        // Apply to runtime
-        Object.entries(local).forEach(([k,v]) => { FEAT_MIN[k] = v; });
-        saved = true; salvando = false; drawEditor();
-        setTimeout(() => { saved = false; drawEditor(); }, 2500);
-      } catch(e) {
-        alert("Erro ao salvar permissões.");
-        salvando = false; drawEditor();
-      }
+    // ── Button handlers
+    btnReset.onclick = () => {
+      Object.keys(FEATURES_DEFAULT).forEach(k => { local[k] = FEATURES_DEFAULT[k].min; });
+      draw();
     };
 
-    // Reset
-    wrap.querySelector("#perm-reset").onclick = () => {
-      local = Object.fromEntries(Object.entries(FEATURES_DEFAULT).map(([k,v]) => [k, v.min]));
-      drawEditor();
+    btnSave.onclick = async () => {
+      salvando = true; draw();
+      try {
+        await FB.setDoc("config/permissoes", { features: local, atualizadoEm: new Date().toISOString() });
+        Object.entries(local).forEach(([k,v]) => { FEAT_MIN[k] = v; });
+        salvando = false; saved = true; draw();
+        setTimeout(() => { saved = false; draw(); }, 2500);
+      } catch(e) {
+        alert("Erro ao salvar permissões: " + e.message);
+        salvando = false; draw();
+      }
     };
   }
 
-  drawEditor();
+  draw();
 }
+
 
 
 function ParticleCanvas(container, h = 120) {
