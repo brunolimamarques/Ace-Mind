@@ -1673,229 +1673,209 @@ function modRelatorios(c, atletas) {
    ADMIN — GESTÃO DE PLANOS (ATLETAS + STAFF)
 ═══════════════════════════════════════════ */
 function modAdmin(c, atletas) {
-  phdr(c, "Controle de acessos", "Gestão de Planos", `<p style="font-size:13px;color:var(--dim);margin-top:6px">Gerencie planos de <strong style="color:var(--y)">Atletas</strong> e <strong style="color:#818cf8">Staff</strong>, e configure permissões por funcionalidade.</p>`);
+  phdr(c, "Controle de acessos", "Gestão de Planos", '<p style="font-size:14px;color:var(--dim);margin-top:6px">Defina o plano de cada atleta e staff. As permissões são aplicadas em tempo real.</p>');
 
-  // Tab switch: Atletas | Staff | Permissões
-  let adminTab = "atletas";
-  const tabWrap = el("div"); tabWrap.style.cssText = "margin-bottom:24px";
-  c.appendChild(tabWrap);
-  const contentWrap = el("div"); c.appendChild(contentWrap);
+  let allUsers = [], planos = {}, busca = "";
+  const PC = { starter:"#60a5fa", pro:"#d4ff00", elite:"#f59e0b" };
+  const PBG = { starter:"rgba(96,165,250,.12)", pro:"rgba(212,255,0,.12)", elite:"rgba(245,158,11,.12)" };
+  const PBR = { starter:"rgba(96,165,250,.35)", pro:"rgba(212,255,0,.35)", elite:"rgba(245,158,11,.35)" };
 
-  // Load all users
-  let allUsers = [], planos = {};
-
-  function drawAdminTabs() {
-    tabWrap.innerHTML = `<div class="tab-switch" style="max-width:480px">
-      <button class="tab-btn${adminTab === "atletas" ? " active" : ""}" id="at-tab-atl">Atletas</button>
-      <button class="tab-btn${adminTab === "staff" ? " active" : ""}" id="at-tab-staff">Staff</button>
-      <button class="tab-btn${adminTab === "perms" ? " active" : ""}" id="at-tab-perms">Permissões</button>
-    </div>`;
-    tabWrap.querySelector("#at-tab-atl").onclick = () => { adminTab = "atletas"; drawAdminTabs(); };
-    tabWrap.querySelector("#at-tab-staff").onclick = () => { adminTab = "staff"; drawAdminTabs(); };
-    tabWrap.querySelector("#at-tab-perms").onclick = () => { adminTab = "perms"; drawAdminTabs(); };
-    contentWrap.innerHTML = "";
-    if (adminTab === "atletas") drawUserTable(contentWrap, allUsers.filter(u => u.cargo === "paciente"), "Atleta");
-    else if (adminTab === "staff") drawUserTable(contentWrap, allUsers.filter(u => isStaff(u.cargo) && u.cargo !== "admin"), "Staff");
-    else renderPermissoesEditor(contentWrap);
-  }
-
-  // Render tabs immediately (empty user list), then fill when data arrives
-  drawAdminTabs();
+  const statsBox = el("div"); c.appendChild(statsBox);
+  const searchBox = el("div"); searchBox.style.cssText = "margin-bottom:18px"; c.appendChild(searchBox);
+  const tableBox = el("div"); c.appendChild(tableBox);
+  const permBox = el("div"); permBox.style.cssText = "margin-top:36px"; c.appendChild(permBox);
 
   FB.getDocs("usuarios").then(users => {
     allUsers = users || [];
     allUsers.forEach(u => { planos[u._id] = u.plano || "starter"; });
-    // Only re-render if user is on a tab that needs user data (not perms)
-    if (adminTab !== "perms") drawAdminTabs();
-  }).catch(err => {
-    console.error("[AceMind] Erro ao carregar usuários:", err);
-  });
+    drawTable();
+  }).catch(() => drawTable());
 
-  function drawUserTable(container, users, tipo) {
-    const PC = { starter:"#60a5fa", pro:"#d4ff00", elite:"#f59e0b" };
-    const PB = { starter:"rgba(96,165,250,.08)", pro:"rgba(212,255,0,.08)", elite:"rgba(245,158,11,.08)" };
-    container.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
-        ${Object.entries(PLANS).map(([k,p]) => `<div style="background:${PB[k]};border:1px solid ${PC[k]}33;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px"><strong style="font-family:DM Mono,sans-serif;font-size:36px;color:${PC[k]};line-height:1">${users.filter(a => planos[a._id] === k).length}</strong><div><span class="slbl" style="color:${PC[k]};display:block">${p.label}</span><p style="font-size:11px;color:var(--muted);margin:3px 0 0">${tipo.toLowerCase()}s</p></div></div>`).join("")}
-      </div>
-      <div style="margin-bottom:14px"><input type="text" id="adm-s" placeholder="Buscar por nome ou e-mail..." style="font-size:13px"></div>
-      <div class="glass" style="border-radius:18px;overflow:hidden">
-        <div style="display:grid;grid-template-columns:1fr auto;gap:14px;padding:11px 20px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2)">
-          <span class="slbl">${tipo}</span><span class="slbl">Plano</span>
-        </div>
-        <div id="adm-rows">
-          ${users.length === 0 ? `<p style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Nenhum ${tipo.toLowerCase()} cadastrado.</p>` :
-          users.map((a, i) => {
-            const pa = planos[a._id] || "starter";
-            return `<div class="adm-row" data-uid="${a._id}" data-n="${(a.nome||"").toLowerCase()}" data-e="${(a.email||"").toLowerCase()}" style="display:grid;grid-template-columns:1fr auto;gap:14px;padding:13px 20px;align-items:center;border-bottom:${i<users.length-1?"1px solid rgba(255,255,255,.04)":"none"}">
-              <div style="display:flex;align-items:center;gap:11px">
-                <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;color:${PC[pa]};flex-shrink:0">${(a.nome||a.email||"?")[0].toUpperCase()}</div>
-                <div style="min-width:0">
-                  <p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:15px;color:#e2e8f0;margin:0 0 2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nome||"—"}</p>
-                  <p style="font-size:11px;color:var(--muted);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.email||""} ${a.cargo && a.cargo !== "paciente" ? `<span style="color:#818cf8;font-weight:700;text-transform:uppercase;font-family:Barlow Condensed,sans-serif;font-size:10px;letter-spacing:.1em">· ${CARGO_LABEL[a.cargo] || a.cargo}</span>` : ""}</p>
-                </div>
-              </div>
-              <div style="display:flex;gap:5px;align-items:center">
-                ${Object.entries(PLANS).map(([k,p])=>`<button data-pb="${a._id}" data-pl="${k}" style="padding:6px 13px;border-radius:9px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid;transition:all .2s;background:${pa===k?"rgba(255,255,255,.1)":"rgba(0,0,0,.3)"};border-color:${pa===k?PC[k]+"88":"rgba(255,255,255,.08)"};color:${pa===k?PC[k]:"var(--muted)"};box-shadow:${pa===k?`0 0 12px ${PC[k]}33`:"none"}">${p.label}</button>`).join("")}
-                <div id="sp-${a._id}" style="display:none;width:14px;height:14px;border-radius:50%;border:2px solid rgba(212,255,0,.2);border-top:2px solid var(--y);animation:orbit 1s linear infinite;flex-shrink:0"></div>
-              </div>
-            </div>`;
-          }).join("")}
-        </div>
-      </div>`;
-    container.querySelector("#adm-s")?.addEventListener("input", e => {
-      const q = e.target.value.toLowerCase();
-      container.querySelectorAll(".adm-row").forEach(r => {
-        r.style.display = (!q || r.dataset.n.includes(q) || r.dataset.e.includes(q)) ? "" : "none";
+  renderPermissoesInline(permBox);
+
+  function drawTable() {
+    const filtered = allUsers.filter(u => !busca || (u.nome||"").toLowerCase().includes(busca) || (u.email||"").toLowerCase().includes(busca));
+    const stats = { starter: allUsers.filter(u => planos[u._id] === "starter").length, pro: allUsers.filter(u => planos[u._id] === "pro").length, elite: allUsers.filter(u => planos[u._id] === "elite").length };
+
+    statsBox.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">' +
+      Object.entries(PLANS).map(([k,p]) => '<div style="background:' + PBG[k] + ';border:1px solid ' + PBR[k] + ';border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px"><strong style="font-family:DM Mono,sans-serif;font-size:40px;font-weight:500;color:' + PC[k] + ';line-height:1">' + stats[k] + '</strong><div><span class="slbl" style="color:' + PC[k] + ';display:block">' + p.emoji + ' ' + p.label + '</span><span style="font-size:11px;color:var(--muted)">usuários</span></div></div>').join("") + '</div>';
+
+    searchBox.innerHTML = '<input type="text" id="adm-busca" placeholder="Buscar por nome ou e-mail..." value="' + busca + '" style="font-size:13px">';
+    searchBox.querySelector("#adm-busca").oninput = e => { busca = e.target.value.toLowerCase(); drawTable(); };
+
+    let rows = "";
+    if (filtered.length === 0) {
+      rows = '<div style="padding:40px 22px;text-align:center"><span class="slbl">Nenhum usuário encontrado.</span></div>';
+    } else {
+      filtered.forEach((a, i) => {
+        const pa = planos[a._id] || "starter";
+        const cargoLabel = CARGO_LABEL[a.cargo] || a.cargo || "";
+        const cargoTag = a.cargo && a.cargo !== "paciente" ? ' <span style="color:#818cf8;font-weight:700;text-transform:uppercase;font-family:Barlow Condensed,sans-serif;font-size:10px;letter-spacing:.1em">\u00b7 ' + cargoLabel + '</span>' : '';
+        let planBtns = "";
+        Object.entries(PLANS).forEach(([k,p]) => {
+          const isOn = pa === k;
+          planBtns += '<button data-uid="' + a._id + '" data-plan="' + k + '" class="plan-toggle-btn" style="padding:7px 14px;border-radius:10px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid;transition:all .2s;background:' + (isOn ? PBG[k] : "rgba(0,0,0,.3)") + ';border-color:' + (isOn ? PBR[k] : "rgba(255,255,255,.08)") + ';color:' + (isOn ? PC[k] : "var(--muted)") + ';box-shadow:' + (isOn ? "0 0 12px " + PBG[k] : "none") + '">' + p.emoji + ' ' + p.label + '</button>';
+        });
+        rows += '<div style="display:grid;grid-template-columns:1fr auto;gap:16px;padding:14px 22px;align-items:center;border-bottom:' + (i < filtered.length - 1 ? "1px solid rgba(255,255,255,.04)" : "none") + '">' +
+          '<div style="display:flex;align-items:center;gap:12px">' +
+            '<div style="width:38px;height:38px;border-radius:50%;background:' + PBG[pa] + ';border:1px solid ' + PBR[pa] + ';display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;color:' + PC[pa] + ';flex-shrink:0">' + (a.nome || a.email || "?")[0].toUpperCase() + '</div>' +
+            '<div style="min-width:0">' +
+              '<p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:16px;color:#e2e8f0;margin:0 0 2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (a.nome || "\u2014") + '</p>' +
+              '<p style="font-size:11px;color:var(--muted);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (a.email || "") + cargoTag + '</p>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:6px;align-items:center">' + planBtns + '</div>' +
+        '</div>';
       });
-    });
-    container.querySelectorAll("[data-pb]").forEach(btn => {
+    }
+
+    tableBox.innerHTML = '<div class="glass" style="border-radius:20px;overflow:hidden">' +
+      '<div style="display:grid;grid-template-columns:1fr auto;gap:16px;padding:12px 22px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2)"><span class="slbl">Usuário</span><span class="slbl">Plano</span></div>' +
+      rows + '</div>';
+
+    tableBox.querySelectorAll(".plan-toggle-btn").forEach(btn => {
       btn.onclick = async () => {
-        const uid = btn.dataset.pb, plan = btn.dataset.pl;
+        const uid = btn.dataset.uid, plan = btn.dataset.plan;
         if (planos[uid] === plan) return;
-        const sp = container.querySelector("#sp-"+uid); if (sp) sp.style.display = "block";
-        try { await FB.updateDoc("usuarios/"+uid, { plano: plan }); planos[uid] = plan; drawAdminTabs(); }
-        catch(e) { alert("Erro ao salvar."); if (sp) sp.style.display = "none"; }
+        btn.style.opacity = ".4";
+        try {
+          await FB.updateDoc("usuarios/" + uid, { plano: plan });
+          planos[uid] = plan;
+          drawTable();
+        } catch(e) { alert("Erro ao salvar."); btn.style.opacity = "1"; }
       };
     });
   }
 
-  function renderPermissoesEditor(container) {
-    const PC  = { starter:"#60a5fa", pro:"#d4ff00", elite:"#f59e0b" };
-    const PBG = { starter:"rgba(96,165,250,.12)", pro:"rgba(212,255,0,.12)", elite:"rgba(245,158,11,.12)" };
-    const PBR = { starter:"rgba(96,165,250,.35)", pro:"rgba(212,255,0,.35)", elite:"rgba(245,158,11,.35)" };
-    const PE  = { starter:"🎾", pro:"⚡", elite:"👑" };
+  function renderPermissoesInline(container) {
+    const gruposAtleta = {
+      "QG Mental": ["sos","visaoTunel","zoneReset","painelParticulas","mantra","diarioPerf"],
+      "Pré-Jogo": ["checklist","cofreTatico","aquecAtleta"],
+      "Pós-Jogo": ["raioX","relatos"],
+      "Analytics": ["analytics","graficoEvolucao","salaTrofeus"],
+      "Ferramentas": ["calendario","pdfExport","videoUpload","iaFeedback"],
+    };
+    const gruposStaff = {
+      "Painel & Monitoramento": ["staffDashboard","staffCheckins","staffPerfil"],
+      "Agenda & Operacional": ["staffAgenda","staffCalendario","staffAquecimento"],
+      "Clínico": ["staffProntuario","staffSoap","staffCriticos","staffRotinas"],
+      "Relatórios & Export": ["staffRelatorios","staffMultiAtleta","staffExportData"],
+      "Avançado & IA": ["staffVideoAnalise","staffIAInsights","staffNotificacoes"],
+    };
 
-    const GRUPOS = [
-      { section:"atleta", label:"QG Mental",    keys:["sos","visaoTunel","zoneReset","painelParticulas","mantra","diarioPerf"] },
-      { section:"atleta", label:"Pré-Jogo",     keys:["checklist","cofreTatico","aquecAtleta"] },
-      { section:"atleta", label:"Pós-Jogo",     keys:["raioX","relatos"] },
-      { section:"atleta", label:"Analytics",     keys:["analytics","graficoEvolucao","salaTrofeus"] },
-      { section:"atleta", label:"Ferramentas",   keys:["calendario","pdfExport","videoUpload","iaFeedback"] },
-      { section:"staff",  label:"Painel & Monitoramento", keys:["staffDashboard","staffCheckins","staffPerfil"] },
-      { section:"staff",  label:"Agenda & Operacional",   keys:["staffAgenda","staffCalendario","staffAquecimento"] },
-      { section:"staff",  label:"Clínico",                keys:["staffProntuario","staffSoap","staffCriticos","staffRotinas"] },
-      { section:"staff",  label:"Relatórios & Export",    keys:["staffRelatorios","staffMultiAtleta","staffExportData"] },
-      { section:"staff",  label:"Avançado & IA",          keys:["staffVideoAnalise","staffIAInsights","staffNotificacoes"] },
-    ];
-
-    let localAtl = {}, localStaff = {};
-    Object.keys(FEATURES_DEFAULT).forEach(k => { localAtl[k] = FEAT_MIN[k] || FEATURES_DEFAULT[k].min; });
-    Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { localStaff[k] = STAFF_FEAT_MIN[k] || STAFF_FEATURES_DEFAULT[k].min; });
-    let salvando = false, saved = false;
+    var localAtl = {}, localStaff = {};
+    Object.keys(FEATURES_DEFAULT).forEach(function(k) { localAtl[k] = FEAT_MIN[k] || FEATURES_DEFAULT[k].min; });
+    Object.keys(STAFF_FEATURES_DEFAULT).forEach(function(k) { localStaff[k] = STAFF_FEAT_MIN[k] || STAFF_FEATURES_DEFAULT[k].min; });
+    var salvando = false, saved = false;
 
     draw();
 
-    FB.getDoc("config/permissoes").then(d => {
+    FB.getDoc("config/permissoes").then(function(d) {
       if (d) {
-        let changed = false;
-        if (d.features) Object.keys(FEATURES_DEFAULT).forEach(k => { if (d.features[k] && d.features[k] !== localAtl[k]) { localAtl[k] = d.features[k]; changed = true; } });
-        if (d.staffFeatures) Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { if (d.staffFeatures[k] && d.staffFeatures[k] !== localStaff[k]) { localStaff[k] = d.staffFeatures[k]; changed = true; } });
+        var changed = false;
+        if (d.features) Object.keys(FEATURES_DEFAULT).forEach(function(k) { if (d.features[k] && d.features[k] !== localAtl[k]) { localAtl[k] = d.features[k]; changed = true; } });
+        if (d.staffFeatures) Object.keys(STAFF_FEATURES_DEFAULT).forEach(function(k) { if (d.staffFeatures[k] && d.staffFeatures[k] !== localStaff[k]) { localStaff[k] = d.staffFeatures[k]; changed = true; } });
         if (changed) draw();
       }
-    }).catch(() => {});
+    }).catch(function() {});
 
-    function buildRow(k, feat, cur, isStaffRow) {
-      const dataAttr = `data-pk="${k}" data-staff="${isStaffRow ? 1 : 0}"`;
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s" onmouseenter="this.style.background='rgba(255,255,255,.025)'" onmouseleave="this.style.background=''">
-        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
-          <span style="font-size:15px;flex-shrink:0;opacity:.65">${feat.icon || "●"}</span>
-          <span style="font-size:13px;color:#c8d4e8">${feat.label}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-          ${Object.entries(PLANS).map(([pk,p]) => {
-            const active = cur === pk;
-            return `<button class="perm-btn" ${dataAttr} data-plan="${pk}" style="width:32px;height:32px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid ${active ? PBR[pk] : "rgba(255,255,255,.08)"};background:${active ? PBG[pk] : "rgba(0,0,0,.3)"};opacity:${active ? 1 : .4};transition:all .15s">${PE[pk]}</button>`;
-          }).join("")}
-          <span style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${PC[cur]};background:${PBG[cur]};border:1px solid ${PBR[cur]};border-radius:7px;padding:4px 10px;min-width:62px;text-align:center;margin-left:4px">${PLANS[cur].label}+</span>
-        </div>
-      </div>`;
+    function featRow(k, feat, cur, isStaff) {
+      var btns = "";
+      Object.entries(PLANS).forEach(function(entry) {
+        var pk = entry[0], p = entry[1], on = (cur === pk);
+        btns += '<button class="perm-btn" data-pk="' + k + '" data-plan="' + pk + '" data-staff="' + (isStaff ? 1 : 0) + '" style="width:32px;height:32px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid ' + (on ? PBR[pk] : "rgba(255,255,255,.08)") + ';background:' + (on ? PBG[pk] : "rgba(0,0,0,.3)") + ';opacity:' + (on ? 1 : .35) + ';transition:all .15s" title="' + p.label + '">' + p.emoji + '</button>';
+      });
+      var editTag = (cur !== feat.min) ? ' <span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:99px;padding:2px 7px">EDITADO</span>' : '';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.03)">' +
+        '<div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0">' +
+          (feat.icon ? '<span style="font-size:14px;opacity:.6;flex-shrink:0">' + feat.icon + '</span>' : '') +
+          '<span style="font-size:13px;color:#c8d4e8">' + feat.label + '</span>' + editTag +
+        '</div>' +
+        '<div style="display:flex;gap:4px;flex-shrink:0">' + btns + '</div>' +
+        '<span style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:' + PC[cur] + ';background:' + PBG[cur] + ';border:1px solid ' + PBR[cur] + ';border-radius:7px;padding:4px 10px;min-width:60px;text-align:center;flex-shrink:0">' + PLANS[cur].label + '+</span>' +
+      '</div>';
+    }
+
+    function buildGroup(label, keys, isStaff, dict, localMap) {
+      var ac = isStaff ? "#818cf8" : "#d4ff00";
+      var acLbl = isStaff ? "rgba(129,140,248,.75)" : "rgba(212,255,0,.7)";
+      var rows = "";
+      keys.forEach(function(k) {
+        var feat = dict[k]; if (!feat) return;
+        rows += featRow(k, feat, localMap[k] || feat.min, isStaff);
+      });
+      return '<div style="background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.05);border-left:3px solid ' + ac + ';border-radius:0 14px 14px 0;margin-bottom:12px;overflow:hidden">' +
+        '<div style="padding:12px 16px 8px;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:' + acLbl + '">' + label + '</span></div>' +
+        rows + '</div>';
     }
 
     function draw() {
-      let html = `
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px">
-          <div>
-            <p style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:rgba(212,255,0,.6);margin:0 0 6px">Configuração de Acesso por Plano</p>
-            <p style="font-size:13px;color:rgba(255,255,255,.4);margin:0">Defina o plano mínimo para cada funcionalidade. Clique nos ícones para alterar.</p>
-          </div>
-          <div style="display:flex;gap:8px;flex-shrink:0">
-            <button id="perm-reset" class="btn-sec" style="padding:9px 18px;font-size:11px;width:auto">↺ Resetar</button>
-            <button id="perm-save" class="btn-y" style="width:auto;padding:10px 24px;font-size:12px" ${salvando?"disabled":""}>${salvando ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar Permissões"}</button>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-          ${Object.entries(PLANS).map(([k,p]) => `<div style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;border-radius:99px;background:${PBG[k]};border:1px solid ${PBR[k]}"><span style="font-size:12px">${p.emoji}</span><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:${PC[k]}">${p.label}</span></div>`).join("")}
-        </div>`;
+      var h = '';
+      // Header
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px">' +
+        '<div>' +
+          '<div style="display:flex;align-items:center;gap:9px;margin-bottom:5px"><div style="width:3px;height:18px;background:linear-gradient(180deg,#d4ff00,#a8ff00);border-radius:99px;box-shadow:0 0 10px rgba(212,255,0,.5)"></div><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:rgba(212,255,0,.6)">Configuração de Acesso por Plano</span></div>' +
+          '<p style="font-size:13px;color:rgba(255,255,255,.4);margin:0">Clique nos ícones para alterar o plano mínimo de cada funcionalidade.</p>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          '<button id="perm-reset" class="btn-sec" style="padding:9px 18px;font-size:11px;width:auto">\u21ba Resetar</button>' +
+          '<button id="perm-save" class="btn-y" style="width:auto;padding:10px 24px;font-size:12px"' + (salvando ? ' disabled' : '') + '>' + (salvando ? "Salvando..." : saved ? "\u2713 Salvo!" : "Salvar Permissões") + '</button>' +
+        '</div>' +
+      '</div>';
+      // Legend
+      h += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">';
+      Object.entries(PLANS).forEach(function(entry) {
+        var k = entry[0], p = entry[1];
+        h += '<div style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;border-radius:99px;background:' + PBG[k] + ';border:1px solid ' + PBR[k] + '"><span style="font-size:12px">' + p.emoji + '</span><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:' + PC[k] + '">' + p.label + '</span></div>';
+      });
+      h += '</div>';
 
-      // ATLETA SEPARATOR
-      html += `<div style="display:flex;align-items:center;gap:12px;margin:26px 0 14px">
-        <div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#d4ff00,#a8ff00);box-shadow:0 0 10px rgba(212,255,0,.5)"></div>
-        <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:var(--y)">🎾 Funcionalidades do Atleta</span>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,255,0,.2),transparent)"></div>
-      </div>`;
-
-      let prevSection = "atleta";
-      GRUPOS.forEach(grupo => {
-        if (grupo.section === "staff" && prevSection === "atleta") {
-          prevSection = "staff";
-          html += `<div style="display:flex;align-items:center;gap:12px;margin:30px 0 14px">
-            <div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#818cf8,#6366f1);box-shadow:0 0 10px rgba(129,140,248,.5)"></div>
-            <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#818cf8">🏥 Funcionalidades do Staff</span>
-            <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(129,140,248,.2),transparent)"></div>
-          </div>`;
-        }
-
-        const isS = grupo.section === "staff";
-        const ac = isS ? "#818cf8" : "#d4ff00";
-        html += `<div style="background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.06);border-left:3px solid ${ac};border-radius:0 14px 14px 0;margin-bottom:12px;overflow:hidden">
-          <div style="padding:12px 18px 8px;border-bottom:1px solid rgba(255,255,255,.04)">
-            <span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:${isS ? "rgba(129,140,248,.8)" : "rgba(212,255,0,.75)"}">${grupo.label}</span>
-          </div>`;
-
-        grupo.keys.forEach(k => {
-          const feat = isS ? STAFF_FEATURES_DEFAULT[k] : FEATURES_DEFAULT[k];
-          if (!feat) return;
-          const local = isS ? localStaff : localAtl;
-          const cur = local[k] || feat.min;
-          html += buildRow(k, feat, cur, isS);
-        });
-
-        html += `</div>`;
+      // Atleta
+      h += '<div style="display:flex;align-items:center;gap:12px;margin:24px 0 14px"><div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#d4ff00,#a8ff00);box-shadow:0 0 10px rgba(212,255,0,.5)"></div><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:var(--y)">\ud83c\udfbe Funcionalidades do Atleta</span><div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,255,0,.2),transparent)"></div></div>';
+      Object.entries(gruposAtleta).forEach(function(entry) {
+        h += buildGroup(entry[0], entry[1], false, FEATURES_DEFAULT, localAtl);
       });
 
-      container.innerHTML = html;
+      // Staff
+      h += '<div style="display:flex;align-items:center;gap:12px;margin:30px 0 14px"><div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#818cf8,#6366f1);box-shadow:0 0 10px rgba(129,140,248,.5)"></div><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#818cf8">\ud83c\udfe5 Funcionalidades do Staff</span><div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(129,140,248,.2),transparent)"></div></div>';
+      Object.entries(gruposStaff).forEach(function(entry) {
+        h += buildGroup(entry[0], entry[1], true, STAFF_FEATURES_DEFAULT, localStaff);
+      });
 
-      // Attach click handlers
-      container.querySelectorAll(".perm-btn").forEach(btn => {
-        btn.onclick = () => {
-          const key = btn.dataset.pk, plan = btn.dataset.plan, isStaff = btn.dataset.staff === "1";
-          if (isStaff) localStaff[key] = plan;
-          else localAtl[key] = plan;
+      container.innerHTML = h;
+
+      // Handlers
+      container.querySelectorAll(".perm-btn").forEach(function(btn) {
+        btn.onmouseenter = function() { if (this.style.opacity !== "1") this.style.opacity = ".7"; this.style.transform = "scale(1.15)"; };
+        btn.onmouseleave = function() { if (this.style.opacity !== "1") this.style.opacity = ".35"; this.style.transform = ""; };
+        btn.onclick = function() {
+          var key = this.dataset.pk, plan = this.dataset.plan, isS = this.dataset.staff === "1";
+          if (isS) localStaff[key] = plan; else localAtl[key] = plan;
           draw();
         };
-        btn.onmouseenter = () => { if (btn.style.opacity !== "1") btn.style.opacity = ".75"; btn.style.transform = "scale(1.15)"; };
-        btn.onmouseleave = () => { if (btn.style.opacity !== "1") btn.style.opacity = ".4"; btn.style.transform = ""; };
       });
 
-      container.querySelector("#perm-reset").onclick = () => {
-        Object.keys(FEATURES_DEFAULT).forEach(k => { localAtl[k] = FEATURES_DEFAULT[k].min; });
-        Object.keys(STAFF_FEATURES_DEFAULT).forEach(k => { localStaff[k] = STAFF_FEATURES_DEFAULT[k].min; });
+      var resetBtn = container.querySelector("#perm-reset");
+      var saveBtn = container.querySelector("#perm-save");
+      if (resetBtn) resetBtn.onclick = function() {
+        Object.keys(FEATURES_DEFAULT).forEach(function(k) { localAtl[k] = FEATURES_DEFAULT[k].min; });
+        Object.keys(STAFF_FEATURES_DEFAULT).forEach(function(k) { localStaff[k] = STAFF_FEATURES_DEFAULT[k].min; });
         draw();
       };
-      container.querySelector("#perm-save").onclick = async () => {
+      if (saveBtn) saveBtn.onclick = async function() {
         salvando = true; draw();
         try {
           await FB.setDoc("config/permissoes", { features: localAtl, staffFeatures: localStaff, atualizadoEm: new Date().toISOString() });
-          Object.entries(localAtl).forEach(([k,v]) => { FEAT_MIN[k] = v; });
-          Object.entries(localStaff).forEach(([k,v]) => { STAFF_FEAT_MIN[k] = v; });
+          Object.entries(localAtl).forEach(function(e) { FEAT_MIN[e[0]] = e[1]; });
+          Object.entries(localStaff).forEach(function(e) { STAFF_FEAT_MIN[e[0]] = e[1]; });
           salvando = false; saved = true; draw();
-          setTimeout(() => { saved = false; draw(); }, 2500);
-        } catch(e) { alert("Erro: "+e.message); salvando = false; draw(); }
+          setTimeout(function() { saved = false; draw(); }, 2500);
+        } catch(e) { alert("Erro: " + e.message); salvando = false; draw(); }
       };
     }
   }
 }
+
 
 /* ═══════════════════════════════════════════
    PARTICLE CANVAS
