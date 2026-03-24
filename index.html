@@ -1783,16 +1783,16 @@ function modAdmin(c, atletas) {
       var btns = "";
       Object.entries(PLANS).forEach(function(entry) {
         var pk = entry[0], p = entry[1], on = (cur === pk);
-        btns += '<button class="perm-btn" data-pk="' + k + '" data-plan="' + pk + '" data-staff="' + (isStaff ? 1 : 0) + '" style="width:32px;height:32px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid ' + (on ? PBR[pk] : "rgba(255,255,255,.08)") + ';background:' + (on ? PBG[pk] : "rgba(0,0,0,.3)") + ';opacity:' + (on ? 1 : .35) + ';transition:all .15s" title="' + p.label + '">' + p.emoji + '</button>';
+        btns += '<button class="perm-btn" data-pk="' + k + '" data-plan="' + pk + '" data-staff="' + (isStaff ? 1 : 0) + '" style="padding:5px 11px;height:28px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid ' + (on ? PBR[pk] : "rgba(255,255,255,.08)") + ';background:' + (on ? PBG[pk] : "rgba(0,0,0,.3)") + ';color:' + (on ? PC[pk] : "rgba(255,255,255,.2)") + ';box-shadow:' + (on ? "0 0 10px " + PBG[pk] : "none") + ';transition:all .15s">' + p.emoji + '<span>' + p.label + '</span></button>';
       });
-      var editTag = (cur !== feat.min) ? ' <span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:99px;padding:2px 7px">EDITADO</span>' : '';
-      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.03)">' +
+      var isEdited = (cur !== feat.min);
+      var editTag = isEdited ? ' <span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:99px;padding:2px 7px">EDITADO</span>' : '';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s" onmouseenter="this.style.background=\'rgba(255,255,255,.02)\'" onmouseleave="this.style.background=\'transparent\'">' +
         '<div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0">' +
-          (feat.icon ? '<span style="font-size:14px;opacity:.6;flex-shrink:0">' + feat.icon + '</span>' : '') +
-          '<span style="font-size:13px;color:#c8d4e8">' + feat.label + '</span>' + editTag +
+          (feat.icon ? '<span style="font-size:15px;flex-shrink:0">' + feat.icon + '</span>' : '') +
+          '<span style="font-size:13px;color:' + (isEdited ? '#e2e8f0' : '#c8d4e8') + ';font-weight:' + (isEdited ? '600' : '400') + '">' + feat.label + '</span>' + editTag +
         '</div>' +
-        '<div style="display:flex;gap:4px;flex-shrink:0">' + btns + '</div>' +
-        '<span style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:' + PC[cur] + ';background:' + PBG[cur] + ';border:1px solid ' + PBR[cur] + ';border-radius:7px;padding:4px 10px;min-width:60px;text-align:center;flex-shrink:0">' + PLANS[cur].label + '+</span>' +
+        '<div style="display:flex;gap:5px;flex-shrink:0">' + btns + '</div>' +
       '</div>';
     }
 
@@ -1800,26 +1800,35 @@ function modAdmin(c, atletas) {
       var ac = isStaff ? "#818cf8" : "#d4ff00";
       var acLbl = isStaff ? "rgba(129,140,248,.75)" : "rgba(212,255,0,.7)";
       var rows = "";
+      var editCount = 0;
       keys.forEach(function(k) {
         var feat = dict[k]; if (!feat) return;
-        rows += featRow(k, feat, localMap[k] || feat.min, isStaff);
+        var cur = localMap[k] || feat.min;
+        if (cur !== feat.min) editCount++;
+        rows += featRow(k, feat, cur, isStaff);
       });
+      var editBadge = editCount > 0 ? ' <span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.12);border:1px solid rgba(251,146,60,.25);border-radius:99px;padding:2px 8px">' + editCount + ' editado' + (editCount > 1 ? 's' : '') + '</span>' : '';
       return '<div style="background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.05);border-left:3px solid ' + ac + ';border-radius:0 14px 14px 0;margin-bottom:12px;overflow:hidden">' +
-        '<div style="padding:12px 16px 8px;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:' + acLbl + '">' + label + '</span></div>' +
+        '<div style="padding:12px 16px 9px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px"><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:' + acLbl + '">' + label + '</span>' + editBadge + '</div>' +
         rows + '</div>';
     }
 
     function draw() {
+      var pendAtl = Object.keys(FEATURES_DEFAULT).filter(function(k) { return localAtl[k] !== FEATURES_DEFAULT[k].min; }).length;
+      var pendStaff = Object.keys(STAFF_FEATURES_DEFAULT).filter(function(k) { return localStaff[k] !== STAFF_FEATURES_DEFAULT[k].min; }).length;
+      var totalPend = pendAtl + pendStaff;
+      var hasPending = totalPend > 0;
       var h = '';
       // Header
-      h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px">' +
+      h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:12px">' +
         '<div>' +
           '<div style="display:flex;align-items:center;gap:9px;margin-bottom:5px"><div style="width:3px;height:18px;background:linear-gradient(180deg,#d4ff00,#a8ff00);border-radius:99px;box-shadow:0 0 10px rgba(212,255,0,.5)"></div><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:rgba(212,255,0,.6)">Configuração de Acesso por Plano</span></div>' +
-          '<p style="font-size:13px;color:rgba(255,255,255,.4);margin:0">Clique nos ícones para alterar o plano mínimo de cada funcionalidade.</p>' +
+          '<p style="font-size:13px;color:rgba(255,255,255,.4);margin:0 0 8px">Clique nos botões de plano para alterar o plano mínimo de cada funcionalidade.</p>' +
+          (hasPending ? '<div style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.3);border-radius:99px"><span style="font-size:12px">⚠️</span><span style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#fb923c">' + totalPend + ' alteraç' + (totalPend === 1 ? 'ão' : 'ões') + ' não salva' + (totalPend === 1 ? '' : 's') + '</span></div>' : '') +
         '</div>' +
         '<div style="display:flex;gap:8px;flex-shrink:0">' +
           '<button id="perm-reset" class="btn-sec" style="padding:9px 18px;font-size:11px;width:auto">\u21ba Resetar</button>' +
-          '<button id="perm-save" class="btn-y" style="width:auto;padding:10px 24px;font-size:12px"' + (salvando ? ' disabled' : '') + '>' + (salvando ? "Salvando..." : saved ? "\u2713 Salvo!" : "Salvar Permissões") + '</button>' +
+          '<button id="perm-save" class="btn-y" style="width:auto;padding:10px 24px;font-size:12px;' + (hasPending && !salvando && !saved ? 'box-shadow:0 0 18px rgba(212,255,0,.35);' : '') + '"' + (salvando ? ' disabled' : '') + '>' + (salvando ? "Salvando..." : saved ? "\u2713 Salvo!" : "Salvar Permissões") + '</button>' +
         '</div>' +
       '</div>';
       // Legend
@@ -1846,8 +1855,8 @@ function modAdmin(c, atletas) {
 
       // Handlers
       container.querySelectorAll(".perm-btn").forEach(function(btn) {
-        btn.onmouseenter = function() { if (this.style.opacity !== "1") this.style.opacity = ".7"; this.style.transform = "scale(1.15)"; };
-        btn.onmouseleave = function() { if (this.style.opacity !== "1") this.style.opacity = ".35"; this.style.transform = ""; };
+        btn.onmouseenter = function() { this.style.transform = "scale(1.06)"; this.style.filter = "brightness(1.2)"; };
+        btn.onmouseleave = function() { this.style.transform = ""; this.style.filter = ""; };
         btn.onclick = function() {
           var key = this.dataset.pk, plan = this.dataset.plan, isS = this.dataset.staff === "1";
           if (isS) localStaff[key] = plan; else localAtl[key] = plan;
