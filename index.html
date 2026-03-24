@@ -1766,7 +1766,7 @@ function modAdmin(c, atletas) {
     var localAtl = {}, localStaff = {};
     Object.keys(FEATURES_DEFAULT).forEach(function(k) { localAtl[k] = FEAT_MIN[k] || FEATURES_DEFAULT[k].min; });
     Object.keys(STAFF_FEATURES_DEFAULT).forEach(function(k) { localStaff[k] = STAFF_FEAT_MIN[k] || STAFF_FEATURES_DEFAULT[k].min; });
-    var salvando = false, saved = false;
+    var salvando = false, saved = false, viewMode = 'feature';
 
     draw();
 
@@ -1783,16 +1783,16 @@ function modAdmin(c, atletas) {
       var btns = "";
       Object.entries(PLANS).forEach(function(entry) {
         var pk = entry[0], p = entry[1], on = (cur === pk);
-        btns += '<button class="perm-btn" data-pk="' + k + '" data-plan="' + pk + '" data-staff="' + (isStaff ? 1 : 0) + '" style="width:32px;height:32px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid ' + (on ? PBR[pk] : "rgba(255,255,255,.08)") + ';background:' + (on ? PBG[pk] : "rgba(0,0,0,.3)") + ';opacity:' + (on ? 1 : .35) + ';transition:all .15s" title="' + p.label + '">' + p.emoji + '</button>';
+        btns += '<button class="perm-btn" data-pk="' + k + '" data-plan="' + pk + '" data-staff="' + (isStaff ? 1 : 0) + '" style="padding:5px 11px;height:28px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid ' + (on ? PBR[pk] : "rgba(255,255,255,.08)") + ';background:' + (on ? PBG[pk] : "rgba(0,0,0,.3)") + ';color:' + (on ? PC[pk] : "rgba(255,255,255,.2)") + ';box-shadow:' + (on ? "0 0 10px " + PBG[pk] : "none") + ';transition:all .15s">' + p.emoji + '<span>' + p.label + '</span></button>';
       });
-      var editTag = (cur !== feat.min) ? ' <span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:99px;padding:2px 7px">EDITADO</span>' : '';
-      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.03)">' +
+      var isEdited = (cur !== feat.min);
+      var editTag = isEdited ? ' <span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:99px;padding:2px 7px">EDITADO</span>' : '';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s" onmouseenter="this.style.background=\'rgba(255,255,255,.02)\'" onmouseleave="this.style.background=\'transparent\'">' +
         '<div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0">' +
-          (feat.icon ? '<span style="font-size:14px;opacity:.6;flex-shrink:0">' + feat.icon + '</span>' : '') +
-          '<span style="font-size:13px;color:#c8d4e8">' + feat.label + '</span>' + editTag +
+          (feat.icon ? '<span style="font-size:15px;flex-shrink:0">' + feat.icon + '</span>' : '') +
+          '<span style="font-size:13px;color:' + (isEdited ? '#e2e8f0' : '#c8d4e8') + ';font-weight:' + (isEdited ? '600' : '400') + '">' + feat.label + '</span>' + editTag +
         '</div>' +
-        '<div style="display:flex;gap:4px;flex-shrink:0">' + btns + '</div>' +
-        '<span style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:' + PC[cur] + ';background:' + PBG[cur] + ';border:1px solid ' + PBR[cur] + ';border-radius:7px;padding:4px 10px;min-width:60px;text-align:center;flex-shrink:0">' + PLANS[cur].label + '+</span>' +
+        '<div style="display:flex;gap:5px;flex-shrink:0">' + btns + '</div>' +
       '</div>';
     }
 
@@ -1800,54 +1800,150 @@ function modAdmin(c, atletas) {
       var ac = isStaff ? "#818cf8" : "#d4ff00";
       var acLbl = isStaff ? "rgba(129,140,248,.75)" : "rgba(212,255,0,.7)";
       var rows = "";
+      var editCount = 0;
       keys.forEach(function(k) {
         var feat = dict[k]; if (!feat) return;
-        rows += featRow(k, feat, localMap[k] || feat.min, isStaff);
+        var cur = localMap[k] || feat.min;
+        if (cur !== feat.min) editCount++;
+        rows += featRow(k, feat, cur, isStaff);
       });
+      var editBadge = editCount > 0 ? ' <span style="font-family:Barlow Condensed,sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fb923c;background:rgba(251,146,60,.12);border:1px solid rgba(251,146,60,.25);border-radius:99px;padding:2px 8px">' + editCount + ' editado' + (editCount > 1 ? 's' : '') + '</span>' : '';
       return '<div style="background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.05);border-left:3px solid ' + ac + ';border-radius:0 14px 14px 0;margin-bottom:12px;overflow:hidden">' +
-        '<div style="padding:12px 16px 8px;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:' + acLbl + '">' + label + '</span></div>' +
+        '<div style="padding:12px 16px 9px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px"><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:' + acLbl + '">' + label + '</span>' + editBadge + '</div>' +
         rows + '</div>';
     }
 
-    function draw() {
-      var h = '';
-      // Header
-      h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px">' +
+    function drawHeader(hasPending, totalPend) {
+      var planKeys = Object.keys(PLANS);
+      var vBtns = planKeys.map(function(k) {
+        var isV = viewMode === k;
+        return '<button class="view-mode-btn" data-vm="' + k + '" style="padding:6px 14px;border-radius:9px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1.5px solid ' + (isV ? PBR[k] : 'rgba(255,255,255,.08)') + ';background:' + (isV ? PBG[k] : 'rgba(0,0,0,.3)') + ';color:' + (isV ? PC[k] : 'rgba(255,255,255,.3)') + ';transition:all .15s">' + PLANS[k].emoji + ' ' + PLANS[k].label + '</button>';
+      });
+      var featureBtn = '<button class="view-mode-btn" data-vm="feature" style="padding:6px 14px;border-radius:9px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1.5px solid ' + (viewMode === 'feature' ? 'rgba(212,255,0,.35)' : 'rgba(255,255,255,.08)') + ';background:' + (viewMode === 'feature' ? 'rgba(212,255,0,.12)' : 'rgba(0,0,0,.3)') + ';color:' + (viewMode === 'feature' ? '#d4ff00' : 'rgba(255,255,255,.3)') + ';transition:all .15s">📋 Por Funcionalidade</button>';
+      var allBtn = '<button class="view-mode-btn" data-vm="all" style="padding:6px 14px;border-radius:9px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1.5px solid ' + (viewMode === 'all' ? 'rgba(212,255,0,.35)' : 'rgba(255,255,255,.08)') + ';background:' + (viewMode === 'all' ? 'rgba(212,255,0,.12)' : 'rgba(0,0,0,.3)') + ';color:' + (viewMode === 'all' ? '#d4ff00' : 'rgba(255,255,255,.3)') + ';transition:all .15s">🗂️ Todos os Planos</button>';
+      return '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:12px">' +
         '<div>' +
           '<div style="display:flex;align-items:center;gap:9px;margin-bottom:5px"><div style="width:3px;height:18px;background:linear-gradient(180deg,#d4ff00,#a8ff00);border-radius:99px;box-shadow:0 0 10px rgba(212,255,0,.5)"></div><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:rgba(212,255,0,.6)">Configuração de Acesso por Plano</span></div>' +
-          '<p style="font-size:13px;color:rgba(255,255,255,.4);margin:0">Clique nos ícones para alterar o plano mínimo de cada funcionalidade.</p>' +
+          '<p style="font-size:13px;color:rgba(255,255,255,.4);margin:0 0 10px">' + (viewMode === 'feature' ? 'Clique nos botões de plano para alterar o plano mínimo de cada funcionalidade.' : 'Veja e mova funcionalidades entre planos diretamente pelas colunas.') + '</p>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:' + (hasPending ? '8px' : '0') + '">' + featureBtn + allBtn + vBtns.join('') + '</div>' +
+          (hasPending ? '<div style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.3);border-radius:99px"><span style="font-size:12px">⚠️</span><span style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#fb923c">' + totalPend + ' alteraç' + (totalPend === 1 ? 'ão' : 'ões') + ' não salva' + (totalPend === 1 ? '' : 's') + '</span></div>' : '') +
         '</div>' +
-        '<div style="display:flex;gap:8px;flex-shrink:0">' +
-          '<button id="perm-reset" class="btn-sec" style="padding:9px 18px;font-size:11px;width:auto">\u21ba Resetar</button>' +
-          '<button id="perm-save" class="btn-y" style="width:auto;padding:10px 24px;font-size:12px"' + (salvando ? ' disabled' : '') + '>' + (salvando ? "Salvando..." : saved ? "\u2713 Salvo!" : "Salvar Permissões") + '</button>' +
+        '<div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start">' +
+          '<button id="perm-reset" class="btn-sec" style="padding:9px 18px;font-size:11px;width:auto">↺ Resetar</button>' +
+          '<button id="perm-save" class="btn-y" style="width:auto;padding:10px 24px;font-size:12px;' + (hasPending && !salvando && !saved ? 'box-shadow:0 0 18px rgba(212,255,0,.35);' : '') + '"' + (salvando ? ' disabled' : '') + '>' + (salvando ? 'Salvando...' : saved ? '✓ Salvo!' : 'Salvar Permissões') + '</button>' +
         '</div>' +
       '</div>';
-      // Legend
-      h += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">';
-      Object.entries(PLANS).forEach(function(entry) {
-        var k = entry[0], p = entry[1];
-        h += '<div style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;border-radius:99px;background:' + PBG[k] + ';border:1px solid ' + PBR[k] + '"><span style="font-size:12px">' + p.emoji + '</span><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:' + PC[k] + '">' + p.label + '</span></div>';
+    }
+
+    function planColumnView(filterPlan) {
+      // Build feature pill for plan-column view
+      function featPill(k, feat, cur, isStaff) {
+        var planKeys = Object.keys(PLANS);
+        var curIdx = planKeys.indexOf(cur);
+        var isEdited = cur !== feat.min;
+        var moveBtns = '';
+        // Only show move arrows to adjacent plans
+        if (curIdx > 0) {
+          var prev = planKeys[curIdx - 1];
+          moveBtns += '<button class="move-feat-btn" data-pk="' + k + '" data-plan="' + prev + '" data-staff="' + (isStaff ? 1 : 0) + '" title="Mover para ' + PLANS[prev].label + '" style="width:22px;height:22px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:11px;border:1px solid ' + PBR[prev] + ';background:' + PBG[prev] + ';color:' + PC[prev] + ';flex-shrink:0">◀</button>';
+        }
+        if (curIdx < planKeys.length - 1) {
+          var next = planKeys[curIdx + 1];
+          moveBtns += '<button class="move-feat-btn" data-pk="' + k + '" data-plan="' + next + '" data-staff="' + (isStaff ? 1 : 0) + '" title="Mover para ' + PLANS[next].label + '" style="width:22px;height:22px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:11px;border:1px solid ' + PBR[next] + ';background:' + PBG[next] + ';color:' + PC[next] + ';flex-shrink:0">▶</button>';
+        }
+        return '<div style="display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid ' + (isEdited ? 'rgba(251,146,60,.2)' : 'rgba(255,255,255,.05)') + ';margin-bottom:6px">' +
+          '<span style="font-size:13px;flex-shrink:0">' + (feat.icon || '') + '</span>' +
+          '<span style="font-size:12px;color:#c8d4e8;flex:1;min-width:0;line-height:1.3">' + feat.label + (isEdited ? ' <span style="font-size:9px;color:#fb923c">●</span>' : '') + '</span>' +
+          '<div style="display:flex;gap:3px;flex-shrink:0">' + moveBtns + '</div>' +
+        '</div>';
+      }
+
+      var planKeys = filterPlan ? [filterPlan] : Object.keys(PLANS);
+      var colCount = planKeys.length;
+      var h = '<div style="display:grid;grid-template-columns:repeat(' + colCount + ',1fr);gap:14px">';
+      planKeys.forEach(function(pk) {
+        var p = PLANS[pk];
+        // Athlete features for this plan
+        var atlFeats = Object.keys(FEATURES_DEFAULT).filter(function(k) { return (localAtl[k] || FEATURES_DEFAULT[k].min) === pk; });
+        // Staff features for this plan
+        var staffFeats = Object.keys(STAFF_FEATURES_DEFAULT).filter(function(k) { return (localStaff[k] || STAFF_FEATURES_DEFAULT[k].min) === pk; });
+        var total = atlFeats.length + staffFeats.length;
+        h += '<div style="background:' + PBG[pk] + ';border:1.5px solid ' + PBR[pk] + ';border-radius:16px;overflow:hidden">';
+        // Column header
+        h += '<div style="padding:14px 16px 10px;border-bottom:1px solid ' + PBR[pk] + ';display:flex;align-items:center;justify-content:space-between">' +
+          '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">' + p.emoji + '</span><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:' + PC[pk] + '">' + p.label + '</span></div>' +
+          '<span style="font-family:DM Mono,monospace;font-size:11px;font-weight:500;color:' + PC[pk] + ';background:rgba(0,0,0,.3);border-radius:99px;padding:2px 9px">' + total + '</span>' +
+        '</div>';
+        h += '<div style="padding:10px">';
+        // Athlete features
+        if (atlFeats.length > 0) {
+          h += '<div style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(212,255,0,.5);margin-bottom:6px">🎾 Atleta</div>';
+          atlFeats.forEach(function(k) { h += featPill(k, FEATURES_DEFAULT[k], localAtl[k] || FEATURES_DEFAULT[k].min, false); });
+        }
+        // Staff features
+        if (staffFeats.length > 0) {
+          h += '<div style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(129,140,248,.5);margin-bottom:6px;margin-top:' + (atlFeats.length > 0 ? '12px' : '0') + '">🏥 Staff</div>';
+          staffFeats.forEach(function(k) { h += featPill(k, STAFF_FEATURES_DEFAULT[k], localStaff[k] || STAFF_FEATURES_DEFAULT[k].min, true); });
+        }
+        if (total === 0) {
+          h += '<div style="padding:20px 0;text-align:center;color:rgba(255,255,255,.2);font-size:12px">Nenhuma funcionalidade</div>';
+        }
+        h += '</div></div>';
       });
       h += '</div>';
+      return h;
+    }
 
-      // Atleta
-      h += '<div style="display:flex;align-items:center;gap:12px;margin:24px 0 14px"><div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#d4ff00,#a8ff00);box-shadow:0 0 10px rgba(212,255,0,.5)"></div><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:var(--y)">\ud83c\udfbe Funcionalidades do Atleta</span><div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,255,0,.2),transparent)"></div></div>';
-      Object.entries(gruposAtleta).forEach(function(entry) {
-        h += buildGroup(entry[0], entry[1], false, FEATURES_DEFAULT, localAtl);
-      });
+    function draw() {
+      var pendAtl = Object.keys(FEATURES_DEFAULT).filter(function(k) { return localAtl[k] !== FEATURES_DEFAULT[k].min; }).length;
+      var pendStaff = Object.keys(STAFF_FEATURES_DEFAULT).filter(function(k) { return localStaff[k] !== STAFF_FEATURES_DEFAULT[k].min; }).length;
+      var totalPend = pendAtl + pendStaff;
+      var hasPending = totalPend > 0;
+      var h = drawHeader(hasPending, totalPend);
 
-      // Staff
-      h += '<div style="display:flex;align-items:center;gap:12px;margin:30px 0 14px"><div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#818cf8,#6366f1);box-shadow:0 0 10px rgba(129,140,248,.5)"></div><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#818cf8">\ud83c\udfe5 Funcionalidades do Staff</span><div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(129,140,248,.2),transparent)"></div></div>';
-      Object.entries(gruposStaff).forEach(function(entry) {
-        h += buildGroup(entry[0], entry[1], true, STAFF_FEATURES_DEFAULT, localStaff);
-      });
+      if (viewMode === 'feature') {
+        // Feature-centric view (original)
+        h += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">';
+        Object.entries(PLANS).forEach(function(entry) {
+          var k = entry[0], p = entry[1];
+          h += '<div style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;border-radius:99px;background:' + PBG[k] + ';border:1px solid ' + PBR[k] + '"><span style="font-size:12px">' + p.emoji + '</span><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:' + PC[k] + '">' + p.label + '</span></div>';
+        });
+        h += '</div>';
+        h += '<div style="display:flex;align-items:center;gap:12px;margin:0 0 14px"><div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#d4ff00,#a8ff00);box-shadow:0 0 10px rgba(212,255,0,.5)"></div><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:var(--y)">🎾 Funcionalidades do Atleta</span><div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,255,0,.2),transparent)"></div></div>';
+        Object.entries(gruposAtleta).forEach(function(entry) { h += buildGroup(entry[0], entry[1], false, FEATURES_DEFAULT, localAtl); });
+        h += '<div style="display:flex;align-items:center;gap:12px;margin:24px 0 14px"><div style="width:4px;height:18px;border-radius:99px;background:linear-gradient(180deg,#818cf8,#6366f1);box-shadow:0 0 10px rgba(129,140,248,.5)"></div><span style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#818cf8">🏥 Funcionalidades do Staff</span><div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(129,140,248,.2),transparent)"></div></div>';
+        Object.entries(gruposStaff).forEach(function(entry) { h += buildGroup(entry[0], entry[1], true, STAFF_FEATURES_DEFAULT, localStaff); });
+      } else if (viewMode === 'all') {
+        h += planColumnView(null);
+      } else {
+        // Single plan column view
+        h += planColumnView(viewMode);
+      }
 
       container.innerHTML = h;
 
-      // Handlers
+      // View toggle handlers
+      container.querySelectorAll(".view-mode-btn").forEach(function(btn) {
+        btn.onclick = function() { viewMode = this.dataset.vm; draw(); };
+        btn.onmouseenter = function() { this.style.filter = "brightness(1.2)"; };
+        btn.onmouseleave = function() { this.style.filter = ""; };
+      });
+
+      // Feature-view plan buttons
       container.querySelectorAll(".perm-btn").forEach(function(btn) {
-        btn.onmouseenter = function() { if (this.style.opacity !== "1") this.style.opacity = ".7"; this.style.transform = "scale(1.15)"; };
-        btn.onmouseleave = function() { if (this.style.opacity !== "1") this.style.opacity = ".35"; this.style.transform = ""; };
+        btn.onmouseenter = function() { this.style.transform = "scale(1.06)"; this.style.filter = "brightness(1.2)"; };
+        btn.onmouseleave = function() { this.style.transform = ""; this.style.filter = ""; };
+        btn.onclick = function() {
+          var key = this.dataset.pk, plan = this.dataset.plan, isS = this.dataset.staff === "1";
+          if (isS) localStaff[key] = plan; else localAtl[key] = plan;
+          draw();
+        };
+      });
+
+      // Plan-view move buttons
+      container.querySelectorAll(".move-feat-btn").forEach(function(btn) {
+        btn.onmouseenter = function() { this.style.transform = "scale(1.15)"; this.style.filter = "brightness(1.3)"; };
+        btn.onmouseleave = function() { this.style.transform = ""; this.style.filter = ""; };
         btn.onclick = function() {
           var key = this.dataset.pk, plan = this.dataset.plan, isS = this.dataset.staff === "1";
           if (isS) localStaff[key] = plan; else localAtl[key] = plan;
