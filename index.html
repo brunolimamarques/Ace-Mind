@@ -1010,42 +1010,6 @@ function tabQG(c) {
     c.appendChild(ac);
   }
 
-  // ── Hub de Ferramentas ──
-  const fhc = el("div"); fhc.style.cssText = "background:rgba(11,18,32,.6);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px";
-  const fGroups = [
-    { label:"🧠 QG Mental",    feats:["painelParticulas","diarioPerf","zoneReset","visaoTunel","sos","analytics"] },
-    { label:"🎾 Pré-Jogo",    feats:["mantra","checklist","cofreTatico","aquecAtleta"] },
-    { label:"🏆 Pós-Jogo",    feats:["raioX","relatos","graficoEvolucao","salaTrofeus"] },
-    { label:"🚀 Avançado",    feats:["videoUpload","pdfExport","iaFeedback","calendario"] },
-  ];
-  const tabNavMap = { painelParticulas:"home",diarioPerf:"home",zoneReset:"home",visaoTunel:"home",sos:"home",analytics:"home",mantra:"pre",checklist:"pre",cofreTatico:"pre",aquecAtleta:"pre",raioX:"pos",relatos:"pos",graficoEvolucao:"pos",salaTrofeus:"pos",calendario:"agenda",videoUpload:"pos",pdfExport:"pos",iaFeedback:"pos" };
-  let fhHtml = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span style="font-size:16px">🛠️</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#e2e8f0">Todas as Ferramentas</span></div>`;
-  fGroups.forEach(grp => {
-    const tiles = grp.feats.map(feat => {
-      const f = FEATURES_DEFAULT[feat]; if (!f) return "";
-      const ok = canAccess(plan, feat);
-      const planLbl = PLANS[FEAT_MIN[feat]]?.label || "Pro";
-      return `<button class="feat-tile${ok?"":" locked"}" data-feat="${feat}" title="${f.label}${ok?"":" · Requer "+planLbl+"+"}">
-        <span style="font-size:18px;display:block">${f.icon}</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:${ok?"#e2e8f0":"rgba(255,255,255,.3)"};line-height:1.2;display:block">${f.label.replace(" / ","/")}</span>
-        ${!ok?`<span style="font-size:8px;color:rgba(245,158,11,.6)">🔒${planLbl}</span>`:""}
-      </button>`;
-    }).join("");
-    fhHtml += `<div style="margin-bottom:13px"><span style="font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:7px">${grp.label}</span><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">${tiles}</div></div>`;
-  });
-  fhc.innerHTML = fhHtml;
-  fhc.querySelectorAll(".feat-tile:not(.locked)").forEach(b => {
-    b.addEventListener("click", () => { const dest = tabNavMap[b.dataset.feat]; if (dest && dest !== "home") setTab(dest); });
-  });
-  fhc.querySelectorAll(".feat-tile.locked").forEach(b => {
-    b.addEventListener("click", () => {
-      const f = FEATURES_DEFAULT[b.dataset.feat]; if (!f) return;
-      const planLbl = PLANS[FEAT_MIN[b.dataset.feat]]?.label || "Pro";
-      alert(`"${f.label}" está disponível no plano ${planLbl}+.\nContacte o administrador para fazer upgrade.`);
-    });
-  });
-  fhc.classList.add('a-up'); fhc.style.animationDelay = '.3s';
-  c.appendChild(fhc);
 }
 
 /* ── Pré-Jogo ── */
