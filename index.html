@@ -329,7 +329,7 @@ textarea.pro-control{resize:vertical;min-height:100px}
 <div class="pro-modal-overlay" id="modal-atleta-pro">
   <div class="pro-modal-content">
     <div class="pro-card-header" id="modal-atleta-pro-title" style="font-size:1.5rem">Cadastrar Jogador</div>
-    <div class="pro-form-group mt-4"><label class="pro-label">Nome Completo</label><input type="text" id="atl-pro-nome" class="pro-control"></div>
+    <div class="pro-form-group mt-4"><label class="pro-label">Nome Completo</label><input type="text" id="atl-pro-nome" class="pro-control" disabled style="opacity:.6;cursor:not-allowed"><p style="font-size:.75rem;color:var(--text-muted);margin-top:4px">O nome é definido pelo próprio atleta no cadastro.</p></div>
     <div class="pro-form-row mt-4">
       <div class="pro-form-group"><label class="pro-label">Empunhadura / Estilo</label><input type="text" id="atl-pro-esporte" class="pro-control" placeholder="Ex: Destro, BH 2 mãos"></div>
       <div class="pro-form-group"><label class="pro-label">Categoria</label><select id="atl-pro-nivel" class="pro-control"><option>6ª Classe (Iniciante)</option><option>5ª a 3ª Classe</option><option>1ª e 2ª Classe (Avançado)</option><option>Pro</option></select></div>
@@ -1024,49 +1024,89 @@ function modProtocolos(c){
    MÓDULO: ATLETAS PRO (Código 2 — cadastro local)
 ════════════════════════════════════════════════ */
 let editingAtletaProId=null;
-function modAtletasPro(c){
-  phdr(c,"Cadastro e acompanhamento","Jogadores");
-  function draw(){
-    c.querySelectorAll(".atletas-pro-body").forEach(e=>e.remove());
-    const wrap=el("div","atletas-pro-body");wrap.style.cssText="margin-top:0";c.appendChild(wrap);
-    wrap.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:18px">
-      <button class="btn btn-primary" id="btn-novo-atleta-pro">+ Novo Jogador</button>
-    </div>
-    <div class="pro-table-container">
-      <table class="pro-table" id="table-atletas-pro">
-        <thead><tr><th>Atleta</th><th>Nível Técnico</th><th>Consistência (Streak)</th><th>Ações</th></tr></thead>
-        <tbody>${appData.atletas.map((a,i)=>{
-          const streak=getStreakAtl(a.nome);
-          const streakHtml=streak>0?`<div class="streak-badge">🔥 ${streak} Treinos</div>`:`<span style="font-size:.8rem;color:var(--text-muted)">Sem dados em quadra</span>`;
-          const restricao=a.lesoes?`<div style="color:var(--warning);font-size:.75rem;margin-top:4px">⚠️ Cuidados Físicos Registrados</div>`:"";
-          return`<tr style="animation-delay:${i*0.05}s">
-            <td><div style="font-weight:700;font-size:1.05rem;color:#fff">${a.nome}</div><div style="color:var(--brand-primary);font-size:.85rem;margin-top:4px">${a.esporte||""}</div>${restricao}</td>
-            <td><span style="background:rgba(0,0,0,.4);padding:6px 12px;border-radius:8px;font-size:.85rem;border:1px solid rgba(255,255,255,.1);color:#fff">${a.nivel||"—"}</span></td>
-            <td>${streakHtml}</td>
-            <td><button class="btn btn-outline" style="padding:8px 16px;font-size:.8rem" data-edit-atl="${a.id}">Ajustar</button></td>
-          </tr>`}).join("")}</tbody>
-      </table>
+async function modAtletasPro(c){
+  phdr(c,"Atletas registrados no app","Jogadores");
+
+  /* ── Carrega direto de usuarios/cargo=paciente ── */
+  const wrap=el("div");wrap.style.cssText="margin-top:0";c.appendChild(wrap);
+  wrap.innerHTML=`<div>${_loading('Carregando atletas do Firebase...')}</div>`;
+
+  try{
+    const docs=await FB.getDocs('usuarios');
+    appData.atletas=docs
+      .filter(u=>u.cargo==='paciente')
+      .sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'))
+      .map(d=>({...d,id:d._id}));
+    persistData();
+  }catch(e){}
+
+  if(!appData.atletas.length){
+    wrap.innerHTML=`<div style="background:rgba(11,18,32,.5);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:48px;text-align:center;color:var(--text-muted)">
+      <span style="font-size:2.5rem;display:block;margin-bottom:14px;opacity:.3">🎾</span>
+      <p>Nenhum atleta cadastrado ainda.</p>
+      <p style="font-size:.85rem;margin-top:6px;opacity:.6">Os atletas aparecem aqui após se registrarem no aplicativo.</p>
     </div>`;
-    wrap.querySelector("#btn-novo-atleta-pro").onclick=()=>{editingAtletaProId=null;document.getElementById("modal-atleta-pro-title").textContent="Cadastrar Jogador";document.getElementById("atl-pro-nome").value="";document.getElementById("atl-pro-esporte").value="";document.getElementById("atl-pro-lesoes").value="";openProModal("modal-atleta-pro")};
-    wrap.querySelectorAll("[data-edit-atl]").forEach(b=>b.onclick=()=>editAtletaProById(+b.dataset.editAtl,draw));
+    return;
   }
-  draw();
+
+  wrap.innerHTML=`<div class="pro-table-container">
+    <table class="pro-table" id="table-atletas-pro">
+      <thead><tr><th>Atleta</th><th>Nível / Estilo</th><th>Consistência (Streak)</th><th>Plano</th><th>Ação</th></tr></thead>
+      <tbody>${appData.atletas.map((a,i)=>{
+        const streak=getStreakAtl(a.nome);
+        const streakHtml=streak>0?`<div class="streak-badge">🔥 ${streak} Treinos</div>`:`<span style="font-size:.8rem;color:var(--text-muted)">Sem treinos registrados</span>`;
+        const restricao=a.lesoes?`<div style="color:var(--warning);font-size:.75rem;margin-top:4px">⚠️ Cuidados Físicos Registrados</div>`:"";
+        const planoAtl=PLANS[a.plano||'starter'];
+        const rid=a._id||a.id;
+        return`<tr style="animation-delay:${i*0.05}s">
+          <td>
+            <div style="font-weight:700;font-size:1.05rem;color:#fff">${a.nome||'—'}</div>
+            <div style="color:var(--text-muted);font-size:.8rem;margin-top:2px">${a.email||''}</div>
+            ${restricao}
+          </td>
+          <td><span style="background:rgba(0,0,0,.4);padding:6px 12px;border-radius:8px;font-size:.85rem;border:1px solid rgba(255,255,255,.1);color:#fff">${a.nivel||a.esporte||'—'}</span></td>
+          <td>${streakHtml}</td>
+          <td><span class="plan-chip ${a.plano||'starter'}">${planoAtl?.emoji||'🎾'} ${planoAtl?.label||'Starter'}</span></td>
+          <td><button class="btn btn-outline" style="padding:8px 14px;font-size:.8rem" data-edit-atl="${rid}">Editar Perfil</button></td>
+        </tr>`;
+      }).join("")}</tbody>
+    </table>
+  </div>`;
+
+  wrap.querySelectorAll("[data-edit-atl]").forEach(b=>b.onclick=()=>editAtletaProById(b.dataset.editAtl,()=>modAtletasPro(c)));
 }
+
 function getStreakAtl(nome){let c=0;appData.protocolos.forEach(p=>{if((p.atleta===nome||!p.atleta)&&p.registros)c+=p.registros.length});return c}
-function saveAtletaPro(){
-  const nome=document.getElementById("atl-pro-nome").value.trim();if(!nome)return alert("O nome é obrigatório.");
-  const payload={nome,esporte:document.getElementById("atl-pro-esporte").value.trim(),nivel:document.getElementById("atl-pro-nivel").value,lesoes:document.getElementById("atl-pro-lesoes").value.trim()};
-  if(editingAtletaProId){const idx=appData.atletas.findIndex(a=>a.id===editingAtletaProId);if(idx>=0)appData.atletas[idx]={...appData.atletas[idx],...payload,updatedAt:getFormattedDate()}}
-  else{appData.atletas.push({...payload,id:Date.now(),createdAt:getFormattedDate(),updatedAt:getFormattedDate()})}
-  persistData();closeProModal("modal-atleta-pro");
-  document.querySelectorAll(".atletas-pro-body").forEach(e=>e.remove());
-  const tmpC=document.querySelector(".dash-main");if(tmpC)modAtletasPro(tmpC);
+
+/* Salva apenas campos complementares em usuarios/{uid} */
+async function saveAtletaPro(){
+  if(!editingAtletaProId)return alert("Nenhum atleta selecionado.");
+  const payload={
+    esporte:document.getElementById("atl-pro-esporte").value.trim(),
+    nivel:document.getElementById("atl-pro-nivel").value,
+    lesoes:document.getElementById("atl-pro-lesoes").value.trim(),
+    updatedAt:new Date().toISOString()
+  };
+  try{
+    await FB.updateDoc(`usuarios/${editingAtletaProId}`,payload);
+    const idx=appData.atletas.findIndex(a=>(a._id||a.id)===editingAtletaProId);
+    if(idx>=0)appData.atletas[idx]={...appData.atletas[idx],...payload};
+    persistData();closeProModal("modal-atleta-pro");
+    /* Re-renderiza o módulo */
+    const c=document.querySelector(".dash-main");
+    if(c){while(c.children.length>1)c.removeChild(c.lastChild);modAtletasPro(c)}
+  }catch(ex){alert("Erro ao salvar: "+ex.message)}
 }
+
 function editAtletaProById(id,cb){
-  const a=appData.atletas.find(x=>x.id===id);if(!a)return;
-  editingAtletaProId=id;document.getElementById("modal-atleta-pro-title").textContent="Editar Jogador";
-  document.getElementById("atl-pro-nome").value=a.nome;document.getElementById("atl-pro-esporte").value=a.esporte||"";
-  document.getElementById("atl-pro-nivel").value=a.nivel||"6ª Classe (Iniciante)";document.getElementById("atl-pro-lesoes").value=a.lesoes||"";
+  const a=appData.atletas.find(x=>(x._id||x.id)===id||String(x._id||x.id)===String(id));if(!a)return;
+  editingAtletaProId=a._id||a.id;
+  document.getElementById("modal-atleta-pro-title").textContent="Editar Perfil — "+a.nome;
+  document.getElementById("atl-pro-nome").value=a.nome||'';
+  document.getElementById("atl-pro-nome").disabled=true; /* nome vem do cadastro do atleta */
+  document.getElementById("atl-pro-esporte").value=a.esporte||"";
+  document.getElementById("atl-pro-nivel").value=a.nivel||"6ª Classe (Iniciante)";
+  document.getElementById("atl-pro-lesoes").value=a.lesoes||"";
   openProModal("modal-atleta-pro");
 }
 
@@ -1368,7 +1408,7 @@ function ParticleCanvas(container,h=120){
    appData é usado como cache local para performance.
    Coleções Firebase:
      • usuarios/{uid}            — perfil do usuário autenticado
-     • atletas_pro/{id}          — jogadores cadastrados pelo staff (col global)
+     • usuarios/{uid}            — atletas (cargo=paciente) e staff — fonte única
      • protocolos/{id}           — protocolos de treino
      • protocolos/{id}/registros — execuções de cada protocolo
      • ia_analises/{id}          — laudos gerados pelo Gemini
@@ -1399,12 +1439,16 @@ function openModal(id){document.getElementById(id).classList.add('active')}
 function closeModal(id){document.getElementById(id).classList.remove('active');editingAtletaId=null}
 
 /* ── Popula selects de atletas ──
-   Usa appData.atletas como cache; se vazio, busca do Firebase primeiro. */
+   Lê da coleção usuarios (cargo==="paciente") — mesma fonte do dashboard staff.
+   appData.atletas é usado como cache para evitar buscas repetidas. */
 async function popularSelectsAtletas(){
   if(!appData.atletas.length){
     try{
-      const docs=await FB.getDocs('atletas_pro');
-      appData.atletas=docs.map(d=>({...d,id:d._id}));
+      const docs=await FB.getDocs('usuarios');
+      appData.atletas=docs
+        .filter(u=>u.cargo==='paciente')
+        .sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'))
+        .map(d=>({...d,id:d._id}));
       persistData();
     }catch(e){}
   }
@@ -1424,23 +1468,17 @@ async function popularSelectsAtletas(){
   });
 }
 
-/* ════ ATLETAS — Firebase ════ */
-let editingAtletaId=null;
-
+/* Atletas vêm de usuarios/cargo=paciente — o staff só edita dados complementares (lesões, nível, esporte) */
 function prepareCreateAtleta(){
-  editingAtletaId=null;
-  document.getElementById('modal-atleta-title').innerText='Cadastrar Jogador';
-  document.getElementById('atl-nome').value='';
-  document.getElementById('atl-esporte').value='';
-  document.getElementById('atl-nivel').value='6ª Classe (Iniciante)';
-  document.getElementById('atl-lesoes').value='';
-  openModal('modal-atleta');
+  /* Não é mais necessário criar atletas por aqui. Os atletas se registram pelo app.
+     Abrimos o modal pré-selecionado para o staff completar o perfil. */
+  alert('Os atletas são criados quando se registram no aplicativo.\nAqui você pode editar os dados de um atleta existente clicando em "Editar" na linha correspondente.');
 }
 
 function editAtleta(id){
   const a=appData.atletas.find(x=>x.id===id||x._id===id);if(!a)return;
   editingAtletaId=a._id||a.id;
-  document.getElementById('modal-atleta-title').innerText='Editar Jogador';
+  document.getElementById('modal-atleta-title').innerText='Editar Perfil — '+a.nome;
   document.getElementById('atl-nome').value=a.nome||'';
   document.getElementById('atl-esporte').value=a.esporte||'';
   document.getElementById('atl-nivel').value=a.nivel||'6ª Classe (Iniciante)';
@@ -1449,30 +1487,23 @@ function editAtleta(id){
 }
 
 async function saveAtleta(){
-  const nome=document.getElementById('atl-nome').value.trim();
-  if(!nome)return alert('O nome do jogador é obrigatório.');
+  if(!editingAtletaId)return alert('Selecione um atleta existente para editar.');
   const btn=document.getElementById('btn-save-atleta');
   btn.disabled=true;btn.textContent='Salvando...';
+  /* Atualiza apenas campos complementares; não toca em cargo/plano/email */
   const payload={
-    nome,
     esporte:document.getElementById('atl-esporte').value.trim(),
     nivel:document.getElementById('atl-nivel').value,
     lesoes:document.getElementById('atl-lesoes').value.trim(),
-    staffId:FB.uid||'',
     updatedAt:new Date().toISOString()
   };
   try{
-    if(editingAtletaId){
-      await FB.updateDoc(`atletas_pro/${editingAtletaId}`,payload);
-      const idx=appData.atletas.findIndex(a=>(a._id||a.id)===editingAtletaId);
-      if(idx>=0)appData.atletas[idx]={...appData.atletas[idx],...payload,_id:editingAtletaId,id:editingAtletaId};
-    }else{
-      const r=await FB.addDoc('atletas_pro',{...payload,createdAt:new Date().toISOString()});
-      appData.atletas.push({...payload,_id:r.id,id:r.id});
-    }
+    await FB.updateDoc(`usuarios/${editingAtletaId}`,payload);
+    const idx=appData.atletas.findIndex(a=>(a._id||a.id)===editingAtletaId);
+    if(idx>=0)appData.atletas[idx]={...appData.atletas[idx],...payload};
     persistData();closeModal('modal-atleta');renderAtletas();
   }catch(ex){alert('Erro ao salvar: '+ex.message)}
-  btn.disabled=false;btn.textContent='Salvar Jogador';
+  btn.disabled=false;btn.textContent='Salvar';
 }
 
 /* Streak: conta execuções salvas no Firebase para este atleta */
@@ -1485,27 +1516,44 @@ function getStreak(atletaNome){
 }
 
 async function renderAtletas(){
-  const tbody=document.querySelector('#table-atletas tbody');if(!tbody)return;
-  tbody.innerHTML=_loading('Carregando jogadores...');
+  /* No AceMind integrado, a tabela de atletas está em #table-atletas-pro (modAtletasPro).
+     Esta função atualiza o cache e também re-renderiza o módulo se ele estiver ativo. */
   try{
-    const docs=await FB.getDocs('atletas_pro');
-    appData.atletas=docs.map(d=>({...d,id:d._id}));
+    const docs=await FB.getDocs('usuarios');
+    appData.atletas=docs
+      .filter(u=>u.cargo==='paciente')
+      .sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'))
+      .map(d=>({...d,id:d._id}));
     persistData();
-  }catch(e){
-    /* usa cache local se Firebase falhar */
-  }
+  }catch(e){}
+  /* Atualiza a tabela se o módulo estiver montado */
+  const tbody=document.querySelector('#table-atletas-pro tbody');
+  if(!tbody){popularSelectsAtletas();return;}
   tbody.innerHTML='';
-  if(!appData.atletas.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px">Nenhum jogador cadastrado ainda.</td></tr>`;return}
+  if(!appData.atletas.length){
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px">Nenhum atleta cadastrado. Os atletas aparecem aqui após se registrarem no app.</td></tr>`;
+    popularSelectsAtletas();return;
+  }
   appData.atletas.forEach((a,i)=>{
     const restricao=a.lesoes?`<div style="color:var(--warning);font-size:.75rem;margin-top:4px">⚠️ Cuidados Físicos Registrados</div>`:'';
     const s=getStreak(a.nome);
     const streakHtml=s>0?`<div class="streak-badge">🔥 ${s} Treinos</div>`:`<span style="font-size:.8rem;color:var(--text-muted)">Sem dados em quadra</span>`;
+    const planoAtl=PLANS[a.plano||'starter'];
     const rid=a._id||a.id;
     tbody.innerHTML+=`<tr style="animation-delay:${i*.05}s">
-      <td><div style="font-weight:700;font-size:1.05rem;color:#fff">${a.nome}</div><div style="color:var(--brand-primary);font-size:.85rem;margin-top:4px">${a.esporte||''}</div>${restricao}</td>
-      <td><span style="background:rgba(0,0,0,.4);padding:6px 12px;border-radius:8px;font-size:.85rem;border:1px solid rgba(255,255,255,.1);color:#fff">${a.nivel||'—'}</span></td>
+      <td>
+        <div style="font-weight:700;font-size:1.05rem;color:#fff">${a.nome||'—'}</div>
+        <div style="color:var(--text-muted);font-size:.8rem;margin-top:2px">${a.email||''}</div>
+        ${restricao}
+      </td>
+      <td><span style="background:rgba(0,0,0,.4);padding:6px 12px;border-radius:8px;font-size:.85rem;border:1px solid rgba(255,255,255,.1);color:#fff">${a.nivel||a.esporte||'Atleta'}</span></td>
       <td>${streakHtml}</td>
-      <td><button class="btn btn-outline" style="padding:8px 16px;font-size:.8rem" onclick="editAtleta('${rid}')">Ajustar</button></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="plan-chip ${a.plano||'starter'}">${planoAtl?.emoji||'🎾'} ${planoAtl?.label||'Starter'}</span>
+          <button class="btn btn-outline" style="padding:8px 14px;font-size:.8rem" onclick="editAtleta('${rid}')">Editar</button>
+        </div>
+      </td>
     </tr>`;
   });
   popularSelectsAtletas();
