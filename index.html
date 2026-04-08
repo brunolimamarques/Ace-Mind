@@ -1363,6 +1363,301 @@ function ParticleCanvas(container,h=120){
 }
 
 /* ════════════════════════════════════════════════
+   FUNÇÕES STANDALONE (Código 3 — modo autônomo sem Firebase)
+   Usadas pelo modal padrão #modal-atleta, pela view de execução
+   global e pelo dossiê HTML estático caso o staff acesse sem auth.
+════════════════════════════════════════════════ */
+
+/* ── Navegação de views standalone ── */
+function switchView(viewId, navElement=null){
+  document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active'));
+  const t=document.getElementById(viewId);if(t)t.classList.add('active');
+  if(navElement){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));navElement.classList.add('active')}
+  if(viewId==='view-protocolos')renderProtocolos();
+  if(viewId==='view-atletas')renderAtletas();
+  if(viewId==='view-relatorios'){popularSelectsAtletas();atualizarDashboard()}
+  if(viewId==='view-ia-analise')popularSelectsAtletas();
+  if(viewId==='view-treino-mental')popularSelectsAtletas();
+  if(viewId==='view-historico-atleta'){popularSelectsAtletas();renderHistoricoAtleta()}
+}
+function openModal(id){document.getElementById(id).classList.add('active')}
+function closeModal(id){document.getElementById(id).classList.remove('active');editingAtletaId=null}
+
+/* ── Popula selects de atletas em todas as views ── */
+function popularSelectsAtletas(){
+  const menus=[
+    {id:'prot-atleta',label:'Aplicável a todos (Genérico)'},
+    {id:'dash-filtro-atleta',label:'Visão Geral (Todos os Jogadores)'},
+    {id:'ia-atleta-select',label:'Selecione um jogador (Opcional)'},
+    {id:'tm-atleta-select',label:'Selecione o Jogador Alvo'},
+    {id:'hist-atleta-select',label:'Selecione um Jogador...'}
+  ];
+  menus.forEach(menu=>{
+    const el2=document.getElementById(menu.id);if(!el2)return;
+    const cur=el2.value;el2.innerHTML=`<option value="">${menu.label}</option>`;
+    appData.atletas.forEach(a=>el2.innerHTML+=`<option value="${a.nome}">${a.nome}</option>`);
+    el2.value=cur;
+  });
+}
+
+/* ── Atletas (modal padrão #modal-atleta — Código 3) ── */
+let editingAtletaId=null;
+function prepareCreateAtleta(){editingAtletaId=null;document.getElementById('modal-atleta-title').innerText='Cadastrar Jogador';document.getElementById('atl-nome').value='';document.getElementById('atl-esporte').value='';document.getElementById('atl-nivel').value='6ª Classe (Iniciante)';document.getElementById('atl-lesoes').value='';openModal('modal-atleta')}
+function editAtleta(id){
+  const a=appData.atletas.find(x=>x.id===id);if(!a)return;
+  editingAtletaId=id;document.getElementById('modal-atleta-title').innerText='Editar Jogador';
+  document.getElementById('atl-nome').value=a.nome;document.getElementById('atl-esporte').value=a.esporte||'';
+  document.getElementById('atl-nivel').value=a.nivel||'6ª Classe (Iniciante)';document.getElementById('atl-lesoes').value=a.lesoes||'';
+  openModal('modal-atleta');
+}
+function saveAtleta(){
+  const nome=document.getElementById('atl-nome').value.trim();if(!nome)return alert('O nome do jogador é obrigatório.');
+  const payload={nome,esporte:document.getElementById('atl-esporte').value.trim(),nivel:document.getElementById('atl-nivel').value,lesoes:document.getElementById('atl-lesoes').value.trim()};
+  if(editingAtletaId){const idx=appData.atletas.findIndex(a=>a.id===editingAtletaId);if(idx>=0)appData.atletas[idx]={...appData.atletas[idx],...payload,updatedAt:getFormattedDate()}}
+  else appData.atletas.push({...payload,id:Date.now(),createdAt:getFormattedDate(),updatedAt:getFormattedDate()});
+  persistData();closeModal('modal-atleta');renderAtletas();
+}
+function getStreak(atletaNome){let c=0;appData.protocolos.forEach(p=>{if((p.atleta===atletaNome||!p.atleta)&&p.registros)c+=p.registros.length});return c}
+function renderAtletas(){
+  const tbody=document.querySelector('#table-atletas tbody');if(!tbody)return;tbody.innerHTML='';
+  appData.atletas.forEach((a,i)=>{
+    const restricao=a.lesoes?`<div style="color:var(--warning);font-size:.75rem;margin-top:4px">⚠️ Cuidados Físicos Registrados</div>`:'';
+    const s=getStreak(a.nome);
+    const streakHtml=s>0?`<div class="streak-badge">🔥 ${s} Treinos</div>`:`<span style="font-size:.8rem;color:var(--text-muted)">Sem dados em quadra</span>`;
+    tbody.innerHTML+=`<tr style="animation-delay:${i*.05}s">
+      <td><div style="font-weight:700;font-size:1.05rem;color:#fff">${a.nome}</div><div style="color:var(--brand-primary);font-size:.85rem;margin-top:4px">${a.esporte||''}</div>${restricao}</td>
+      <td><span style="background:rgba(0,0,0,.4);padding:6px 12px;border-radius:8px;font-size:.85rem;border:1px solid rgba(255,255,255,.1);color:#fff">${a.nivel||'—'}</span></td>
+      <td>${streakHtml}</td>
+      <td><button class="btn btn-outline" style="padding:8px 16px;font-size:.8rem" onclick="editAtleta(${a.id})">Ajustar</button></td>
+    </tr>`;
+  });
+  popularSelectsAtletas();
+}
+
+/* ── Protocolos standalone (Código 3) ── */
+let editingProtocoloId=null,execucaoProtocoloId=null;
+let draggedItem=null;
+function setupDragAndDrop(row){
+  row.addEventListener('dragstart',function(){draggedItem=this;setTimeout(()=>this.classList.add('dragging'),0)});
+  row.addEventListener('dragend',function(){draggedItem=null;this.classList.remove('dragging')});
+  row.addEventListener('dragover',function(e){e.preventDefault();this.style.borderTop="2px solid var(--brand-primary)"});
+  row.addEventListener('dragleave',function(){this.style.borderTop="1px solid rgba(255,255,255,.05)"});
+  row.addEventListener('drop',function(e){e.preventDefault();this.style.borderTop="1px solid rgba(255,255,255,.05)";if(draggedItem!==this)this.parentNode.insertBefore(draggedItem,this.nextSibling)});
+}
+function addPassoRow(desc='',vid=''){
+  const container=document.getElementById('passos-container');if(!container)return;
+  const div=document.createElement('div');div.className='passo-row';div.draggable=true;
+  div.innerHTML=`<div class="drag-handle" title="Arraste para reordenar">↕</div>
+    <input type="text" class="form-control passo-desc" placeholder="Instrução do drill..." style="flex:2;background:rgba(0,0,0,.5)" value="${desc}">
+    <input type="url" class="form-control passo-vid" placeholder="Link (Ex: Video do golpe)" style="flex:1;background:rgba(0,0,0,.5)" value="${vid}">
+    <button class="btn btn-danger" onclick="this.parentElement.remove()" style="padding:12px">✕</button>`;
+  setupDragAndDrop(div);container.appendChild(div);
+}
+function magicFill(){
+  document.getElementById('prot-titulo').value="Drill: Consistência de Fundo (Cross-court)";
+  document.getElementById('prot-esporte').value="Tênis";
+  document.getElementById('passos-container').innerHTML='';
+  ["Aquecimento na rede (Voleio x Fundo) - 5 min","Troca de bolas cruzadas na direita (Forehand) - Meta: 15 seguidas","Troca de bolas cruzadas na esquerda (Backhand) - Meta: 10 seguidas","Ataque na bola curta e fechamento na rede"].forEach(p=>addPassoRow(p));
+  alert("🪄 Template de quadra carregado!");
+}
+function prepareCreateProtocolo(navElement){
+  editingProtocoloId=null;
+  const t=document.getElementById('prot-titulo');if(t)t.value='';
+  const e=document.getElementById('prot-esporte');if(e)e.value='Tênis';
+  const pc=document.getElementById('passos-container');if(pc)pc.innerHTML='';
+  addPassoRow();popularSelectsAtletas();
+  switchView('view-form-protocolo',navElement);
+}
+function editProtocolo(id){
+  const p=appData.protocolos.find(x=>x.id===id);if(!p)return;
+  editingProtocoloId=id;
+  document.getElementById('prot-titulo').value=p.titulo;document.getElementById('prot-esporte').value=p.esporte||'Tênis';
+  if(document.getElementById('prot-atleta'))document.getElementById('prot-atleta').value=p.atleta||'';
+  document.getElementById('passos-container').innerHTML='';
+  if(p.passos&&p.passos.length)p.passos.forEach(s=>addPassoRow(s.desc||s,s.vid||''));else addPassoRow();
+  switchView('view-form-protocolo');
+}
+function cloneProtocolo(id){
+  const p=appData.protocolos.find(x=>x.id===id);if(!p)return;
+  const clone=JSON.parse(JSON.stringify(p));clone.id=Date.now();clone.titulo+=" (Clone)";clone.registros=[];
+  appData.protocolos.push(clone);persistData();renderProtocolos();
+}
+function saveProtocol(){
+  const titulo=document.getElementById('prot-titulo').value.trim();if(!titulo)return alert("O título é obrigatório.");
+  let passos=[];document.querySelectorAll('.passo-row').forEach(row=>{const d=row.querySelector('.passo-desc')?.value.trim();const v=row.querySelector('.passo-vid')?.value.trim();if(d)passos.push({desc:d,vid:v||''})});
+  const base={titulo,esporte:document.getElementById('prot-esporte')?.value.trim()||'Tênis',atleta:document.getElementById('prot-atleta')?.value||'',passos};
+  if(editingProtocoloId){const idx=appData.protocolos.findIndex(p=>p.id===editingProtocoloId);appData.protocolos[idx]={...appData.protocolos[idx],...base,updatedAt:getFormattedDate()}}
+  else appData.protocolos.push({...base,id:Date.now(),registros:[],createdAt:getFormattedDate(),updatedAt:getFormattedDate()});
+  persistData();switchView('view-protocolos',document.querySelectorAll('.nav-item')[0]);
+}
+function renderProtocolos(){
+  const tbody=document.querySelector('#table-protocolos tbody');if(!tbody)return;tbody.innerHTML='';
+  appData.protocolos.forEach((p,i)=>{
+    tbody.innerHTML+=`<tr style="animation-delay:${i*.05}s">
+      <td><div style="font-weight:700;font-size:1.05rem;color:#fff">${p.titulo}</div><div style="color:var(--brand-primary);font-size:.85rem;margin-top:4px">${(p.passos||[]).length} Etapas</div></td>
+      <td><div style="color:var(--text-main);font-weight:500">${p.atleta||'Drill Geral (Equipe)'}</div><div style="color:var(--text-muted);font-size:.85rem;margin-top:4px">${p.esporte||'Tênis'}</div></td>
+      <td><div class="flex-center">
+        <button class="btn btn-primary" style="padding:8px 16px;font-size:.8rem" onclick="abrirExecucao(${p.id})">▶ Executar</button>
+        <button class="btn btn-outline" style="padding:8px 16px;font-size:.8rem" onclick="editProtocolo(${p.id})">Ajustar</button>
+        <button class="btn btn-outline" style="padding:8px 16px;font-size:.9rem;border-color:transparent" onclick="cloneProtocolo(${p.id})" title="Clonar">📄</button>
+      </div></td>
+    </tr>`;
+  });
+}
+
+/* ── Execução standalone (Código 3 — timer, mic, cycle) ── */
+let timerInterval=null,ms=0,isTimerRunning=false;
+function updateTimerDisplay(){
+  const mins=Math.floor(ms/600),secs=Math.floor((ms%600)/10),dec=ms%10;
+  const t=document.getElementById('timer-text');if(t)t.innerText=`${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}.${dec}`;
+}
+function toggleTimer(){if(isTimerRunning){clearInterval(timerInterval);isTimerRunning=false}else{timerInterval=setInterval(()=>{ms++;updateTimerDisplay()},100);isTimerRunning=true}}
+function resetTimer(){clearInterval(timerInterval);isTimerRunning=false;ms=0;updateTimerDisplay()}
+
+let recognition=null;
+if('webkitSpeechRecognition'in window){
+  recognition=new webkitSpeechRecognition();recognition.continuous=true;recognition.interimResults=true;recognition.lang='pt-BR';
+  recognition.onresult=function(e){let t='';for(let i=e.resultIndex;i<e.results.length;++i)t+=e.results[i][0].transcript;const obs=document.getElementById('exec-obs');if(obs)obs.value=t};
+}
+let isRecording=false;
+function toggleDictation(){
+  if(!recognition)return alert("Seu navegador não suporta ditado por voz.");
+  const btn=document.getElementById('btn-mic');
+  if(isRecording){recognition.stop();isRecording=false;btn.classList.remove('recording')}else{recognition.start();isRecording=true;btn.classList.add('recording')}
+}
+function abrirExecucao(id){
+  const prot=appData.protocolos.find(p=>p.id===id);if(!prot)return;
+  execucaoProtocoloId=id;
+  const nm=document.getElementById('exec-prot-nome');if(nm)nm.innerText=`${prot.titulo} | Jogador: ${prot.atleta||'Geral'}`;
+  const dt=document.getElementById('exec-data');if(dt)dt.valueAsDate=new Date();
+  const obs=document.getElementById('exec-obs');if(obs)obs.value='';
+  resetTimer();
+  const tbody=document.getElementById('exec-body');if(!tbody)return;tbody.innerHTML='';
+  (prot.passos||[]).forEach((p,idx)=>{
+    const desc=typeof p==='string'?p:p.desc;
+    const vid=typeof p!=='string'&&p.vid?`<a href="${p.vid}" target="_blank" style="color:var(--brand-primary);font-size:.8rem;margin-left:8px;text-decoration:none">📹 Ref</a>`:'';
+    tbody.innerHTML+=`<tr><td style="font-weight:500;font-size:1.05rem;color:#fff">${idx+1}. ${desc} ${vid}</td><td style="width:120px;text-align:center"><button class="cycle-btn state-empty" data-val="" onclick="cycleState(this)">-</button></td></tr>`;
+  });
+  switchView('view-execucao');
+}
+function cycleState(btn){
+  const states=['','✓','A','X','O'],classes=['state-empty','state-v','state-a','state-x','state-o'];
+  let i=(states.indexOf(btn.dataset.val)+1)%states.length;
+  btn.dataset.val=states[i];btn.innerText=states[i]||'-';btn.className='cycle-btn '+classes[i];
+}
+function salvarExecucao(){
+  const prot=appData.protocolos.find(p=>p.id===execucaoProtocoloId);if(!prot)return;
+  const data=document.getElementById('exec-data')?.value||'';
+  const obs=document.getElementById('exec-obs')?.value||'';
+  let resultados=[];document.querySelectorAll('#exec-body .cycle-btn').forEach(b=>resultados.push(b.dataset.val));
+  if(!prot.registros)prot.registros=[];prot.registros.push({data,obs,resultados});persistData();
+  alert("Sessão salva com sucesso!");switchView('view-protocolos',document.querySelectorAll('.nav-item')[0]);
+}
+
+/* ── Dashboard Charts standalone (Código 3) ── */
+let lineChartInstance=null,radarChartInstance=null;
+function atualizarDashboard(){const f=document.getElementById('dash-filtro-atleta');renderCharts(f?f.value:'')}
+function renderCharts(atletaFiltro=''){
+  const ctxLine=document.getElementById('lineChart');const ctxRadar=document.getElementById('radarChart');
+  if(!ctxLine||!ctxRadar)return;
+  if(lineChartInstance)lineChartInstance.destroy();if(radarChartInstance)radarChartInstance.destroy();
+  Chart.defaults.color='#94a3b8';Chart.defaults.font.family="'Inter',sans-serif";Chart.defaults.borderColor='rgba(255,255,255,.05)';
+  let regs=[];appData.protocolos.forEach(p=>{if(!atletaFiltro||p.atleta===atletaFiltro){(p.registros||[]).forEach(r=>regs.push(r))}});
+  regs.sort((a,b)=>new Date(a.data)-new Date(b.data));
+  let labels=['Sem dados'],dados=[0];
+  if(regs.length>0){labels=[];dados=[];regs.slice(-10).forEach((r,i)=>{labels.push(new Date(r.data+'T12:00:00Z').toLocaleDateString('pt-BR').substring(0,5)||`S${i+1}`);dados.push(Math.round((r.resultados.filter(x=>x==='✓').length/(r.resultados.length||1))*100))})}
+  lineChartInstance=new Chart(ctxLine.getContext('2d'),{type:'line',data:{labels,datasets:[{label:'% de Eficiência (✓)',data:dados,borderColor:'#ccff00',backgroundColor:'rgba(204,255,0,.15)',borderWidth:4,pointBackgroundColor:'#ccff00',pointBorderColor:'#111827',pointBorderWidth:2,pointRadius:6,fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:100,grid:{color:'rgba(255,255,255,.05)'}},x:{grid:{display:false}}},plugins:{legend:{labels:{color:'#fff',font:{weight:'bold'}}}}}});
+  let rd=[70,70,70,70,70,70],rl='Média de Quadra';
+  if(atletaFiltro){const ao=appData.atletas.find(a=>a.nome===atletaFiltro);rl=`Radar - ${atletaFiltro}`;if(ao){if(ao.nivel?.includes('Iniciante'))rd=[40,50,60,45,55,40];else if(ao.nivel?.includes('Avançado'))rd=[85,80,85,80,85,80];else if(ao.nivel?.includes('Pro'))rd=[95,90,95,90,95,95];else rd=[65,70,75,60,70,65]}}
+  radarChartInstance=new Chart(ctxRadar.getContext('2d'),{type:'radar',data:{labels:['Saque','Forehand','Backhand','Voleio','Footwork','Mental'],datasets:[{label:rl,data:rd,backgroundColor:'rgba(204,255,0,.25)',borderColor:'#ccff00',borderWidth:3,pointBackgroundColor:'#ccff00',pointBorderColor:'#111827',pointBorderWidth:2,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:100,angleLines:{color:'rgba(255,255,255,.1)'},grid:{color:'rgba(255,255,255,.05)'},pointLabels:{color:'#f8fafc',font:{size:12,weight:'bold'}}}},plugins:{legend:{labels:{color:'#fff',font:{weight:'bold'}}}}}});
+}
+
+/* ── IA Vídeo standalone (Código 3 — usa IDs do HTML estático) ── */
+function handleVideoUpload(input){
+  const file=input.files[0];if(!file)return;
+  const url=URL.createObjectURL(file);
+  const player=document.getElementById('video-preview-player');player.src=url;player.style.display='block';
+  document.getElementById('upload-drop-zone').style.display='none';
+  document.getElementById('video-actions-wrapper').style.display='flex';
+  const btn=document.getElementById('btn-gerar-ia');btn.disabled=false;btn.innerText='✨ Processar Biomecânica com IA';
+  document.getElementById('ai-empty-state').style.display='block';
+  document.getElementById('ai-loading-state').style.display='none';
+  document.getElementById('ai-results-state').style.display='none';
+}
+async function extractFramesFromVideo(videoEl,numFrames=3){
+  const canvas=document.getElementById('hidden-canvas');const ctx=canvas.getContext('2d');const frames=[];
+  canvas.width=videoEl.videoWidth||640;canvas.height=videoEl.videoHeight||480;
+  const dur=videoEl.duration;const times=[dur*.25,dur*.5,dur*.75];
+  for(let t of times){videoEl.currentTime=t;await new Promise(res=>{videoEl.onseeked=()=>{ctx.drawImage(videoEl,0,0,canvas.width,canvas.height);frames.push({inlineData:{data:canvas.toDataURL('image/jpeg',.8).split(',')[1],mimeType:'image/jpeg'}});res()}})}
+  return frames;
+}
+async function runRealAIAnalysis(){
+  const videoPlayer=document.getElementById('video-preview-player');
+  if(!videoPlayer.duration||videoPlayer.duration===0)return alert("Por favor, carregue um vídeo válido primeiro.");
+  const btn=document.getElementById('btn-gerar-ia');const loadingText=document.getElementById('ai-loading-text');
+  const atletaNome=document.getElementById('ia-atleta-select')?.value||'este jogador';
+  document.getElementById('ai-empty-state').style.display='none';document.getElementById('ai-results-state').style.display='none';
+  document.getElementById('ai-loading-state').style.display='flex';
+  btn.disabled=true;btn.innerText='📸 Extraindo frames de impacto...';loadingText.innerText='Extraindo quadros-chave...';
+  try{
+    const imageParts=await extractFramesFromVideo(videoPlayer);
+    btn.innerText='🧠 IA mapeando cadeias cinéticas...';loadingText.innerText='Conectando ao Gemini 2.5 Flash...';
+    const prompt=`Você é um treinador de tênis de elite (nível ATP/WTA) especializado em análise biomecânica. Analise a sequência de 3 imagens retiradas de um vídeo de ${atletaNome} executando um golpe de tênis (saque, forehand, backhand, etc). Sua resposta deve ser EXCLUSIVAMENTE um objeto JSON válido (sem blocos de código markdown como \`\`\`json). O JSON deve conter exatamente estas três chaves: "positivos": array de strings com 2 a 3 pontos fortes técnicos. "negativos": array de strings com 2 a 3 falhas biomecânicas. "plano": string com prescrição de ajuste prático em quadra.`;
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${MINHA_CHAVE_GEMINI}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt},...imageParts]}]})});
+    const data=await resp.json();if(data.error)throw new Error(data.error.message);
+    let txt=data.candidates[0].content.parts[0].text.replace(/```json/gi,'').replace(/```/g,'').trim();
+    const laudo=JSON.parse(txt);ultimaAnaliseGerada=laudo;
+    document.getElementById('ai-pos').innerHTML=laudo.positivos.map(i=>`<li>${i}</li>`).join('');
+    document.getElementById('ai-neg').innerHTML=laudo.negativos.map(i=>`<li>${i}</li>`).join('');
+    document.getElementById('ai-act').innerHTML=laudo.plano;
+    document.getElementById('ai-loading-state').style.display='none';document.getElementById('ai-results-state').style.display='flex';
+    btn.disabled=false;btn.innerText='✨ Refazer Leitura Biomecânica';
+  }catch(err){console.error(err);alert("Falha ao processar IA.\n\n"+err.message);document.getElementById('ai-loading-state').style.display='none';document.getElementById('ai-empty-state').style.display='block';btn.disabled=false;btn.innerText='Tentar Novamente'}
+}
+function salvarAnaliseIA(){
+  const nome=document.getElementById('ia-atleta-select')?.value;if(!nome)return alert("⚠️ Por favor, vincule um jogador antes de salvar.");if(!ultimaAnaliseGerada)return alert("Nenhuma análise gerada para salvar.");
+  if(!appData.iaAnalises)appData.iaAnalises=[];appData.iaAnalises.push({id:Date.now(),atleta:nome,data:getFormattedDate(),laudo:ultimaAnaliseGerada});
+  persistData();alert("✅ Laudo Biomecânico salvo no Dossiê do Jogador!");
+}
+function salvarTreinoMental(){
+  const nome=document.getElementById('tm-atleta-select')?.value;if(!nome)return alert("⚠️ Por favor, selecione o Jogador Alvo antes de salvar.");
+  const prof=document.getElementById('tm-profissional')?.value||'Não informado';
+  if(!appData.treinosMentais)appData.treinosMentais=[];appData.treinosMentais.push({id:Date.now(),atleta:nome,data:getFormattedDate(),profissional:prof,foco:'Protocolo de Controle de Ansiedade Pré-Match'});
+  persistData();alert("✅ Sessão Mental salva no Dossiê do Jogador!");
+}
+
+/* ── Dossiê renderização standalone (Código 3) ── */
+function renderHistoricoAtleta(){
+  const nome=document.getElementById('hist-atleta-select')?.value;
+  const contentDiv=document.getElementById('hist-content');const emptyDiv=document.getElementById('hist-empty-state');
+  if(!nome){if(contentDiv)contentDiv.style.display='none';if(emptyDiv)emptyDiv.style.display='block';return}
+  if(contentDiv)contentDiv.style.display='flex';if(emptyDiv)emptyDiv.style.display='none';
+  const atl=appData.atletas.find(a=>a.nome===nome);
+  let perfilHtml=`<p style="color:var(--text-muted);font-size:.9rem">Jogador não encontrado no cadastro base.</p>`;
+  if(atl)perfilHtml=`
+    <div class="form-group" style="flex:1"><label>Nome</label><div style="font-size:1.3rem;font-weight:800;color:var(--brand-primary);text-transform:uppercase">${atl.nome}</div></div>
+    <div class="form-group" style="flex:1"><label>Estilo / Categoria</label><div style="font-size:1.1rem;color:#fff">${atl.esporte||''} <span style="color:var(--text-muted);font-size:.9rem">| ${atl.nivel||''}</span></div></div>
+    <div class="form-group" style="flex:2"><label>Histórico Médico</label><div style="font-size:.95rem;color:var(--warning);background:rgba(245,158,11,.1);padding:8px 12px;border-radius:6px;border:1px solid rgba(245,158,11,.2)">${atl.lesoes||'✅ Apto para Alta Intensidade.'}</div></div>`;
+  const pi=document.getElementById('hist-info-perfil');if(pi)pi.innerHTML=perfilHtml;
+  const listIA=document.getElementById('hist-ia-list');if(listIA){
+    listIA.innerHTML='';const analises=(appData.iaAnalises||[]).filter(a=>a.atleta===nome).sort((a,b)=>b.id-a.id);
+    if(!analises.length)listIA.innerHTML='<p style="color:var(--text-muted);font-size:.9rem">Nenhuma leitura IA arquivada.</p>';
+    else analises.forEach(a=>{listIA.innerHTML+=`<div class="historico-badge"><span class="historico-data">📅 ${a.data}</span><div style="font-size:.9rem;margin-top:12px;line-height:1.6"><strong style="color:var(--success)">🟢 Base Sólida:</strong> ${(a.laudo?.positivos||[]).join(', ')}<br><br><strong style="color:var(--danger)">🔴 Gaps Técnicos:</strong> ${(a.laudo?.negativos||[]).join(', ')}<br><br><strong style="color:var(--brand-primary)">📝 Prescrição:</strong> <span style="color:#fff">${a.laudo?.plano||''}</span></div></div>`});
+  }
+  const listTM=document.getElementById('hist-tm-list');if(listTM){
+    listTM.innerHTML='';const tm=(appData.treinosMentais||[]).filter(t=>t.atleta===nome).sort((a,b)=>b.id-a.id);
+    if(!tm.length)listTM.innerHTML='<p style="color:var(--text-muted);font-size:.9rem">Nenhuma sessão mental registrada.</p>';
+    else tm.forEach(t=>{listTM.innerHTML+=`<div class="historico-badge"><span class="historico-data">📅 ${t.data}</span><div style="font-size:.9rem;margin-top:12px;color:#fff;line-height:1.6"><strong style="color:var(--brand-primary)">Foco:</strong> ${t.foco||''}<br><strong style="color:var(--text-muted)">Coach:</strong> ${t.profissional||''}</div></div>`});
+  }
+  const listProt=document.getElementById('hist-prot-list');if(listProt){
+    let html='';appData.protocolos.filter(p=>p.atleta===nome||!p.atleta).forEach(p=>{
+      (p.registros||[]).forEach(r=>{const ac=r.resultados.filter(x=>x==='✓').length,tot=r.resultados.length||1,pct=Math.round(ac/tot*100);const cor=pct>=70?'var(--success)':pct>=40?'var(--warning)':'var(--danger)';
+      html+=`<div class="historico-badge" style="display:flex;justify-content:space-between;align-items:center;border-left:4px solid ${cor}"><div><span class="historico-data" style="color:#fff">📅 ${r.data} | 📋 Drill: <span style="color:var(--brand-primary)">${p.titulo}</span></span><div style="font-size:.9rem;color:var(--text-muted);margin-top:8px">Obs: ${r.obs||'Sessão padrão.'}</div></div><div style="text-align:right;padding-left:16px"><div style="font-size:1.6rem;font-weight:800;color:${cor};text-shadow:0 0 10px ${cor}40">${pct}%</div><div style="font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Acertos</div></div></div>`})});
+    listProt.innerHTML=html||'<p style="color:var(--text-muted);font-size:.9rem">Nenhum histórico de quadra para este jogador.</p>';
+  }
+}
+
+/* ════════════════════════════════════════════════
    INIT (Código 1 — loading + token check)
 ════════════════════════════════════════════════ */
 (async function init(){
