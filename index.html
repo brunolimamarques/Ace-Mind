@@ -378,6 +378,7 @@ function persistData(){
 function getFormattedDate(){const now=new Date();return now.toLocaleDateString('pt-BR')+' às '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
 
 /* ════ PLANS & FEATURES ════ */
+const GEMINI_KEY="AIzaSyC6cnjTsmcWgD-eSlXEkLqttGSwMBeNrKE";
 const PLANS={starter:{level:1,label:"Starter",color:"#60a5fa",emoji:"🎾"},pro:{level:2,label:"Pro",color:"#00e5ff",emoji:"⚡"},elite:{level:3,label:"Elite",color:"#ff3366",emoji:"👑"}};
 const FEATURES_DEFAULT={
   sos:{min:"pro",label:"S.O.S Mental",icon:"🚨"},visaoTunel:{min:"starter",label:"Visão de Túnel",icon:"🎯"},
@@ -977,7 +978,6 @@ async function salvarTreinoMental(uid,dados){
 function modIAAnalise(c){
   phdr(c,"Análise técnica com inteligência artificial","Análise com IA Gemini");
   let atletas=[],aid="",videoFile=null,videoBase64=null,iaResult=null,analise={pontosFOrtes:[],pontosAMelhorar:[],planosDeAcao:[],resumo:""},salv=false;
-  const GEMINI_KEY="AIzaSyC6cnjTsmcWgD-eSlXEkLqttGSwMBeNrKE";
   const hdr=el("div");c.appendChild(hdr);
   FB.getDocs("usuarios").then(uu=>{atletas=(uu||[]).filter(u=>u.cargo==="paciente");hdr.innerHTML=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px"><label class="slbl">Atleta:</label>${atlSelect(atletas,"")}</div>`;hdr.querySelector("#atl-sel").onchange=e=>{aid=e.target.value;drawIA()}}).catch(()=>{});
   const box=el("div");c.appendChild(box);
@@ -986,7 +986,17 @@ function modIAAnalise(c){
     const upArea=box.querySelector("#upload-area"),fileInp=box.querySelector("#video-input");upArea.onclick=()=>fileInp.click();upArea.ondragover=e=>{e.preventDefault();upArea.style.borderColor="var(--y)"};upArea.ondragleave=()=>upArea.style.borderColor="";upArea.ondrop=e=>{e.preventDefault();upArea.style.borderColor="";if(e.dataTransfer.files[0])handleVideoUploadStaff(e.dataTransfer.files[0],box)};fileInp.onchange=()=>{if(fileInp.files[0])handleVideoUploadStaff(fileInp.files[0],box)};
   }
   window._handleVideoUploadStaff=async(file,box)=>{videoFile=file;const prev=box.querySelector("#video-preview");if(prev){prev.src=URL.createObjectURL(file);prev.style.display="block";prev.load()}const runBtn=box.querySelector("#run-ia");if(runBtn)runBtn.style.display="flex";await extractFramesStaff(file,box)};
-  window._runIAStaff=async(box)=>{if(!videoFile)return;const loading=box.querySelector("#ia-loading"),runBtn=box.querySelector("#run-ia"),resultArea=box.querySelector("#ia-result-area");if(loading)loading.style.display="flex";if(runBtn)runBtn.style.display="none";const result=await runRealAIAnalysis(videoBase64,box);if(loading)loading.style.display="none";if(runBtn)runBtn.style.display="none";if(result&&resultArea){analise=result;renderIAResult(resultArea,result);iaResult=result}};
+  window._runIAStaff=async(box)=>{
+    if(!videoFile)return;
+    const loading=box.querySelector("#ia-loading"),runBtn=box.querySelector("#run-ia"),resultArea=box.querySelector("#ia-result-area");
+    if(loading){loading.style.display="flex";}
+    if(runBtn)runBtn.style.display="none";
+    if(resultArea)resultArea.innerHTML="<p style=\"color:var(--muted);font-size:13px\">Consultando Gemini AI...</p>";
+    const result=await runRealAIAnalysis(videoBase64,resultArea);
+    if(loading)loading.style.display="none";
+    if(result&&resultArea){analise=result;renderIAResult(resultArea,result);iaResult=result}
+    else if(resultArea&&!result){resultArea.innerHTML="<p style=\"color:#f87171;font-size:13px\">A IA não retornou resultado. Verifique o console para detalhes.</p>"}
+  };
   box.addEventListener&&box.addEventListener("click",e=>{if(e.target.id==="run-ia")window._runIAStaff&&window._runIAStaff(box)});
   function renderIAResult(area,r){area.innerHTML=`<div class="ai-result-section" style="display:flex;flex-direction:column;gap:16px"><div class="ai-result-card positive"><h4 class="tm-subtitle">✅ Pontos Positivos</h4><ul class="tm-list">${(r.pontosFortes||[]).map(p=>`<li>${p}</li>`).join("")}</ul></div><div class="ai-result-card negative"><h4 class="tm-subtitle">⚠️ Pontos a Melhorar</h4><ul class="tm-list">${(r.pontosAMelhorar||[]).map(p=>`<li>${p}</li>`).join("")}</ul></div><div class="ai-result-card action"><h4 class="tm-subtitle">🎯 Plano de Ação</h4><ul class="tm-list">${(r.planosDeAcao||[]).map(p=>`<li>${p}</li>`).join("")}</ul></div>${r.resumo?`<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.15);border-radius:13px;padding:18px"><h4 class="tm-subtitle">📋 Resumo Técnico</h4><p style="font-size:14px;color:#94a3b8;line-height:1.7">${r.resumo}</p></div>`:""}<div style="display:flex;gap:10px"><button id="salvar-analise-btn" class="btn btn-primary" style="flex:1" ${salv?"disabled":""}>${salv?"Salvando...":"💾 Salvar Análise"}</button><button onclick="gerarPDF('ia-result-area','analise-ia-${aid}')" class="btn btn-outline" style="flex:1">📄 Exportar PDF</button></div></div>`}
   box.addEventListener&&box.addEventListener("click",async e=>{if(e.target.id==="salvar-analise-btn"&&!salv&&iaResult&&aid){salv=true;if(box.querySelector("#salvar-analise-btn"))box.querySelector("#salvar-analise-btn").disabled=true;await salvarAnaliseIA(aid,iaResult);salv=false}});
@@ -998,15 +1008,39 @@ async function extractFramesStaff(file,box){
   return new Promise(res=>{const vid=document.createElement("video");vid.src=URL.createObjectURL(file);vid.onloadeddata=()=>{const canvas=document.createElement("canvas");canvas.width=320;canvas.height=180;const ctx=canvas.getContext("2d");ctx.drawImage(vid,0,0,320,180);videoBase64=canvas.toDataURL("image/jpeg",.8).split(",")[1];res(videoBase64)};vid.onerror=()=>res(null)})
 }
 
-async function runRealAIAnalysis(frameBase64,box){
-  const prompt=`Você é um analista de performance em tênis de alto nível. Analise esta captura de vídeo de treino e forneça feedback técnico detalhado.\n\nRetorne APENAS um JSON válido no seguinte formato (sem markdown, sem explicações extras):\n{\n"pontosFortes": ["ponto 1", "ponto 2", "ponto 3"],\n"pontosAMelhorar": ["melhoria 1", "melhoria 2", "melhoria 3"],\n"planosDeAcao": ["ação 1", "ação 2", "ação 3"],\n"resumo": "Resumo técnico detalhado em 2-3 frases"\n}`;
+async function runRealAIAnalysis(frameBase64,resultArea){
+  const prompt="Você é um analista especializado em psicologia do esporte e performance em tênis de alto nível. Analise esta imagem de treino/jogo e forneça um feedback técnico e psicológico detalhado.\n\nRetorne APENAS um JSON válido neste formato exato (sem markdown, sem texto extra):\n{\"pontosFortes\":[\"ponto 1\",\"ponto 2\",\"ponto 3\"],\"pontosAMelhorar\":[\"melhoria 1\",\"melhoria 2\",\"melhoria 3\"],\"planosDeAcao\":[\"ação 1\",\"ação 2\",\"ação 3\"],\"resumo\":\"Resumo técnico em 2-3 frases\"}";
   try{
-    const body={model:"gemini-1.5-flash",contents:[{parts:[{inline_data:{mime_type:"image/jpeg",data:frameBase64||""}},{text:prompt}]}],generationConfig:{response_mime_type:"application/json"}};
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-    if(!resp.ok){const fallback=await resp.text();console.error("Gemini error:",fallback);return getMockAnalysis()}
-    const data=await resp.json();const text=data.candidates?.[0]?.content?.parts?.[0]?.text||"{}";
-    const clean=text.replace(/```json|```/g,"").trim();return JSON.parse(clean);
-  }catch(e){console.error("IA error:",e);return getMockAnalysis()}
+    // Build request — with image if available, text-only if not
+    const parts=[];
+    if(frameBase64){parts.push({inline_data:{mime_type:"image/jpeg",data:frameBase64}})}
+    parts.push({text:prompt});
+    const body={
+      contents:[{parts}],
+      generationConfig:{temperature:0.7,maxOutputTokens:1024}
+    };
+    const resp=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+GEMINI_KEY,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(body)
+    });
+    const data=await resp.json();
+    if(!resp.ok){
+      const errMsg=data?.error?.message||"Erro desconhecido";
+      console.error("Gemini API error:",errMsg,data);
+      if(resultArea)resultArea.innerHTML="<p style=\"color:#f87171;font-size:13px\">Erro Gemini: "+errMsg+"</p>";
+      return null;
+    }
+    const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
+    // Strip markdown code fences if present
+    const clean=raw.replace(/^```json\s*/,"").replace(/^```\s*/,"").replace(/\s*```$/,"").trim();
+    if(!clean){console.error("Empty Gemini response");return null}
+    return JSON.parse(clean);
+  }catch(e){
+    console.error("runRealAIAnalysis error:",e);
+    if(resultArea)resultArea.innerHTML="<p style=\"color:#f87171;font-size:13px\">Erro ao processar: "+e.message+"</p>";
+    return null;
+  }
 }
 
 function getMockAnalysis(){return{pontosFortes:["Posicionamento dos pés consistente no serviço","Boa rotação de quadril no backhand","Tempo de reação eficiente na rede"],pontosAMelhorar:["Inclinação do tronco no forehand necessita ajuste","Ativação do core insuficiente em movimentos laterais","Follow-through do saque pode ser aprimorado"],planosDeAcao:["Exercícios diários de mobilidade de quadril (10min)","Trabalho específico de equilíbrio e propriocepção","Vídeo-análise comparativa com referências técnicas"],resumo:"Atleta demonstra boa base técnica com potencial de evolução significativa nas áreas identificadas."}}
