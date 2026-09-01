@@ -762,11 +762,43 @@ function modDashboard(c,checkins){
 }
 
 function modPerfil(c,atletas){
-  phdr(c,"Dados técnicos","Perfil Esportivo");let aid="",perf={};
+  phdr(c,"Dados técnicos","Perfil Esportivo");let aid="",perf={},anamnese={};
   const hdr=el("div");hdr.innerHTML=atlSelect(atletas,"");c.appendChild(hdr);const box=el("div");c.appendChild(box);
-  hdr.querySelector("#atl-sel").onchange=async e=>{aid=e.target.value;if(!aid){box.innerHTML="";return}box.innerHTML=`<p style="color:var(--muted);font-size:13px">Carregando...</p>`;const d=await FB.getDoc(`prontuarios/${aid}`).catch(()=>null);perf=d?.perfil||{};drawPerfil()};
-  function drawPerfil(){box.innerHTML=`<div class="glass" style="border-radius:22px;padding:32px;display:grid;grid-template-columns:1fr 1fr;gap:24px"><div style="display:flex;flex-direction:column;gap:18px"><div><label class="slbl" style="display:block;margin-bottom:7px">Categoria</label><input type="text" id="pf-cat" value="${perf.categoria||""}" placeholder="ATP, ITF..." style="font-size:13px"></div><div><label class="slbl" style="display:block;margin-bottom:7px">Ranking</label><input type="text" id="pf-rnk" value="${perf.ranking||""}" placeholder="#124 ATP" style="font-size:13px;font-family:'DM Mono',sans-serif;color:var(--y)"></div><div><label class="slbl" style="display:block;margin-bottom:7px">Mão Dominante</label><select id="pf-mao" style="font-size:12px"><option value="">Selecione...</option>${["Destro","Canhoto","Ambidestro"].map(o=>`<option${perf.mao===o?" selected":""}>${o}</option>`).join("")}</select></div></div><div style="display:flex;flex-direction:column;gap:18px"><div><label class="slbl" style="display:block;margin-bottom:7px">Estilo de Jogo</label><input type="text" id="pf-est" value="${perf.estilo||""}" placeholder="Agressivo de Fundo" style="font-size:13px"></div><div><label class="slbl" style="display:block;margin-bottom:7px">Histórico de Lesões</label><textarea id="pf-les" style="height:100px;font-size:13px;resize:none;display:block">${perf.lesoes||""}</textarea></div></div><div style="grid-column:1/-1;border-top:1px solid rgba(255,255,255,.05);padding-top:20px;display:flex;justify-content:flex-end"><button class="btn-y" id="pf-save" style="width:auto;padding:12px 28px">Salvar Ficha</button></div></div>`;
-    box.querySelector("#pf-cat").oninput=e=>perf.categoria=e.target.value;box.querySelector("#pf-rnk").oninput=e=>perf.ranking=e.target.value;box.querySelector("#pf-est").oninput=e=>perf.estilo=e.target.value;box.querySelector("#pf-mao").onchange=e=>perf.mao=e.target.value;box.querySelector("#pf-les").oninput=e=>perf.lesoes=e.target.value;box.querySelector("#pf-save").onclick=async()=>{await FB.setDoc(`prontuarios/${aid}`,{perfil:perf}).catch(ex=>alert("Erro: "+ex.message));alert("Salvo! ✓")}}
+  hdr.querySelector("#atl-sel").onchange=async e=>{aid=e.target.value;if(!aid){box.innerHTML="";return}box.innerHTML=`<p style="color:var(--muted);font-size:13px">Carregando...</p>`;const d=await FB.getDoc(`prontuarios/${aid}`).catch(()=>null);perf=d?.perfil||{};anamnese=d?.anamnese||{};drawPerfil()};
+  function drawPerfil(){box.innerHTML=`<div class="glass" style="border-radius:22px;padding:32px;display:grid;grid-template-columns:1fr 1fr;gap:24px"><div style="display:flex;flex-direction:column;gap:18px"><div><label class="slbl" style="display:block;margin-bottom:7px">Categoria</label><input type="text" id="pf-cat" value="${perf.categoria||""}" placeholder="ATP, ITF..." style="font-size:13px"></div><div><label class="slbl" style="display:block;margin-bottom:7px">Ranking</label><input type="text" id="pf-rnk" value="${perf.ranking||""}" placeholder="#124 ATP" style="font-size:13px;font-family:'DM Mono',sans-serif;color:var(--y)"></div><div><label class="slbl" style="display:block;margin-bottom:7px">Mão Dominante</label><select id="pf-mao" style="font-size:12px"><option value="">Selecione...</option>${["Destro","Canhoto","Ambidestro"].map(o=>`<option${perf.mao===o?" selected":""}>${o}</option>`).join("")}</select></div></div><div style="display:flex;flex-direction:column;gap:18px"><div><label class="slbl" style="display:block;margin-bottom:7px">Estilo de Jogo</label><input type="text" id="pf-est" value="${perf.estilo||""}" placeholder="Agressivo de Fundo" style="font-size:13px"></div><div><label class="slbl" style="display:block;margin-bottom:7px">Histórico de Lesões</label><textarea id="pf-les" style="height:100px;font-size:13px;resize:none;display:block">${perf.lesoes||""}</textarea></div></div>
+
+<div style="grid-column:1/-1;border-top:1px solid rgba(255,255,255,.05);padding-top:20px;margin-top:4px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+    <div class="section-accent"></div>
+    <span style="font-family:'Exo 2',sans-serif;font-weight:900;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#e2e8f0">🩺 Anamnese</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+    <div><label class="slbl" style="display:block;margin-bottom:7px">Doenças Pré-existentes</label><textarea id="an-doencas" style="height:80px;font-size:13px;resize:none;display:block" placeholder="Ex: Asma, hipertensão, diabetes...">${anamnese.doencas||""}</textarea></div>
+    <div><label class="slbl" style="display:block;margin-bottom:7px">Medicações em Uso</label><textarea id="an-medic" style="height:80px;font-size:13px;resize:none;display:block" placeholder="Nome, dosagem e frequência...">${anamnese.medicacoes||""}</textarea></div>
+    <div><label class="slbl" style="display:block;margin-bottom:7px">Cirurgias Anteriores</label><textarea id="an-cirurgias" style="height:80px;font-size:13px;resize:none;display:block" placeholder="Data e tipo de procedimento...">${anamnese.cirurgias||""}</textarea></div>
+    <div><label class="slbl" style="display:block;margin-bottom:7px">Alergias</label><textarea id="an-alergias" style="height:80px;font-size:13px;resize:none;display:block" placeholder="Medicamentosas, alimentares, respiratórias...">${anamnese.alergias||""}</textarea></div>
+    <div><label class="slbl" style="display:block;margin-bottom:7px">Histórico Familiar Relevante</label><textarea id="an-familiar" style="height:80px;font-size:13px;resize:none;display:block" placeholder="Doenças cardíacas, cronicas na família...">${anamnese.familiar||""}</textarea></div>
+    <div><label class="slbl" style="display:block;margin-bottom:7px">Uso de Suplementos</label><textarea id="an-suplementos" style="height:80px;font-size:13px;resize:none;display:block" placeholder="Whey, creatina, vitaminas...">${anamnese.suplementos||""}</textarea></div>
+    <div><label class="slbl" style="display:block;margin-bottom:7px">Hábitos de Sono</label><input type="text" id="an-sono" value="${anamnese.sono||""}" placeholder="Ex: 7h/noite, dificuldade para dormir..." style="font-size:13px"></div>
+    <div><label class="slbl" style="display:block;margin-bottom:7px">Hábitos Alimentares</label><input type="text" id="an-alimentar" value="${anamnese.alimentar||""}" placeholder="Restrições, rotina alimentar..." style="font-size:13px"></div>
+    <div style="grid-column:1/-1"><label class="slbl" style="display:block;margin-bottom:7px">Histórico Psicológico / Emocional</label><textarea id="an-psico" style="height:90px;font-size:13px;resize:none;display:block" placeholder="Ansiedade, acompanhamento terapêutico, eventos relevantes...">${anamnese.psicologico||""}</textarea></div>
+    <div style="grid-column:1/-1"><label class="slbl" style="display:block;margin-bottom:7px">Observações Gerais</label><textarea id="an-obs" style="height:80px;font-size:13px;resize:none;display:block" placeholder="Outras informações relevantes...">${anamnese.observacoes||""}</textarea></div>
+  </div>
+</div>
+
+<div style="grid-column:1/-1;border-top:1px solid rgba(255,255,255,.05);padding-top:20px;display:flex;justify-content:flex-end"><button class="btn-y" id="pf-save" style="width:auto;padding:12px 28px">Salvar Ficha</button></div></div>`;
+    box.querySelector("#pf-cat").oninput=e=>perf.categoria=e.target.value;box.querySelector("#pf-rnk").oninput=e=>perf.ranking=e.target.value;box.querySelector("#pf-est").oninput=e=>perf.estilo=e.target.value;box.querySelector("#pf-mao").onchange=e=>perf.mao=e.target.value;box.querySelector("#pf-les").oninput=e=>perf.lesoes=e.target.value;
+    box.querySelector("#an-doencas").oninput=e=>anamnese.doencas=e.target.value;
+    box.querySelector("#an-medic").oninput=e=>anamnese.medicacoes=e.target.value;
+    box.querySelector("#an-cirurgias").oninput=e=>anamnese.cirurgias=e.target.value;
+    box.querySelector("#an-alergias").oninput=e=>anamnese.alergias=e.target.value;
+    box.querySelector("#an-familiar").oninput=e=>anamnese.familiar=e.target.value;
+    box.querySelector("#an-suplementos").oninput=e=>anamnese.suplementos=e.target.value;
+    box.querySelector("#an-sono").oninput=e=>anamnese.sono=e.target.value;
+    box.querySelector("#an-alimentar").oninput=e=>anamnese.alimentar=e.target.value;
+    box.querySelector("#an-psico").oninput=e=>anamnese.psicologico=e.target.value;
+    box.querySelector("#an-obs").oninput=e=>anamnese.observacoes=e.target.value;
+    box.querySelector("#pf-save").onclick=async()=>{await FB.setDoc(`prontuarios/${aid}`,{perfil:perf,anamnese}).catch(ex=>alert("Erro: "+ex.message));alert("Salvo! ✓")}}
 }
 
 function modProntuario(c,atletas){
