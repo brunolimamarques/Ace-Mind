@@ -574,10 +574,32 @@ function tabQG(c){
   pc.appendChild(pcStats);c.appendChild(pc);
   const dc=el("div");dc.style.cssText="background:rgba(11,18,32,.6);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px";
   function drawD(){
-    dc.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.05)"><div class="section-accent"></div><span style="font-family:'Exo 2',sans-serif;font-weight:900;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#e2e8f0">Diário de Performance</span></div><div style="display:flex;flex-direction:column;gap:20px">${[["Sono",sono,"sono","#818cf8"],["Foco",foco,"foco","var(--y)"],["Energia",energia,"energia","var(--y)"]].map(([l,v,k,col])=>`<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="slbl">${l}</span><span style="font-family:DM Mono,sans-serif;font-size:22px;font-weight:500;color:${col};line-height:1" id="dv-${k}">${v}</span></div><input type="range" min="1" max="10" id="dr-${k}" style="--val:${Math.round((v-1)/9*100)}%;width:100%"></div>`).join("")}<div style="border-top:1px solid rgba(255,255,255,.05);padding-top:14px;display:flex;flex-direction:column;gap:11px">${[["Foco mental",foco],["Energia vital",energia],["Recuperação",sono]].map(([l,v])=>`<div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span class="slbl">${l}</span><span style="font-family:'DM Mono',sans-serif;font-size:11px;color:var(--y)">${Math.round(v*10)}%</span></div><div class="sbar"><div class="sbar-fill" style="width:${v*10}%"></div></div></div>`).join("")}</div><div><label style="display:flex;align-items:center;gap:6px;font-family:'Exo 2',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fb923c;margin-bottom:7px">🔥 Trunfo do Dia</label><textarea id="d-pf" class="cs" placeholder="Melhor momento mental hoje..." style="height:68px;font-size:13px;resize:none;display:block">${pontoForte}</textarea></div><button class="btn-y" id="d-save" ${salvando?"disabled":""}>${salvando?"Salvando...":"Salvar Diário"}</button></div>`;
+    dc.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.05)"><div class="section-accent"></div><span style="font-family:'Exo 2',sans-serif;font-weight:900;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#e2e8f0">Diário de Performance</span></div><div style="display:flex;flex-direction:column;gap:20px">${[["Sono",sono,"sono","#818cf8"],["Foco",foco,"foco","var(--y)"],["Energia",energia,"energia","var(--y)"]].map(([l,v,k,col])=>`<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="slbl">${l}</span><span style="font-family:DM Mono,sans-serif;font-size:22px;font-weight:500;color:${col};line-height:1" id="dv-${k}">${v}</span></div><input type="range" min="1" max="10" id="dr-${k}" style="--val:${Math.round((v-1)/9*100)}%;width:100%"></div>`).join("")}<div style="border-top:1px solid rgba(255,255,255,.05);padding-top:14px;display:flex;flex-direction:column;gap:11px">${[["Foco mental",foco],["Energia vital",energia],["Recuperação",sono]].map(([l,v])=>`<div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span class="slbl">${l}</span><span style="font-family:'DM Mono',sans-serif;font-size:11px;color:var(--y)">${Math.round(v*10)}%</span></div><div class="sbar"><div class="sbar-fill" style="width:${v*10}%"></div></div></div>`).join("")}</div><div><label style="display:flex;align-items:center;gap:6px;font-family:'Exo 2',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fb923c;margin-bottom:7px">🔥 Trunfo do Dia</label><div style="display:flex;gap:8px;align-items:flex-start"><textarea id="d-pf" class="cs" placeholder="Melhor momento mental hoje... (ou grave por voz)" style="height:68px;font-size:13px;resize:none;display:block;flex:1">${pontoForte}</textarea><div class="mic-btn" id="d-mic" style="width:44px;height:44px;flex-shrink:0">🎤</div></div></div><button class="btn-y" id="d-save" ${salvando?"disabled":""}>${salvando?"Salvando...":"Salvar Diário"}</button></div>`;
     ["sono","foco","energia"].forEach(k=>{const r=dc.querySelector(`#dr-${k}`),lbl=dc.querySelector(`#dv-${k}`);if(!r)return;r.addEventListener("input",e=>{const v=+e.target.value;setRng(r,v);lbl.textContent=v;if(k==="sono"){sono=v;const el2=document.getElementById("pc-sono");if(el2)el2.textContent=v}else if(k==="foco"){foco=v;const el2=document.getElementById("pc-foco");if(el2)el2.textContent=v}else{energia=v;const el2=document.getElementById("pc-energia");if(el2)el2.textContent=v}})});
     setTimeout(()=>animSkillBars(dc),100);
     dc.querySelector("#d-pf").oninput=e=>pontoForte=e.target.value;
+     const micBtn=dc.querySelector("#d-mic");
+    if(micBtn){
+      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(!SR){
+        micBtn.style.display="none";
+      }else{
+        let rec=null,recording=false;
+        micBtn.onclick=()=>{
+          if(recording){if(rec)rec.stop();return}
+          rec=new SR();rec.lang="pt-BR";rec.interimResults=false;rec.continuous=false;
+          rec.onstart=()=>{recording=true;micBtn.classList.add("recording");micBtn.textContent="🔴"};
+          rec.onend=()=>{recording=false;micBtn.classList.remove("recording");micBtn.textContent="🎤"};
+          rec.onerror=()=>{recording=false;micBtn.classList.remove("recording");micBtn.textContent="🎤"};
+          rec.onresult=e=>{
+            const texto=e.results[0][0].transcript;
+            pontoForte=(pontoForte?pontoForte+" ":"")+texto;
+            const ta=dc.querySelector("#d-pf");if(ta)ta.value=pontoForte;
+          };
+          rec.start();
+        };
+      }
+    }
     dc.querySelector("#d-save").onclick=async e=>{ripple(e);if(salvando)return;salvando=true;drawD();try{await FB.addDoc("checkins",{pacienteId:uid,nome:APP.user.nome,email:APP.user.email,foco,energia,sono,pontoForte,data:new Date().toISOString()});alert("Diário salvo!");pontoForte=""}catch(ex){alert("Erro: "+ex.message)}salvando=false;drawD()};
   }
   dc.classList.add('a-up');dc.style.animationDelay='.1s';drawD();c.appendChild(dc);
