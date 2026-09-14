@@ -1271,6 +1271,39 @@ function ParticleCanvas(container,h=110){
     navigator.serviceWorker.register("sw.js").catch(()=>{});
   });
 }
+  (function initInstallBanner(){
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+  const isStandalone=window.navigator.standalone===true||window.matchMedia("(display-mode: standalone)").matches;
+  if(isStandalone)return; // já instalado, não mostra nada
+  if(localStorage.getItem("am_install_dismissed"))return; // usuário já dispensou
+ 
+  let deferredPrompt=null;
+  window.addEventListener("beforeinstallprompt",(e)=>{
+    e.preventDefault();
+    deferredPrompt=e;
+    showInstallBanner("android");
+  });
+ 
+  if(isIOS)showInstallBanner("ios");
+ 
+  function showInstallBanner(platform){
+    if(document.getElementById("am-install-banner"))return;
+    const banner=document.createElement("div");
+    banner.id="am-install-banner";
+    banner.style.cssText="position:fixed;left:16px;right:16px;bottom:16px;z-index:500;background:rgba(10,16,30,.97);backdrop-filter:blur(20px);border:1px solid rgba(0,229,255,.25);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);animation:fadeUp .4s cubic-bezier(.22,1,.36,1) both;max-width:420px;margin:0 auto";
+    banner.innerHTML=platform==="ios"
+      ?`<span style="font-size:24px;flex-shrink:0">📲</span><div style="flex:1;font-size:12.5px;color:#e2e8f0;line-height:1.55"><strong style="color:var(--y);font-family:'Exo 2',sans-serif">Instale o AceMind</strong><br>Toque em <strong>Compartilhar</strong> (o ícone com a seta ⬆️ na barra do Safari) e depois em <strong>"Adicionar à Tela de Início"</strong>.</div><button id="am-inst-close" style="background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px;line-height:1">✕</button>`
+      :`<span style="font-size:24px;flex-shrink:0">📲</span><div style="flex:1;font-size:12.5px;color:#e2e8f0">Instale o <strong style="color:var(--y);font-family:'Exo 2',sans-serif">AceMind</strong> na tela inicial pra acesso rápido.</div><button id="am-inst-go" style="background:var(--y);color:#050a0f;border:none;border-radius:9px;padding:8px 14px;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;flex-shrink:0;font-family:'Exo 2',sans-serif">Instalar</button><button id="am-inst-close" style="background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px;line-height:1">✕</button>`;
+    document.body.appendChild(banner);
+    banner.querySelector("#am-inst-close").onclick=()=>{banner.remove();localStorage.setItem("am_install_dismissed","1")};
+    const goBtn=banner.querySelector("#am-inst-go");
+    if(goBtn)goBtn.onclick=async()=>{
+      banner.remove();
+      if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null}
+    };
+  }
+})();
+  
 (async function init(){
   FB.token=localStorage.getItem("am_tok");FB.uid=localStorage.getItem("am_uid");
   if(FB.token&&FB.uid){
