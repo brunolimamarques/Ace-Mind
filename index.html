@@ -579,23 +579,28 @@ function tabQG(c){
     ["sono","foco","energia"].forEach(k=>{const r=dc.querySelector(`#dr-${k}`),lbl=dc.querySelector(`#dv-${k}`);if(!r)return;r.addEventListener("input",e=>{const v=+e.target.value;setRng(r,v);lbl.textContent=v;if(k==="sono"){sono=v;const el2=document.getElementById("pc-sono");if(el2)el2.textContent=v}else if(k==="foco"){foco=v;const el2=document.getElementById("pc-foco");if(el2)el2.textContent=v}else{energia=v;const el2=document.getElementById("pc-energia");if(el2)el2.textContent=v}})});
     setTimeout(()=>animSkillBars(dc),100);
     dc.querySelector("#d-pf").oninput=e=>pontoForte=e.target.value;
-     const micBtn=dc.querySelector("#d-mic");
+    const micBtn=dc.querySelector("#d-mic");
     if(micBtn){
       const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
       if(!SR){
         micBtn.style.display="none";
       }else{
-        let rec=null,recording=false;
+        let rec=null,recording=false,baseTexto=pontoForte;
         micBtn.onclick=()=>{
           if(recording){if(rec)rec.stop();return}
-          rec=new SR();rec.lang="pt-BR";rec.interimResults=false;rec.continuous=false;
+          baseTexto=pontoForte;
+          rec=new SR();rec.lang="pt-BR";rec.interimResults=true;rec.continuous=true;
           rec.onstart=()=>{recording=true;micBtn.classList.add("recording");micBtn.textContent="🔴"};
           rec.onend=()=>{recording=false;micBtn.classList.remove("recording");micBtn.textContent="🎤"};
-          rec.onerror=(ev)=>{recording=false;micBtn.classList.remove("recording");micBtn.textContent="🎤";alert("Erro no microfone: "+ev.error)};
+          rec.onerror=()=>{recording=false;micBtn.classList.remove("recording");micBtn.textContent="🎤"};
           rec.onresult=e=>{
-            const texto=e.results[0][0].transcript;
-            pontoForte=(pontoForte?pontoForte+" ":"")+texto;
-            const ta=dc.querySelector("#d-pf");if(ta)ta.value=pontoForte;
+            let interim="",final="";
+            for(let i=e.resultIndex;i<e.results.length;i++){
+              if(e.results[i].isFinal)final+=e.results[i][0].transcript;
+              else interim+=e.results[i][0].transcript;
+            }
+            if(final){baseTexto=(baseTexto?baseTexto+" ":"")+final;pontoForte=baseTexto}
+            const ta=dc.querySelector("#d-pf");if(ta)ta.value=baseTexto+(interim?" "+interim:"");
           };
           rec.start();
         };
