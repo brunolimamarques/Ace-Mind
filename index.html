@@ -591,7 +591,7 @@ function tabQG(c){
           rec=new SR();rec.lang="pt-BR";rec.interimResults=false;rec.continuous=false;
           rec.onstart=()=>{recording=true;micBtn.classList.add("recording");micBtn.textContent="🔴"};
           rec.onend=()=>{recording=false;micBtn.classList.remove("recording");micBtn.textContent="🎤"};
-          rec.onerror=()=>{recording=false;micBtn.classList.remove("recording");micBtn.textContent="🎤"};
+          rec.onerror=(ev)=>{recording=false;micBtn.classList.remove("recording");micBtn.textContent="🎤";alert("Erro no microfone: "+ev.error)};
           rec.onresult=e=>{
             const texto=e.results[0][0].transcript;
             pontoForte=(pontoForte?pontoForte+" ":"")+texto;
