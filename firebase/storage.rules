@@ -1,0 +1,10 @@
+rules_version = '2';
+// O AceMind não guarda arquivos no Storage (os vídeos ficam no aparelho; só quadros vão para a análise).
+// Tudo fechado por padrão.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

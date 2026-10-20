@@ -1,0 +1,16 @@
+{
+  "indexes": [
+    {"collectionGroup": "checkins", "queryScope": "COLLECTION", "fields": [{"fieldPath": "pacienteId", "order": "ASCENDING"}, {"fieldPath": "data", "order": "DESCENDING"}]},
+    {"collectionGroup": "agenda", "queryScope": "COLLECTION", "fields": [{"fieldPath": "atletaId", "order": "ASCENDING"}, {"fieldPath": "dataHora", "order": "DESCENDING"}]},
+    {"collectionGroup": "solicitacoes_lgpd", "queryScope": "COLLECTION", "fields": [{"fieldPath": "uid", "order": "ASCENDING"}, {"fieldPath": "criadoEm", "order": "DESCENDING"}]},
+    {"collectionGroup": "treinos_mentais", "queryScope": "COLLECTION", "fields": [{"fieldPath": "atletaId", "order": "ASCENDING"}, {"fieldPath": "dataRegistro", "order": "DESCENDING"}]}
+  ],
+  "fieldOverrides": [
+    {"collectionGroup": "notas_geral", "fieldPath": "criadoEm", "indexes": [{"order": "ASCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION_GROUP"}]},
+    {"collectionGroup": "notas_treino", "fieldPath": "criadoEm", "indexes": [{"order": "ASCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION_GROUP"}]},
+    {"collectionGroup": "notas_fisio", "fieldPath": "criadoEm", "indexes": [{"order": "ASCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION_GROUP"}]},
+    {"collectionGroup": "notas_medica", "fieldPath": "criadoEm", "indexes": [{"order": "ASCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION_GROUP"}]},
+    {"collectionGroup": "notas_psico", "fieldPath": "criadoEm", "indexes": [{"order": "ASCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION"}, {"order": "DESCENDING", "queryScope": "COLLECTION_GROUP"}]},
+    {"collectionGroup": "limites", "fieldPath": "expiraEm", "ttl": true, "indexes": []}
+  ]
+}

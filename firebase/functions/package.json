@@ -1,0 +1,17 @@
+{
+  "name": "acemind-funcoes",
+  "version": "3.0.0",
+  "description": "AceMind — funções de servidor: S.O.S, notificações, lembretes, segurança e IA",
+  "main": "index.js",
+  "private": true,
+  "engines": { "node": "22" },
+  "scripts": {
+    "deploy": "firebase deploy --only functions:acemind",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.5.0",
+    "firebase-functions": "^7.4.0",
+    "web-push": "^3.6.7"
+  }
+}

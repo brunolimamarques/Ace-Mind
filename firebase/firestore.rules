@@ -1,0 +1,227 @@
+rules_version = '2';
+
+// AceMind v3 — regras de segurança do banco (Cloud Firestore)
+// Princípios: ninguém muda o próprio cargo ou plano; cada profissão lê só a sua área do prontuário;
+// registros clínicos não são apagados; auditoria e logs só podem ser criados (nunca alterados);
+// atletas veem só os próprios dados. Publique com: firebase deploy --only firestore:rules
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ───────── quem está pedindo ─────────
+    function logado() { return request.auth != null; }
+    function caminhoPerfil(uid) { return /databases/$(database)/documents/usuarios/$(uid); }
+    function eu() { return get(caminhoPerfil(request.auth.uid)).data; }
+    function temPerfil() { return logado() && exists(caminhoPerfil(request.auth.uid)); }
+    function ativo() {
+      return temPerfil()
+        && eu().get('desativado', false) != true
+        && (eu().get('revogadoEm', 0) == 0 || request.auth.token.auth_time > eu().get('revogadoEm', 0));
+    }
+    function cargo() { return eu().get('cargo', 'paciente'); }
+    function equipe() { return ativo() && cargo() in ['treinador', 'fisioterapeuta', 'medico', 'psicologo', 'assistente', 'admin']; }
+    function admin() { return ativo() && (cargo() == 'admin' || eu().get('admin', false) == true); }
+    function psico() { return ativo() && cargo() in ['psicologo', 'assistente']; }
+    function clinico() { return ativo() && cargo() in ['fisioterapeuta', 'medico', 'psicologo', 'assistente']; }
+    function prescreve() { return (ativo() && cargo() in ['treinador', 'fisioterapeuta', 'medico']) || admin(); }
+    function eh(uid) { return ativo() && request.auth.uid == uid; }
+    function podeArea(a) {
+      return ativo() && (
+        (a == 'geral' && equipe()) ||
+        (a == 'treino' && cargo() in ['treinador', 'fisioterapeuta', 'medico', 'admin']) ||
+        (a in ['fisio', 'medica'] && cargo() in ['fisioterapeuta', 'medico']) ||
+        (a == 'psico' && cargo() in ['psicologo', 'assistente'])
+      );
+    }
+
+    // ───────── validações ─────────
+    function txt(v, max) { return v is string && v.size() <= max; }
+    function nota(v) { return (v is int || v is float) && v >= 0 && v <= 10; }
+    function novo() { return request.resource.data; }
+    function mudou() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    function soMuda(campos) { return mudou().hasOnly(campos); }
+    function cadastroAberto() {
+      return !exists(/databases/$(database)/documents/config/publico)
+        || get(/databases/$(database)/documents/config/publico).data.get('cadastroAberto', true) != false;
+    }
+
+    // ───────── usuários ─────────
+    function novoAtleta() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['nome', 'email', 'cargo', 'plano', 'esporte', 'nascimento', 'dataCadastro', 'convidadoPor', 'convidadoPorNome'])
+        && d.cargo == 'paciente' && d.plano == 'starter'
+        && txt(d.nome, 80) && txt(d.email, 120)
+        && txt(d.get('esporte', ''), 60) && txt(d.get('nascimento', ''), 10);
+    }
+    function usuarioValido() {
+      let d = request.resource.data;
+      return d.cargo in ['paciente', 'treinador', 'fisioterapeuta', 'medico', 'psicologo', 'assistente', 'admin']
+        && d.get('plano', 'starter') in ['starter', 'pro', 'elite']
+        && txt(d.get('nome', ''), 80);
+    }
+    function naoTiraProprioAdmin(uid) {
+      return uid != request.auth.uid || request.resource.data.cargo == 'admin' || request.resource.data.get('admin', false) == true;
+    }
+    match /usuarios/{uid} {
+      allow get: if (logado() && request.auth.uid == uid) || equipe();
+      allow list: if equipe();
+      allow create: if (logado() && request.auth.uid == uid && novoAtleta() && cadastroAberto())
+                    || (equipe() && novoAtleta())
+                    || (admin() && usuarioValido());
+      allow update: if (logado() && request.auth.uid == uid && resource.data.get('desativado', false) != true
+                         && soMuda(['nome', 'esporte', 'nascimento', 'consentimento', 'telefone', 'contatoEmergencia', 'responsavel', 'ultimoAcesso'])
+                         && txt(novo().get('nome', ''), 80) && txt(novo().get('esporte', ''), 60) && txt(novo().get('telefone', ''), 30))
+                    || (admin() && usuarioValido() && naoTiraProprioAdmin(uid))
+                    || (equipe() && resource.data.cargo == 'paciente' && soMuda(['esporte']) && txt(novo().esporte, 60));
+      allow delete: if false;
+    }
+
+    // ───────── prontuário ─────────
+    function camposProntuario(k) { return k.hasOnly(['perfil', 'anamnese', 'diagnostico', 'rotinas', 'relatorio', 'criadoEm', 'atualizadoEm']); }
+    function notaNova(a) {
+      let d = request.resource.data;
+      return podeArea(a) && d.area == a && d.autorId == request.auth.uid && d.autorCargo == cargo()
+        && txt(d.texto, 20000) && d.criadoTs == request.time
+        && d.keys().hasOnly(['area', 'texto', 'soap', 'autorId', 'autorNome', 'autorCargo', 'criadoEm', 'criadoTs', 'adendoDe']);
+    }
+    function notaEdicao(a) {
+      return podeArea(a) && resource.data.autorId == request.auth.uid && resource.data.get('anulada', false) != true && (
+        (soMuda(['texto', 'editadoEm']) && txt(novo().texto, 20000) && request.time < resource.data.criadoTs + duration.value(24, 'h'))
+        || (soMuda(['anulada', 'motivoAnulacao', 'anuladaEm']) && novo().anulada == true && txt(novo().motivoAnulacao, 500))
+      );
+    }
+    match /prontuarios/{uid} {
+      allow get: if eh(uid) || equipe();
+      allow list: if equipe();
+      allow create: if equipe() && camposProntuario(novo().keys());
+      allow update: if equipe() && camposProntuario(mudou())
+                    && (!mudou().hasAny(['anamnese']) || clinico() || admin())
+                    && (!mudou().hasAny(['diagnostico']) || psico() || admin());
+      allow delete: if false;
+
+      match /partidas/{id} {
+        allow read: if eh(uid) || equipe();
+        allow create: if (eh(uid) || equipe()) && txt(novo().torneio, 120) && txt(novo().get('relato', ''), 2000);
+        allow update, delete: if equipe();
+      }
+      // registros antigos, sem área: ficam com a psicologia, somente leitura
+      match /soap/{id} { allow read: if psico(); }
+      match /notas_geral/{id}  { allow read: if podeArea('geral');  allow create: if notaNova('geral');  allow update: if notaEdicao('geral'); }
+      match /notas_treino/{id} { allow read: if podeArea('treino'); allow create: if notaNova('treino'); allow update: if notaEdicao('treino'); }
+      match /notas_fisio/{id}  { allow read: if podeArea('fisio');  allow create: if notaNova('fisio');  allow update: if notaEdicao('fisio'); }
+      match /notas_medica/{id} { allow read: if podeArea('medica'); allow create: if notaNova('medica'); allow update: if notaEdicao('medica'); }
+      match /notas_psico/{id}  { allow read: if podeArea('psico');  allow create: if notaNova('psico');  allow update: if notaEdicao('psico'); }
+      match /privado/{doc} {
+        allow read, update: if doc == 'psico' && psico();
+        allow create: if doc == 'psico' && (psico() || admin());
+      }
+    }
+    // linha do tempo da área (consulta em todos os atletas)
+    match /{caminho=**}/notas_geral/{id}  { allow read: if podeArea('geral'); }
+    match /{caminho=**}/notas_treino/{id} { allow read: if podeArea('treino'); }
+    match /{caminho=**}/notas_fisio/{id}  { allow read: if podeArea('fisio'); }
+    match /{caminho=**}/notas_medica/{id} { allow read: if podeArea('medica'); }
+    match /{caminho=**}/notas_psico/{id}  { allow read: if podeArea('psico'); }
+
+    // ───────── dados do atleta ─────────
+    match /atletas/{uid} {
+      match /eventos/{id} {
+        allow read: if eh(uid) || equipe();
+        allow create: if (equipe() || (eh(uid) && novo().criadoPor == 'atleta')) && txt(novo().titulo, 80) && txt(novo().get('notas', ''), 500);
+        allow update: if (equipe() || (eh(uid) && resource.data.get('criadoPor', 'atleta') == 'atleta' && novo().get('criadoPor', 'atleta') == 'atleta'))
+                      && txt(novo().titulo, 80) && txt(novo().get('notas', ''), 500);
+        allow delete: if equipe() || (eh(uid) && resource.data.get('criadoPor', 'atleta') == 'atleta');
+      }
+      match /planos/{doc} { allow read: if eh(uid) || equipe(); allow write: if equipe(); }
+      match /treinos/{id} {
+        allow read: if eh(uid) || equipe();
+        allow create: if (prescreve() && txt(novo().titulo, 80))
+                      || (eh(uid) && novo().origem == 'atleta' && novo().autorId == request.auth.uid && novo().status == 'realizado' && txt(novo().titulo, 80));
+        allow update: if prescreve()
+                      || (eh(uid) && soMuda(['status', 'realizado', 'motivoNao']) && novo().status in ['realizado', 'nao_realizado']);
+        allow delete: if prescreve() || (eh(uid) && resource.data.origem == 'atleta');
+      }
+      match /lesoes/{id} {
+        allow read: if eh(uid) || equipe();
+        allow create, update: if prescreve() && txt(novo().local, 40) && txt(novo().get('descricao', ''), 3000);
+      }
+      match /avaliacoes/{id} {
+        allow read: if eh(uid) || equipe();
+        allow create, update: if prescreve();
+      }
+      match /feedback_ia/{id} { allow read: if eh(uid) || equipe(); }
+    }
+
+    // ───────── coleções gerais ─────────
+    match /checkins/{id} {
+      allow read: if equipe() || (ativo() && resource.data.pacienteId == request.auth.uid);
+      allow create: if ativo() && novo().pacienteId == request.auth.uid
+        && novo().keys().hasOnly(['pacienteId', 'nome', 'email', 'foco', 'energia', 'sono', 'humor', 'estresse', 'dor', 'dorLocal', 'pontoForte', 'data'])
+        && nota(novo().foco) && nota(novo().energia) && nota(novo().get('sono', 0)) && nota(novo().get('humor', 0))
+        && nota(novo().get('estresse', 0)) && nota(novo().get('dor', 0))
+        && txt(novo().get('pontoForte', ''), 1000) && txt(novo().get('dorLocal', ''), 40) && txt(novo().data, 40);
+    }
+    match /sos_alertas/{id} {
+      allow read: if equipe() || (ativo() && resource.data.pacienteId == request.auth.uid);
+      allow create: if ativo() && novo().pacienteId == request.auth.uid && novo().status == 'pendente'
+        && novo().keys().hasOnly(['pacienteId', 'nome', 'email', 'telefone', 'esporte', 'data', 'status']) && txt(novo().nome, 80);
+      allow update: if (equipe()
+                         && soMuda(['status', 'respondidoPorId', 'respondidoPorNome', 'respondidoPorCargo', 'respondidoEm', 'resolvidoPorId', 'resolvidoPorNome', 'resolvidoEm', 'desfecho'])
+                         && novo().status in ['pendente', 'em_atendimento', 'resolvido'] && txt(novo().get('desfecho', ''), 500))
+                    || (ativo() && resource.data.pacienteId == request.auth.uid && resource.data.status == 'pendente'
+                         && soMuda(['mensagem', 'status']) && novo().status in ['pendente', 'cancelado'] && txt(novo().get('mensagem', ''), 500));
+    }
+    match /agenda/{id} {
+      allow read: if equipe() || (ativo() && resource.data.atletaId == request.auth.uid);
+      allow create, update: if equipe() && txt(novo().atletaId, 128) && txt(novo().dataHora, 20)
+        && txt(novo().get('link', ''), 300) && (novo().get('link', '') == '' || novo().get('link', '').matches('https://[^ ]+'))
+        && txt(novo().get('local', ''), 120) && txt(novo().get('titulo', ''), 80);
+      allow delete: if equipe();
+    }
+    match /torneios/{id}        { allow read: if ativo(); allow write: if equipe(); }
+    match /protocolos/{id}      { allow read, write: if equipe(); }
+    match /execucoes/{id}       { allow read, create: if equipe(); }
+    match /treinos_mentais/{id} {
+      allow read: if equipe() || (ativo() && resource.data.atletaId == request.auth.uid);
+      allow write: if equipe();
+    }
+    match /ia_analises/{id} {
+      allow read: if equipe() || (ativo() && resource.data.atletaId == request.auth.uid);
+      allow create: if equipe()
+                    || (ativo() && novo().atletaId == request.auth.uid && novo().origem == 'atleta'
+                        && eu().get('consentimento', {}).get('video', false) == true);
+      allow delete: if admin();
+    }
+
+    // ───────── configuração ─────────
+    match /config/publico    { allow get: if true;      allow write: if admin(); }
+    match /config/permissoes { allow read: if logado(); allow write: if admin(); }
+    match /config/seguranca  { allow read: if equipe(); allow write: if admin(); }
+
+    // ───────── registros que só podem ser criados ─────────
+    match /auditoria/{id} {
+      allow create: if ativo() && novo().porId == request.auth.uid && txt(novo().acao, 60) && txt(novo().get('detalhe', ''), 300)
+        && novo().keys().hasOnly(['acao', 'alvoId', 'alvoNome', 'detalhe', 'porId', 'porNome', 'porCargo', 'data']);
+      allow read: if admin();
+    }
+    match /logs_erros/{id} {
+      allow create: if logado() && novo().uid == request.auth.uid && txt(novo().msg, 300) && txt(novo().get('stack', ''), 900);
+      allow read: if admin();
+    }
+    match /consentimentos/{id} {
+      allow create: if logado() && novo().uid == request.auth.uid && txt(novo().versao, 20);
+      allow read: if (logado() && resource.data.uid == request.auth.uid) || admin();
+    }
+    match /solicitacoes_lgpd/{id} {
+      allow create: if ativo() && novo().uid == request.auth.uid && novo().status == 'aberta' && txt(novo().get('detalhe', ''), 1000);
+      allow read: if (ativo() && resource.data.uid == request.auth.uid) || admin();
+      allow update: if admin();
+    }
+
+    // ───────── notificações (cada pessoa cuida dos próprios aparelhos) ─────────
+    match /push_subs/{uid} {
+      allow read, write: if logado() && request.auth.uid == uid;
+      match /dispositivos/{d} { allow read, write: if logado() && request.auth.uid == uid; }
+    }
+  }
+}
