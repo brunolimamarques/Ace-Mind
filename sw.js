@@ -1,51 +1,84 @@
-// sw.js — service worker mínimo do AceMind.
-// Objetivo: satisfazer o requisito de "instalável" dos navegadores
-// e dar um cache básico do app shell para abrir mais rápido.
-// Não faz cache agressivo de dados (Firestore/Gemini) — só do HTML.
+/* AceMind — service worker (versão 3.0 · 16/10/2026)
+   Páginas e código do app: sempre busca a versão mais nova na internet; a cópia salva só é usada sem conexão.
+   Fontes, bibliotecas e ícones: usa a cópia salva (os nomes dos arquivos mudam a cada versão).
+   Nunca guarda respostas do banco de dados (Firebase): dados pessoais não ficam no cache.
+   Ao publicar uma versão nova do site, troque o nome do CACHE abaixo. */
+const CACHE = "acemind-3.0.0-2026-10-16";
+const ESSENCIAIS = ["./", "index.html", "app.js", "app.css", "fonts/fonts.css", "manifest.json", "icon-192.png"];
 
-const CACHE_NAME = "acemind-shell-v1";
-const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png"
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
-  self.skipWaiting();
+self.addEventListener("install", event => {
+  event.waitUntil(caches.open(CACHE).then(c => Promise.all(ESSENCIAIS.map(u => c.add(new Request(u, { cache: "reload" })).catch(() => {})))).then(() => self.skipWaiting()));
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-self.addEventListener("fetch", (event) => {
-  // Só intercepta GET do mesmo domínio (nunca as chamadas ao Firebase/Cloud Function)
-  if (event.request.method !== "GET") return;
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
+async function guardar(req, res) {
+  if (res && res.ok && res.type === "basic") {
+    const copia = res.clone();
+    caches.open(CACHE).then(c => c.put(req, copia)).catch(() => {});
+  }
+  return res;
+}
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((resp) => {
-          if (resp && resp.status === 200) {
-            const clone = resp.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return resp;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
-  );
+self.addEventListener("fetch", event => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return; // Firebase e outros serviços: direto na rede, sem cache
+
+  const codigo = req.mode === "navigate" || req.destination === "document" || /\/(app\.js|app\.css|sw\.js|manifest\.json)$/.test(url.pathname) || url.pathname.endsWith("/");
+  if (codigo) {
+    event.respondWith(
+      fetch(req, { cache: "no-cache" })
+        .then(res => guardar(req, res))
+        .catch(async () => (await caches.match(req, { ignoreSearch: true })) || (req.mode === "navigate" ? (await caches.match("./")) || (await caches.match("index.html")) : null) || Response.error())
+    );
+    return;
+  }
+
+  event.respondWith((async () => {
+    const salvo = await caches.match(req);
+    if (salvo) return salvo;
+    try { return await guardar(req, await fetch(req)); } catch (e) { return Response.error(); }
+  })());
+});
+
+/* ── notificações push (S.O.S, lembretes, alertas da equipe) ── */
+self.addEventListener("push", event => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (e) { d = { corpo: event.data ? event.data.text() : "" }; }
+  const titulo = String(d.titulo || "AceMind").slice(0, 80);
+  const op = {
+    body: String(d.corpo || "").slice(0, 240),
+    tag: String(d.tag || "acemind"),
+    renotify: true,
+    requireInteraction: d.tipo === "sos",
+    icon: "icon-192.png",
+    badge: "icon-192.png",
+    vibrate: d.tipo === "sos" ? [300, 120, 300, 120, 300] : [120],
+    data: { destino: String(d.destino || ""), url: "./" }
+  };
+  event.waitUntil(self.registration.showNotification(titulo, op));
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const destino = (event.notification.data && event.notification.data.destino) || "";
+  event.waitUntil((async () => {
+    const lista = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of lista) {
+      if (new URL(c.url).origin === self.location.origin) {
+        await c.focus();
+        c.postMessage({ tipo: "abrir", destino });
+        return;
+      }
+    }
+    await self.clients.openWindow("./" + (destino ? "#" + destino : ""));
+  })());
 });
