@@ -58,6 +58,27 @@ Pode rodar de novo quando quiser: o que já está pronto é mantido. A função 
 | `firebase/instalar.sh`, `firebase/tutorial.md` | Instalador do servidor e o passo a passo do Cloud Shell |
 | `firebase.json`, `.firebaserc` | Configuração do Firebase (projeto `ace-mind-c13a1`) |
 | `frontend/`, `backend/` | Protótipo antigo: não é usado pelo app |
+| `breu/` | Mascote Breu na visão do atleta (veja abaixo) |
+
+---
+
+## Mascote Breu
+
+O Breu acompanha o atleta no app. Atletas **até 14 anos** veem o **Breu Sub-15** (sentado); a partir de **15 anos**, o **Breu humanoide** (de pé, com a camisa de treino). A idade vem da data de nascimento do cadastro. A equipe não vê o Breu.
+
+- **No QG Mental**, um card no topo com a saudação do dia e um atalho para o check-in ou para respirar junto.
+- **Nas outras telas**, ele fica no canto inferior direito e reage ao que a pessoa faz: muda de expressão enquanto ela mexe nas barras do check-in, comemora check-in salvo, treino e vitória, apoia depois de derrota ou humor baixo, respira junto no Zone Reset, fica quieto na Visão de Túnel, segue o dedo ou o mouse com o olhar, boceja e cochila se a pessoa fica parada.
+- **Tocar** nele: uma dica. **Segurar** (ou botão direito): ele fica em silêncio até ser tocado de novo. A escolha fica salva no aparelho.
+- **Segurança:** ele nunca fica na frente de um botão ou campo (só espia) e não abre recado automático sobre o S.O.S nem sobre os telefones de emergência. Respeita o "reduzir movimento" do celular.
+- **Privacidade:** nada é enviado ao servidor. As preferências (silêncio, apresentação já vista) ficam só no aparelho.
+
+| Arquivo | O que é |
+|---|---|
+| `breu/breu.js` | Comportamento e falas (as falas ficam no começo do arquivo, separadas por Sub-15 e 15+) |
+| `breu/breu.css` | Visual, expressões e animações |
+| `breu/breu-sub15.svg`, `breu/breu-15.svg` | Arte do canvas "Mascote Ace Mind", separada em partes (olhos, orelhas, faixa, cauda) para animar |
+
+O Breu funciona separado do `app.js`: não depende do build. Ele entra pelo `index.html` com duas linhas (`breu/breu.css` e `breu/breu.js`). Ao mudar algum arquivo do Breu, troque o `?v=` dessas duas linhas e a constante `VERSAO` no começo do `breu.js`.
 
 ---
 

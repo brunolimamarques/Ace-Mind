@@ -1,9 +1,9 @@
-/* AceMind — service worker (versão 3.0 · 16/10/2026)
+/* AceMind — service worker (versão 3.0.1 · 22/10/2026 · mascote Breu)
    Páginas e código do app: sempre busca a versão mais nova na internet; a cópia salva só é usada sem conexão.
    Fontes, bibliotecas e ícones: usa a cópia salva (os nomes dos arquivos mudam a cada versão).
    Nunca guarda respostas do banco de dados (Firebase): dados pessoais não ficam no cache.
    Ao publicar uma versão nova do site, troque o nome do CACHE abaixo. */
-const CACHE = "acemind-3.0.0-2026-10-16";
+const CACHE = "acemind-3.0.1-2026-10-22";
 const ESSENCIAIS = ["./", "index.html", "app.js", "app.css", "fonts/fonts.css", "manifest.json", "icon-192.png"];
 
 self.addEventListener("install", event => {
@@ -32,7 +32,7 @@ self.addEventListener("fetch", event => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // Firebase e outros serviços: direto na rede, sem cache
 
-  const codigo = req.mode === "navigate" || req.destination === "document" || /\/(app\.js|app\.css|sw\.js|manifest\.json)$/.test(url.pathname) || url.pathname.endsWith("/");
+  const codigo = req.mode === "navigate" || req.destination === "document" || /\/(app\.js|app\.css|sw\.js|manifest\.json|breu\.js|breu\.css|breu-sub15\.svg|breu-15\.svg)$/.test(url.pathname) || url.pathname.endsWith("/");
   if (codigo) {
     event.respondWith(
       fetch(req, { cache: "no-cache" })
