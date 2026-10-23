@@ -58,23 +58,34 @@ Pode rodar de novo quando quiser: o que já está pronto é mantido. A função 
 | `firebase/instalar.sh`, `firebase/tutorial.md` | Instalador do servidor e o passo a passo do Cloud Shell |
 | `firebase.json`, `.firebaserc` | Configuração do Firebase (projeto `ace-mind-c13a1`) |
 | `frontend/`, `backend/` | Protótipo antigo: não é usado pelo app |
-| `breu/` | Mascote Breu na visão do atleta (veja abaixo) |
+| `breu/` | Mascote Breu, no app do atleta e no painel da equipe (veja abaixo) |
 
 ---
 
 ## Mascote Breu
 
-O Breu acompanha o atleta no app. Atletas **até 14 anos** veem o **Breu Sub-15** (sentado); a partir de **15 anos**, o **Breu humanoide** (de pé, com a camisa de treino). A idade vem da data de nascimento do cadastro. A equipe não vê o Breu.
+O Breu acompanha o atleta no app. Atletas **até 14 anos** veem o **Breu Sub-15** (sentado); a partir de **15 anos**, o **Breu humanoide** (de pé, com a camisa de treino). A idade vem da data de nascimento do cadastro.
 
-- **No QG Mental**, um card no topo com a saudação do dia e um atalho para o check-in ou para respirar junto.
-- **Nas outras telas**, ele fica no canto inferior direito e reage ao que a pessoa faz: muda de expressão enquanto ela mexe nas barras do check-in, comemora check-in salvo, treino e vitória, apoia depois de derrota ou humor baixo, respira junto no Zone Reset, fica quieto na Visão de Túnel, segue o dedo ou o mouse com o olhar, boceja e cochila se a pessoa fica parada.
-- **Tocar** nele: uma dica. **Segurar** (ou botão direito): ele fica em silêncio até ser tocado de novo. A escolha fica salva no aparelho.
-- **Segurança:** ele nunca fica na frente de um botão ou campo (só espia) e não abre recado automático sobre o S.O.S nem sobre os telefones de emergência. Respeita o "reduzir movimento" do celular.
-- **Privacidade:** nada é enviado ao servidor. As preferências (silêncio, apresentação já vista) ficam só no aparelho.
+### No app do atleta
+- **No QG Mental**, um card no topo com a saudação e o recado mais importante do momento: novidade da equipe, check-in pendente, treino do dia ou "respirar comigo". Mostra também a **sequência de check-ins** (a mesma que a equipe vê em Atletas & Convites).
+- **Nas outras telas**, ele fica no canto inferior direito e reage ao que a pessoa faz: muda de expressão enquanto ela mexe nas barras do check-in, comemora check-in salvo, treino, vitória e marcos de sequência (3, 7, 14, 21, 30 dias...), apoia depois de derrota ou humor baixo, respira junto no Zone Reset, fica quieto na Visão de Túnel, segue o dedo ou o mouse com o olhar, boceja e cochila se a pessoa fica parada.
+- **Recados da equipe:** avisa quando alguém da equipe atualiza, nos últimos 14 dias, os objetivos e recomendações (Exportar Dossiê), o protocolo de aquecimento ou as orientações de uma lesão ativa, e leva o atleta até a tela certa. Também lembra o **treino prescrito para o dia**.
+- **Lembrete diário:** depois de um check-in, se o aparelho aceita notificações e o lembrete não está ativo, ele oferece ativar (no máximo uma vez por semana; "Agora não" vale por 30 dias). Quem ativa é o atleta, em Meus dados.
+- **Estados vazios** (sem check-ins, sem competições, sem vídeos) ganham um atalho para o próximo passo. Ao tocar num **recurso bloqueado**, ele explica o plano e quem libera. **Sem internet**, explica que o check-in e o Raio-X ficam guardados no aparelho.
+- **Termos:** para menores de 18 anos, ele explica que o responsável precisa ler e preencher a parte dele junto. Não incentiva o aceite.
+- **Tocar** nele: uma dica (ou o recado da equipe ainda não visto). **Segurar** (ou botão direito): ele fica em silêncio até ser tocado de novo. A escolha fica salva no aparelho.
+
+### No painel da equipe
+- O **Breu assistente** fica no fim do menu lateral (no celular, ao lado do botão Menu). Ele não fala sozinho: ao clicar, mostra as **pendências do dia** (check-ins de hoje com sinal de alerta, as suas sessões de hoje e, para a administração, pedidos LGPD em aberto ou com mais de 15 dias), **dicas da tela aberta** com atalhos para telas relacionadas e uma explicação do que o atleta vê no app.
+- Se não há atletas cadastrados, ele leva direto ao convite. Se chega um S.O.S, o painel do Breu fecha para não ficar na frente.
+
+### Segurança e privacidade
+- Ele nunca fica na frente de um botão ou campo (só espia) e não abre recado automático sobre o S.O.S nem sobre os telefones de emergência. Respeita o "reduzir movimento" do celular.
+- Ele só **lê** o que a própria pessoa já pode ver pelas regras do banco e **nunca grava** nada no servidor. As preferências (silêncio, recados já vistos, apresentação) ficam só no aparelho.
 
 | Arquivo | O que é |
 |---|---|
-| `breu/breu.js` | Comportamento e falas (as falas ficam no começo do arquivo, separadas por Sub-15 e 15+) |
+| `breu/breu.js` | Comportamento, falas do atleta (separadas por Sub-15 e 15+) e dicas da equipe por tela (`DICAS`), tudo no começo do arquivo |
 | `breu/breu.css` | Visual, expressões e animações |
 | `breu/breu-sub15.svg`, `breu/breu-15.svg` | Arte do canvas "Mascote Ace Mind", separada em partes (olhos, orelhas, faixa, cauda) para animar |
 

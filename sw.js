@@ -1,9 +1,9 @@
-/* AceMind — service worker (versão 3.0.1 · 22/10/2026 · mascote Breu)
+/* AceMind — service worker (versão 3.0.2 · 23/10/2026 · mascote Breu)
    Páginas e código do app: sempre busca a versão mais nova na internet; a cópia salva só é usada sem conexão.
    Fontes, bibliotecas e ícones: usa a cópia salva (os nomes dos arquivos mudam a cada versão).
    Nunca guarda respostas do banco de dados (Firebase): dados pessoais não ficam no cache.
    Ao publicar uma versão nova do site, troque o nome do CACHE abaixo. */
-const CACHE = "acemind-3.0.1-2026-10-22";
+const CACHE = "acemind-3.0.2-2026-10-23";
 const ESSENCIAIS = ["./", "index.html", "app.js", "app.css", "fonts/fonts.css", "manifest.json", "icon-192.png"];
 
 self.addEventListener("install", event => {

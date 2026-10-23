@@ -1,11 +1,13 @@
-/* ════ Breu · mascote da visão do atleta (Ace Mind) ════
-   Módulo independente do app.js: observa a tela do atleta e reage ao que a pessoa faz.
-   - Até 14 anos: Breu Sub-15 (breu-sub15.svg). A partir de 15: Breu humanoide (breu-15.svg).
-   - Companheiro flutuante (canto inferior direito) em todas as abas + card no QG Mental.
-   - Nunca envia dados para fora: preferências ficam só no aparelho (localStorage). */
+/* ════ Breu · mascote do Ace Mind ════
+   Módulo independente do app.js: observa a tela e reage ao que a pessoa faz.
+   Atleta: até 14 anos, Breu Sub-15 (breu-sub15.svg); a partir de 15, Breu humanoide (breu-15.svg).
+     Card no QG Mental, companheiro flutuante nas outras abas, recados da equipe, sequência de check-ins,
+     lembrete diário, ajuda nos estados vazios, nos recursos bloqueados, sem internet e nos termos (menores de 18).
+   Equipe: assistente discreto com as pendências do dia e dicas de cada tela do painel.
+   O Breu só lê o que a própria pessoa já pode ver, nunca grava no banco e guarda preferências só no aparelho. */
 (function () {
   "use strict";
-  const VERSAO = "1.0.0";
+  const VERSAO = "1.1.0";
   const SCRIPT = document.currentScript;
   const BASE = SCRIPT && SCRIPT.src ? new URL(".", SCRIPT.src).href : "breu/";
   const NS = "http://www.w3.org/2000/svg";
@@ -15,10 +17,14 @@
 
   /* ── acesso ao estado do app (variáveis globais do app.js) ── */
   const pegar = f => { try { return f(); } catch (e) { return undefined; } };
-  /* global APP, SOSA, SP */
+  /* global APP, SOSA, SP, FB, CFG, AMI, pode, alertasCk, lesaoAtiva, ehAdmin, isStaff, TREINO_TIPOS */
   const app = () => pegar(() => APP);
+  const fb = () => pegar(() => FB);
   const sosStatus = () => pegar(() => SOSA.status) || "";
   const esporte = () => pegar(() => SP()) || { evento: "Competição", g: "f" };
+  const podeVer = f => pegar(() => pode(f)) !== false;
+  const icone = n => pegar(() => AMI(n)) || "";
+  const irPara = aba => pegar(() => APP.irPara(aba));
 
   function idadeDe(n) {
     if (!n) return null;
@@ -35,7 +41,14 @@
   const primeiro = n => String(n || "").trim().split(/\s+/)[0] || "";
   const sorteia = a => a[Math.floor(Math.random() * a.length)];
   const entre = (a, b) => a + Math.random() * (b - a);
-  const lim = (v, a, b) => Math.max(a, Math.min(b, v));
+  const p2 = n => String(n).padStart(2, "0");
+  const diaLocal = (d = new Date()) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+  const diaDe = v => { const s = String(v || ""); const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(s) ? s + "T12:00:00" : s); return isNaN(d) ? "" : diaLocal(d); };
+  const somaDia = (dia, n) => { const d = new Date(dia + "T12:00:00"); d.setDate(d.getDate() + n); return diaLocal(d); };
+  const recente = (iso, dias) => { const t = Date.parse(iso); return !isNaN(t) && Date.now() - t < dias * 864e5; };
+  const quando = iso => { const d = diaDe(iso), h = diaLocal(); if (!d) return ""; if (d === h) return "hoje"; if (d === somaDia(h, -1)) return "ontem"; return "em " + d.slice(8, 10) + "/" + d.slice(5, 7); };
+  const hhmm = s => { const m = String(s || "").match(/T(\d{2}):(\d{2})/); return m ? m[1] + ":" + m[2] : ""; };
+  const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
 
   /* ── preferências no aparelho ── */
   const LSK = () => "breu_v1_" + (S.uid || "anon");
@@ -46,7 +59,7 @@
     set(k, v) { try { sessionStorage.setItem("breu_" + k, v); } catch (e) {} }
   };
 
-  /* ════ falas ════ */
+  /* ════ falas do atleta (s = Sub-15, m = 15+) ════ */
   const F = {
     intro: {
       s: "Oi, {nome}! Eu sou o Breu, a pantera do Ace Mind. Vou te acompanhar por aqui. Toca em mim pra conversar!",
@@ -134,22 +147,188 @@
       pendente_tarde: { s: "Já tá tarde! Faz o check-in rapidinho e vai descansar: sono também é treino.", m: "Tá tarde. Check-in rápido e cama: sono também é treino." },
       feito: { s: "Check-in feito! Que tal respirar comigo um pouquinho?", m: "Check-in feito. Quer fechar com um minuto de respiração comigo?" },
       livre: { s: "Tô aqui pra te acompanhar. Toca em mim quando quiser!", m: "Tô aqui pra te acompanhar. Toque em mim quando quiser." },
-      aniver: { s: "{idade} anos! Hoje o Breu tá vibrando por você.", m: "{idade} anos. Que venha a melhor temporada da sua vida." }
+      aniver: { s: "{idade} anos! Hoje o Breu tá vibrando por você.", m: "{idade} anos. Que venha a melhor temporada da sua vida." },
+      offline: { s: "Tô sem internet, mas pode registrar: o check-in fica guardado aqui e vai quando a conexão voltar.", m: "Sem internet por enquanto. Pode registrar: o check-in fica no aparelho e é enviado quando a conexão voltar." }
+    },
+    /* recados da equipe: o Breu avisa quando alguém da equipe atualiza algo que o atleta vê */
+    recado: {
+      relatorio: { s: "{quem} deixou objetivos e recomendações novos pra você. Bora ver?", m: "{quem} atualizou seus objetivos e recomendações. Vale a leitura." },
+      aquecimento: { s: "{quem} montou seu aquecimento! Tá na aba Pré.", m: "{quem} atualizou seu protocolo de aquecimento. Está na aba Pré." },
+      lesao: { s: "{quem} deixou orientações sobre sua lesão ({local}). Dá uma olhada antes de treinar, tá?", m: "{quem} deixou orientações novas sobre sua lesão ({local}). Confira antes de treinar." }
+    },
+    recadoAba: {
+      plano: { s: "Isso aqui é novo: a equipe atualizou {quando}.", m: "Atualizado {quando}. Lê com calma." },
+      pre: { s: "Seu aquecimento tá aqui embaixo. Novinho!", m: "O protocolo novo está logo abaixo." },
+      treino: { s: "As orientações estão em Lesões e restrições, aqui embaixo.", m: "As orientações estão em Lesões e restrições, logo abaixo." }
+    },
+    treinoHoje: { s: "Hoje tem treino: {titulo}. Depois me conta como foi, registrando a PSE em Treino.", m: "Hoje tem {titulo}. Quando terminar, registre duração e PSE em Treino: é isso que mostra sua carga." },
+    treinoHojeTarde: { s: "E o treino de hoje ({titulo})? Se já fez, registra rapidinho em Treino!", m: "Fez o {titulo} hoje? Registre em Treino enquanto está fresco." },
+    treinoAba: { s: "O de hoje é o {titulo}. Quando terminar, toca em Registrar como feito e marca a PSE.", m: "O de hoje: {titulo}. Ao terminar, toque em Registrar como feito e marque a PSE." },
+    seq: {
+      pendente: { s: "Faz o de hoje e chega a {n} dias seguidos!", m: "Faça o de hoje e chegue a {n} dias seguidos." },
+      marco: { s: "{n} dias seguidos de check-in! Você tá voando!", m: "{n} dias seguidos de check-in. Isso é constância de atleta." }
+    },
+    lembrete: {
+      oferta: { s: "Quer que eu te lembre do check-in todo dia? Você escolhe o horário.", m: "Quer um lembrete diário do check-in? Você escolhe o horário." },
+      como: { s: "É só tocar em Ativar neste aparelho e escolher o horário.", m: "Toque em Ativar neste aparelho e escolha o horário do lembrete." }
+    },
+    offline: { s: "Fiquei sem internet. Pode continuar: check-in e Raio-X ficam guardados aqui e vão quando a conexão voltar.", m: "Sem internet. Pode seguir: check-in e Raio-X ficam salvos no aparelho e são enviados quando a conexão voltar." },
+    bloqueado: { s: "Esse recurso faz parte do plano {plano}. Quem libera é a equipe AceMind.", m: "Esse recurso é do plano {plano}. Para liberar, fale com a equipe AceMind." },
+    termos: {
+      s: "Essa parte é com seu responsável: mãe, pai ou tutor. Chama ele pra ler os termos e preencher junto com você.",
+      m: "Como você tem menos de 18 anos, um responsável legal precisa ler os termos e preencher esta parte junto com você."
     }
+  };
+  const MARCOS = [3, 7, 14, 21, 30, 50, 75, 100];
+
+  /* ════ assistente da equipe ════ */
+  const EQT = {
+    intro: "Oi, {nome}! Sou o Breu, o mascote que acompanha os atletas no app. Por aqui eu mostro as pendências do dia e explico cada tela do painel.",
+    carregando: "Conferindo o dia...",
+    nada: "Nada pendente por enquanto.",
+    padrao: "Escolha um item do menu: as dicas de cada tela aparecem aqui.",
+    atletas: [
+      "Até 14 anos, o atleta vê o Breu Sub-15; a partir de 15, o humanoide. A versão vem da data de nascimento do cadastro.",
+      "No app, ele acompanha o check-in barra a barra, sugere respiração quando o estresse está alto, comemora conquistas e fica calmo durante um S.O.S.",
+      "Ele avisa o atleta quando você atualiza objetivos e recomendações (Exportar Dossiê), o protocolo de aquecimento ou as orientações de uma lesão, e lembra o treino prescrito do dia.",
+      "Nunca fica na frente do S.O.S nem dos telefones de emergência. Nada do que ele faz é gravado no banco."
+    ]
+  };
+  /* dicas por tela do painel: t = título, d = dicas, l = telas relacionadas */
+  const DICAS = {
+    dashboard: { t: "Radar dos Atletas", d: [
+      "Quem tem sinal de alerta aparece primeiro. O ponto colorido é o último check-in: vermelho pede atenção imediata, laranja é para acompanhar, verde está bem e cinza está sem check-in há 14 dias.",
+      "“Sem check-in 3+ dias” mostra quem sumiu: vale um contato.",
+      "Trunfo do dia é o melhor momento que o próprio atleta escreveu no check-in."], l: ["checkins", "dossie", "agenda"] },
+    checkins: { t: "Check-ins", d: [
+      "Filtre por atleta e período, ou marque “Só com sinais de alerta”.",
+      "Prontidão é a média, de 0 a 10, de foco, energia, sono, humor, estresse invertido e dor invertida.",
+      "O CSV exporta exatamente o que está filtrado, e a exportação fica registrada na Auditoria."], l: ["dashboard", "dash_chart"] },
+    dash_chart: { t: "Dashboard Analítico", d: [
+      "No radar, quanto mais longe do centro, melhor: estresse e dor entram invertidos (Calma e Corpo sem dor).",
+      "Adesão é o número de dias com check-in no período.",
+      "Estresse e dor começam escondidos no gráfico de linhas: toque na legenda para mostrar."], l: ["comparativo", "checkins"] },
+    comparativo: { t: "Comparativo Multi-Atleta", d: [
+      "Marque até 8 atletas e toque em Comparar.",
+      "O gráfico mostra prontidão (0 a 10) e adesão ao check-in (%) lado a lado."], l: ["dash_chart", "dashboard"] },
+    insights: { t: "Insights", d: [
+      "Compara os últimos 7 dias com as 3 semanas anteriores de cada atleta; cada alerta mostra a regra usada.",
+      "No resumo por IA, os nomes viram códigos (A1, A2...) antes do envio e só voltam no seu aparelho.",
+      "É apoio: confira os dados do atleta antes de agir."], l: ["dashboard", "dossie"] },
+    perfil: { t: "Perfil Esportivo", d: [
+      "Modalidade, categoria, lateralidade e anamnese do atleta.",
+      "A modalidade muda os textos do app do atleta (jogo, prova, luta...) e o que aparece no Raio-X.",
+      "Lesões atuais ficam em Lesões & Avaliações; o histórico psicológico, no Prontuário (Psicologia)."], l: ["lesoes", "prontuario"] },
+    prontuario: { t: "Prontuário", d: [
+      "Cada profissão vê e escreve só as próprias áreas; cada registro guarda autor, profissão e data.",
+      "O autor pode editar nas primeiras 24 horas; depois, só com adendo.",
+      "Registro errado não é apagado: fica anulado, com o motivo, para manter o histórico."], l: ["registros", "dossie"] },
+    registros: { t: "Registros Clínicos", d: [
+      "Linha do tempo com os registros mais recentes das suas áreas, de todos os atletas.",
+      "Para escrever um registro novo, use o Prontuário."], l: ["prontuario"] },
+    lesoes: { t: "Lesões & Avaliações", d: [
+      "Registre local, gravidade e status: afastado, em reabilitação, com restrição ou liberado.",
+      "As orientações para o atleta aparecem no app dele, na aba Treino, e o Breu avisa quando você atualiza.",
+      "Nas avaliações físicas, o atleta vê o último resultado e o anterior de cada teste.",
+      "Lançou por engano? Anule: o registro continua no histórico."], l: ["treinos", "perfil"] },
+    criticos: { t: "Pressão em Competição", d: [
+      "Lance as competições com resultado e nível de confiança. O Raio-X que o atleta faz no app também entra aqui.",
+      "Compare a confiança média nas vitórias com a das derrotas (ou fora do pódio): uma diferença grande sugere queda sob pressão."], l: ["dossie", "treino_mental"] },
+    dossie: { t: "Dossiê do Atleta", d: [
+      "Tudo do atleta numa tela: perfil, check-ins, competições, treino, lesões e as áreas do prontuário que você pode ver.",
+      "Para gerar o PDF, use Exportar Dossiê.",
+      "Cada abertura do dossiê fica registrada na Auditoria."], l: ["relatorios", "prontuario"] },
+    atletas_pro: { t: "Atletas & Convites", d: [
+      "Em Convidar atleta, ele recebe um e-mail para criar a senha. No primeiro acesso, aceita os termos; se tiver menos de 18, o responsável preenche junto.",
+      "A data de nascimento define o Breu que o atleta vê: até 14 anos, o Sub-15; a partir de 15, o humanoide.",
+      "Sequência é o número de dias seguidos com check-in. O atleta também vê a dele no app."], l: ["dashboard", "perfil"] },
+    treinos: { t: "Treinos & Carga", d: [
+      "Em + Prescrever, a sessão vai para a aba Treino do atleta, e o Breu lembra no dia.",
+      "Quando o atleta registra duração e PSE, a carga entra aqui: minutos × PSE, em UA.",
+      "Aguda:crônica entre 0,8 e 1,3 é a zona adequada; acima de 1,5 é salto de carga. Precisa de 3 semanas de registros.",
+      "Use Duplicar +7 dias para repetir uma sessão na semana seguinte."], l: ["lesoes", "aquecimento"] },
+    agenda: { t: "Agenda & Sessões", d: [
+      "A sessão marcada aparece na agenda do atleta e no lembrete do dia, no app.",
+      "Para sessão on-line, crie a sala (Meet, Zoom ou Teams) e cole o link https.",
+      "Competições registradas aqui aparecem em Meu Plano para os atletas da modalidade.",
+      "Ative as notificações para receber um lembrete 30 minutos antes."], l: ["calendarios", "notificacoes"] },
+    calendarios: { t: "Calendários dos Atletas", d: [
+      "Calendário semanal de cada atleta, com eventos e sessões.",
+      "Eventos criados pela equipe não podem ser apagados pelo atleta."], l: ["agenda"] },
+    aquecimento: { t: "Aquecimento & Rotinas", d: [
+      "O protocolo salvo aparece para o atleta na aba Pré, e o Breu avisa que tem novidade.",
+      "As rotinas de ativação (ritual pré e reset pós-erro) aparecem no Cofre Tático do atleta.",
+      "Sem protocolo, o atleta vê um aviso de que a equipe ainda não definiu."], l: ["treinos", "protocolos"] },
+    protocolos: { t: "Protocolos de Treino", d: [
+      "Monte protocolos com passos (arraste para reordenar) e reutilize com qualquer atleta.",
+      "Em Executar, siga passo a passo com cronômetro; o microfone transcreve as observações.",
+      "Ao concluir, a execução fica registrada."], l: ["treino_mental"] },
+    treino_mental: { t: "Treino Mental", d: [
+      "Registre sessões de visualização, respiração, autoconversa, atenção, ativação ou mindfulness.",
+      "Duração, intensidade e notas ficam no histórico do atleta."], l: ["protocolos", "criticos"] },
+    ia_analise: { t: "Análise com IA", d: [
+      "Escolha o atleta e o vídeo (até 100 MB): o app extrai alguns quadros e a IA aponta pontos fortes, o que melhorar e um plano de ação.",
+      "A análise salva aparece para o atleta em Vídeo & IA.",
+      "É apoio técnico: revise antes de usar com o atleta."], l: ["video_comp"] },
+    video_comp: { t: "Comparar Análises", d: [
+      "Escolha duas análises do mesmo atleta para ver a evolução, antes e depois."], l: ["ia_analise"] },
+    relatorios: { t: "Exportar Dossiê", d: [
+      "Escolha atleta, período e seções; a prévia mostra o documento como vai sair.",
+      "Objetivos e Recomendações são salvos quando você baixa ou imprime: o atleta vê em Meu Plano e o Breu avisa a novidade.",
+      "Cada exportação fica registrada na Auditoria."], l: ["dossie"] },
+    exportar: { t: "Exportar Dados (CSV)", d: [
+      "Escolha o conjunto de dados, o atleta e o período.",
+      "O arquivo tem dados pessoais e de saúde: guarde em local protegido e apague quando não usar mais. A exportação fica na Auditoria."], l: ["checkins"] },
+    sos: { t: "Central S.O.S", d: [
+      "O painel confere novos alertas a cada 15 segundos, com som e aviso do navegador.",
+      "Em Estou cuidando, o atleta vê no app que você recebeu o alerta.",
+      "No app do atleta, o Breu fica calmo e incentiva a respiração; os telefones do CVV (188) e do SAMU (192) aparecem sempre.",
+      "Para receber com o app fechado, ative as notificações deste aparelho."], l: ["notificacoes"] },
+    notificacoes: { t: "Notificações", d: [
+      "Ative em cada aparelho onde quer receber. No iPhone, instale o app na tela de início antes (iOS 16.4 ou mais recente).",
+      "S.O.S sempre avisa toda a equipe; os outros alertas você escolhe.",
+      "Os atletas escolhem o horário do lembrete do check-in em Meus dados, e o Breu sugere ativar."], l: ["sos"] },
+    admin: { t: "Usuários & Planos", d: [
+      "O cargo define o que cada pessoa vê. Admin abre esta área de sistema, mas não abre registros clínicos de outras profissões.",
+      "A pessoa convidada recebe um e-mail para criar a senha e, no primeiro acesso, assina o compromisso de sigilo.",
+      "Precisa haver sempre pelo menos uma pessoa na administração."], l: ["permissoes", "seguranca"] },
+    permissoes: { t: "Permissões dos Planos", d: [
+      "Defina o plano mínimo de cada recurso do app do atleta e do painel.",
+      "O S.O.S é um recurso de segurança: bloquear por plano pode deixar atletas sem canal de ajuda."], l: ["admin"] },
+    seguranca: { t: "Segurança & Privacidade", d: [
+      "Preencha empresa, encarregado de dados (DPO) e e-mail de privacidade.",
+      "Escolha o tempo de inatividade da equipe e se atletas podem criar conta sozinhos.",
+      "A chave pública das notificações vai aqui; a privada fica só nas funções de servidor."], l: ["auditoria", "lgpd"] },
+    auditoria: { t: "Auditoria", d: [
+      "Quem fez o quê e quando: acessos a dossiês, exportações, mudanças de cargo e mais.",
+      "Os registros não podem ser apagados nem alterados, nem pela administração."], l: ["seguranca"] },
+    lgpd: { t: "Pedidos LGPD", d: [
+      "Responda em até 15 dias; o prazo vencido aparece no pedido.",
+      "Na exclusão, os registros clínicos ficam guardados e bloqueados pelo prazo legal.",
+      "A resposta que você escreve aparece para o titular no app."], l: ["auditoria", "seguranca"] },
+    saude: { t: "Saúde do Sistema", d: [
+      "Confira se as funções de servidor estão respondendo.",
+      "Migrar dados é feito uma vez só, depois de publicar as regras novas do banco.",
+      "Os erros dos últimos 14 dias aparecem agrupados, sem conteúdo pessoal."], l: ["seguranca"] }
   };
 
   /* ════ estado ════ */
   const S = {
-    montado: false, montando: false, versao: null, uid: null, nome: "", idade: null, nasc: "",
+    montado: false, montando: false, visao: null, versao: null, uid: null, nome: "", idade: null, nasc: "",
     rig: null, dock: null, btn: null, fala: null, falaTimer: 0, svgC: null,
-    hero: null, svgH: null, heroVisivel: false, io: null,
+    hero: null, svgH: null, heroVisivel: false, io: null, extras: new Set(),
     base: "foco", expr: "foco", exprTimer: 0, aba: null,
     modo: null, resp: null, sosVisto: "", ultimaFalaAuto: 0,
     ultimaAcao: Date.now(), bocejou: false, dormindo: false, quieto: false,
     escondidoEm: 0, toquesRapidos: [], ckFeito: null, resultado: "",
     ptr: null, ptrT: 0, raf: 0, timers: new Set(), obs: [], ouvintes: [],
-    ckUltimo: {}, ckFalado: {}, chkFalado: false, tunel: false, zr: false, bloqueando: false, critico: false, cobertura: 0, forcaDentro: 0
+    ckUltimo: {}, ckFalado: {}, chkFalado: false, bloqueando: false, critico: false, cobertura: 0, forcaDentro: 0, fila: []
   };
+  /* novidades do atleta (carregadas uma vez por sessão) */
+  const N = { carregado: false, recados: [], treinoHoje: null, seq: 0, seqHoje: false };
+  /* assistente da equipe */
+  const EQ = { card: null, pill: null, painel: null, ovl: null, avs: [], pend: null, carregando: false, abaHelp: null, origem: null };
+
   const V = (o, vars) => { // escolhe a versão da fala (s = Sub-15, m = 15+) e preenche as variáveis
     let t = o && (S.versao === "sub15" ? (o.s !== undefined ? o.s : o.m) : (o.m !== undefined ? o.m : o.s));
     if (Array.isArray(t)) t = sorteia(t);
@@ -163,6 +342,14 @@
   function depois(fn, ms) { const id = setTimeout(() => { S.timers.delete(id); fn(); }, ms); S.timers.add(id); return id; }
   function cancelar(id) { if (id) { clearTimeout(id); S.timers.delete(id); } }
   function ouvir(alvo, ev, fn, op) { alvo.addEventListener(ev, fn, op); S.ouvintes.push([alvo, ev, fn, op]); }
+  /* espera algo aparecer na tela (o app desenha as abas de forma assíncrona) */
+  function esperar(cond, ms = 4000) {
+    return new Promise(ok => {
+      const fim = Date.now() + ms;
+      const tenta = () => { let r = null; try { r = cond(); } catch (e) {} if (r) return ok(r); if (Date.now() > fim || !S.montado) return ok(null); depois(tenta, 120); };
+      tenta();
+    });
+  }
 
   /* ════ arte ════ */
   const cacheRig = {};
@@ -183,9 +370,10 @@
 
   let seq = 0;
   function el(tag, attrs) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
-  function instancia(tipo) {
+  /* tipo "busto": cabeça e ombros num anel ciano e vermelho (avatar); "corpo": como no card do QG; "inteiro": da cabeça aos pés */
+  function instancia(tipo, rig, expr) {
     const P = "br" + (++seq) + "-";
-    const svg = document.importNode(S.rig, true);
+    const svg = document.importNode(rig || S.rig, true);
     svg.querySelectorAll("[id]").forEach(n => { n.id = P + n.id; });
     svg.querySelectorAll("*").forEach(n => {
       for (const a of ["fill", "stroke", "filter", "clip-path", "mask"]) {
@@ -214,13 +402,21 @@
       svg.insertBefore(arco(292, 460, "#D2456C"), cabeca);
       svg.setAttribute("viewBox", svg.getAttribute("data-vb-busto"));
     } else {
-      svg.setAttribute("viewBox", svg.getAttribute("data-vb-corpo"));
+      if (tipo !== "inteiro") svg.setAttribute("viewBox", svg.getAttribute("data-vb-corpo")); // "inteiro" mantém o personagem da cabeça aos pés
       svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
     }
-    svg.setAttribute("data-x", S.expr);
+    svg.setAttribute("data-x", expr || S.expr);
     return svg;
   }
-  const instancias = () => [S.svgC, S.hero && S.hero.isConnected ? S.svgH : null].filter(Boolean);
+  /* todas as cópias do Breu na tela piscam, olham e mudam de expressão juntas */
+  const instancias = () => {
+    const l = [];
+    if (S.svgC && S.svgC.isConnected) l.push(S.svgC);
+    if (S.svgH && S.svgH.isConnected) l.push(S.svgH);
+    EQ.avs.forEach(s => { if (s.isConnected) l.push(s); });
+    S.extras.forEach(s => { if (s.isConnected) l.push(s); else S.extras.delete(s); });
+    return l;
+  };
 
   /* ════ expressões ════ */
   const OLHO_FECHADO = { respira: 1, vibra: 1, bocejo: 1 };
@@ -267,7 +463,8 @@
     const meio = svg.getAttribute("preserveAspectRatio") !== "xMidYMax meet";
     const k = Math.min(r.width / vb[2], r.height / vb[3]);
     const ox = (r.width - vb[2] * k) / 2, oy = meio ? (r.height - vb[3] * k) / 2 : r.height - vb[3] * k;
-    return { x: r.left + ox + (300 - vb[0]) * k, y: r.top + oy + (OLHO_Y[S.versao] - vb[1]) * k };
+    const versao = svg.getAttribute("data-versao") || S.versao;
+    return { x: r.left + ox + (300 - vb[0]) * k, y: r.top + oy + ((OLHO_Y[versao] || 130) - vb[1]) * k };
   }
   function olharPara(px, py) {
     instancias().forEach(svg => {
@@ -297,7 +494,7 @@
 
   /* ════ balão de fala ════ */
   function falar(texto, op = {}) {
-    if (!texto || !S.montado) return false;
+    if (!texto || !S.montado || S.visao !== "atleta") return false;
     const auto = !op.usuario;
     if (auto) {
       if (S.quieto && !op.mesmoQuieto) return false;
@@ -308,11 +505,13 @@
     if (op.expr) reagir(op.expr, op.exprMs || 2600);
     const ms = op.ms || Math.min(13000, 3600 + texto.length * 55 + (op.acoes ? 4500 : 0));
     // com o card do QG à vista, o Breu está lá: o recado aparece no próprio card
-    if (S.heroVisivel && S.hero && S.hero.isConnected) { if (auto) S.ultimaFalaAuto = Date.now(); heroMsg(texto, op.acoes || [], ms); return true; }
+    if (S.heroVisivel && S.hero && S.hero.isConnected) { if (auto) S.ultimaFalaAuto = Date.now(); heroMsg(texto, op.acoes || [], ms); if (op.aoMostrar) op.aoMostrar(); return true; }
     if (!S.dock || S.dock.dataset.estado === "fora") return false;
+    // recado importante que não pode aparecer agora espera a vez (até 15 s) em vez de se perder
+    const guardar = () => { if (op.forte && auto) { S.fila = S.fila.filter(x => x.texto !== texto).concat({ texto, op, ate: op._ate || Date.now() + 15000 }).slice(-3); } return false; };
     // espiando: rolando a tela ou digitando, só fala se a pessoa pediu; se era só para não cobrir um botão, levanta para falar
-    if (S.dock.dataset.estado === "espiando" && (S.rolando || S.tecladoAberto) && !op.usuario && !op.sos) return false;
-    if (!op.usuario && (S.critico || sobAArea(areaDoBalao(), 4, 2) === 2)) return false; // nada na frente do S.O.S
+    if (S.dock.dataset.estado === "espiando" && (S.rolando || S.tecladoAberto) && !op.usuario && !op.sos) return guardar();
+    if (!op.usuario && (S.critico || sobAArea(areaDoBalao(), 4, 2) === 2)) return guardar(); // nada na frente do S.O.S
     if (!S.critico) {
       S.forcaDentro = Date.now() + ms;
       atualizarDock();
@@ -335,16 +534,26 @@
     f.hidden = false;
     f.style.animation = "none"; void f.offsetWidth; f.style.animation = "";
     S.falaTimer = depois(fecharFala, ms);
+    if (op.aoMostrar) op.aoMostrar();
     return true;
+  }
+  /* fala o próximo recado da fila quando o Breu pode aparecer de novo */
+  function soltarFila(estado) {
+    if (!S.fila.length || S.critico || S.rolando || S.tecladoAberto || S.quieto || S.modo) return;
+    if (!(S.heroVisivel || estado === "dentro" || estado === "espiando")) return;
+    if (S.fala && !S.fala.hidden) return;
+    S.fila = S.fila.filter(x => Date.now() < x.ate);
+    const x = S.fila.shift(); if (!x) return;
+    depois(() => { if (S.montado) falar(x.texto, { ...x.op, _ate: x.ate }); }, 350); // mantém o prazo original
   }
   function fecharFala() {
     const f = S.fala; if (!f || f.hidden) return;
-    if (S.forcaDentro) { S.forcaDentro = 0; depois(atualizarDock, 60); }
+    if (S.forcaDentro || S.fila.length) { S.forcaDentro = 0; depois(atualizarDock, 300); }
     cancelar(S.falaTimer); f.classList.add("sai");
     depois(() => { if (f.classList.contains("sai")) { f.hidden = true; f.classList.remove("sai"); } }, 230);
   }
 
-  /* ════ companheiro flutuante ════ */
+  /* ════ companheiro flutuante (atleta) ════ */
   function criarDock() {
     const d = document.createElement("div");
     d.className = "breu-dock"; d.dataset.estado = "fora"; d.dataset.versao = S.versao;
@@ -391,6 +600,7 @@
     else if (S.critico || (!conversando && (S.tecladoAberto || (S.rolando && S.modo !== "sos") || S.bloqueando))) e = "espiando";
     estadoDock(e);
     S.dock.toggleAttribute("data-sono", S.quieto || S.dormindo);
+    soltarFila(e);
   }
 
   /* o Breu nunca fica na frente de um botão ou campo: se houver algo clicável embaixo, ele só espia */
@@ -426,6 +636,7 @@
   }
   let ultimaCobertura = 0;
   function conferirCobertura(forcar) {
+    if (!S.dock) return;
     if (!forcar && Date.now() - ultimaCobertura < 250) return;
     ultimaCobertura = Date.now();
     const n = cobreAlgo();
@@ -450,6 +661,9 @@
     }
     if (!reduz()) classe([S.dock.querySelector(".breu-corpo")], "breu-pula", 900);
     reagir(sorteia(["vibra", "curioso", "garra", "foco"]), 1500);
+    // com recado da equipe ainda não visto, o toque leva até ele
+    const r = recadoAtual();
+    if (r && S.aba !== ABA_RECADO[r.tipo]) { falar(textoRecado(r), { usuario: true, acoes: [{ t: BOTAO_RECADO[r.tipo], fn: () => abrirRecado(r) }] }); return; }
     falar(proximoPapo(), { usuario: true });
   }
   function proximoPapo() { // "saco" embaralhado: não repete até passar por todas
@@ -536,30 +750,58 @@
     });
     box.hidden = !box.children.length;
   }
+  /* o recado do dia: o mais importante agora */
   function heroPadrao(forcar) {
     const h = S.hero; if (!h) return;
     if (heroVolta && !forcar) return; // um recado passageiro ainda está no card
     h.querySelector(".breu-hero-tit").textContent = saudacao();
+    atualizarSeqChip();
     const temCk = !!document.getElementById("dr-sono"), temZr = !!document.getElementById("zr-btn");
-    const hora = new Date().getHours();
+    const hora = new Date().getHours(), A = app() || {};
+    const rec = recadoAtual(), ckPend = temCk && S.ckFeito !== true;
     let msg, acoes = [];
     if (aniversarioHoje(S.nasc)) msg = V(F.hero.aniver);
-    else if (temCk && S.ckFeito === false) msg = V(hora >= 22 || hora < 5 ? F.hero.pendente_tarde : F.hero.pendente);
-    else if (temCk && S.ckFeito === true) msg = V(F.hero.feito);
-    else if (temCk) msg = V(F.hero.pendente);
+    else if (A.offline || navigator.onLine === false) msg = V(F.hero.offline);
+    else if (rec) { msg = textoRecado(rec); acoes.push({ t: BOTAO_RECADO[rec.tipo], fn: () => abrirRecado(rec) }); }
+    else if (ckPend) {
+      msg = V(hora >= 22 || hora < 5 ? F.hero.pendente_tarde : F.hero.pendente);
+      if (N.seq >= 2 && !N.seqHoje) msg += " " + V(F.seq.pendente, { n: N.seq + 1 });
+    }
+    else if (N.treinoHoje && temCk) { msg = V(hora >= 17 ? F.treinoHojeTarde : F.treinoHoje, { titulo: N.treinoHoje.titulo }); acoes.push({ t: "Abrir treinos", fn: () => irPara("treino") }); }
+    else if (temCk) msg = V(F.hero.feito);
     else msg = V(F.hero.livre);
-    if (temCk && S.ckFeito !== true) acoes.push({ t: "Fazer check-in", fn: irCheckin });
-    if (temZr) acoes.push({ t: "Respirar comigo", fn: respirarJunto });
+    if (ckPend) acoes.push({ t: "Fazer check-in", fn: irCheckin });
+    if (temZr && acoes.length < 2) acoes.push({ t: "Respirar comigo", fn: respirarJunto });
     const m = h.querySelector(".breu-hero-msg");
     if (m.textContent !== msg) heroMsg(msg, acoes); else heroAcoes(acoes);
+  }
+  /* chip com a sequência de check-ins (a mesma conta que a equipe vê em Atletas & Convites) */
+  function atualizarSeqChip() {
+    const h = S.hero; if (!h) return;
+    let chip = h.querySelector(".breu-seq");
+    const n = N.seq || 0;
+    if (n >= 2) {
+      if (!chip) { chip = document.createElement("span"); chip.className = "streak-badge breu-seq"; h.querySelector(".breu-hero-kicker").appendChild(chip); }
+      const txt = `${n} dias seguidos`;
+      if (chip.getAttribute("aria-label") !== txt) { chip.innerHTML = `${icone("flame")}<span>${n} dias</span><span class="breu-seq-l">seguidos</span>`; chip.setAttribute("aria-label", txt); chip.setAttribute("role", "img"); }
+    } else if (chip) chip.remove();
   }
   function rolarAte(alvo) {
     const c = document.getElementById("mob-content"); if (!c || !alvo) return;
     const top = alvo.getBoundingClientRect().top - c.getBoundingClientRect().top + c.scrollTop - 12;
     c.scrollTo({ top, behavior: reduz() ? "auto" : "smooth" });
   }
+  function destacar(alvo) { if (!alvo) return; classe([alvo], "breu-destaque", 2600); }
+  function cardPorTitulo(re) {
+    return Array.from(document.querySelectorAll("#mob-content .am-card")).find(c => re.test(((c.querySelector(".am-tit span") || {}).textContent) || "")) || null;
+  }
   function irCheckin() {
-    const r = document.getElementById("dr-sono"); if (!r) return;
+    const r = document.getElementById("dr-sono");
+    if (!r) { // está em outra aba: volta ao QG primeiro
+      irPara("home");
+      esperar(() => document.getElementById("dr-sono")).then(x => { if (x) irCheckin(); });
+      return;
+    }
     rolarAte(r.closest(".am-card") || r);
     depois(() => { try { r.focus({ preventScroll: true }); } catch (e) {} falar(V(F.ck.arrasta), { forte: true, expr: "curioso" }); }, 700);
   }
@@ -567,6 +809,11 @@
     const b = document.getElementById("zr-btn"); if (!b) return;
     rolarAte(b.closest(".a-up") || b);
     depois(() => { const bb = document.getElementById("zr-btn"); if (bb && /iniciar/i.test(bb.textContent)) bb.click(); }, 650);
+  }
+  function irRaioX() {
+    const t = document.getElementById("rp-torn"); if (!t) return;
+    rolarAte(t.closest(".am-card") || t);
+    depois(() => { try { t.focus({ preventScroll: true }); } catch (e) {} }, 600);
   }
   function montarHero() {
     const c = document.getElementById("mob-content");
@@ -595,6 +842,105 @@
     if (S.hero && S.hero.parentNode) S.hero.remove();
   }
 
+  /* ════ novidades do atleta: recados da equipe, treino de hoje e sequência ════ */
+  const ABA_RECADO = { relatorio: "plano", aquecimento: "pre", lesao: "treino" };
+  const BOTAO_RECADO = { relatorio: "Ver meu plano", aquecimento: "Ver aquecimento", lesao: "Ver orientações" };
+  const CARD_RECADO = { relatorio: /Objetivos e recomendações/i, aquecimento: /Aquecimento/i, lesao: /Lesões e restrições/i };
+  const vistos = () => pref().vistos || {};
+  function recadoAtual() { const v = vistos(); return N.recados.find(r => v[r.tipo] !== r.em) || null; }
+  function recadoDaAba(a) { const v = vistos(); return N.recados.find(r => ABA_RECADO[r.tipo] === a && v[r.tipo] !== r.em) || null; }
+  function marcarVisto(r) { const v = vistos(); if (v[r.tipo] === r.em) return; v[r.tipo] = r.em; salvarPref({ vistos: v }); }
+  function textoRecado(r) { return V(F.recado[r.tipo], { quem: r.quem ? primeiro(r.quem) : "A equipe", local: r.local || "", quando: quando(r.em) }); }
+  function abrirRecado(r) { marcarAcao(); irPara(ABA_RECADO[r.tipo]); }
+  /* chegou na aba do recado: marca como visto, rola até o card e explica */
+  function mostrarRecadoNaAba(a) {
+    const r = recadoDaAba(a); if (!r) return false;
+    marcarVisto(r);
+    depois(() => {
+      if (S.aba !== a) return;
+      const card = cardPorTitulo(CARD_RECADO[r.tipo]);
+      if (card) { rolarAte(card); destacar(card); }
+      falar(V(F.recadoAba[a], { quando: quando(r.em) }), { forte: true, expr: "curioso" });
+    }, 700);
+    return true;
+  }
+  async function carregarNovidades() {
+    const A = app(), B = fb(), uid = S.uid;
+    if (!A || !B || A.offline || navigator.onLine === false || !uid) return;
+    const ok = p => Promise.resolve(p).catch(() => null);
+    const [pr, aq, les, trs, cks] = await Promise.all([
+      podeVer("meuPlano") ? ok(B.getDoc(`prontuarios/${uid}`)) : null,
+      podeVer("aquecAtleta") ? ok(B.getDoc(`atletas/${uid}/planos/aquecimento`)) : null,
+      podeVer("treinoAtleta") ? ok(B.query(`atletas/${uid}/lesoes`, null, null, null, null, "DESCENDING", 60, true)) : null,
+      podeVer("treinoAtleta") ? ok(B.query(`atletas/${uid}/treinos`, "status", "==", "prescrito", null, "DESCENDING", 80, true)) : null,
+      ok(B.query("checkins", "pacienteId", "==", uid, "data", "DESCENDING", 45, true))
+    ]);
+    if (!S.montado || S.uid !== uid) return;
+    const rec = [];
+    const r = pr && pr.relatorio;
+    if (r && (r.objetivos || r.recomendacoes) && r.atualizadoEm && recente(r.atualizadoEm, 14)) rec.push({ tipo: "relatorio", em: r.atualizadoEm, quem: r.por });
+    if (aq && (aq.titulo || aq.exercicios) && aq.atualizadoEm && recente(aq.atualizadoEm, 14)) rec.push({ tipo: "aquecimento", em: aq.atualizadoEm, quem: aq.atualizadoPor });
+    const ativas = (les || []).filter(l => l && !l.anulada && l.status && l.status !== "liberado" && l.orientacoes)
+      .map(l => ({ l, em: l.atualizadoEm || l.criadoEm || "" })).filter(x => x.em && recente(x.em, 14)).sort((a, b) => String(b.em).localeCompare(String(a.em)));
+    if (ativas.length) rec.push({ tipo: "lesao", em: ativas[0].em, quem: ativas[0].l.atualizadoPor || ativas[0].l.autorNome, local: ativas[0].l.local || "" });
+    // a lesão vem antes (segurança); depois o mais recente
+    N.recados = rec.sort((a, b) => (b.tipo === "lesao") - (a.tipo === "lesao") || String(b.em).localeCompare(String(a.em)));
+    definirTreinoHoje(trs);
+    if (cks) {
+      const dias = new Set(cks.map(c => diaDe(c.data)).filter(Boolean));
+      let d = diaLocal(); N.seqHoje = dias.has(d); if (!N.seqHoje) d = somaDia(d, -1);
+      let n = 0; while (dias.has(d)) { n++; d = somaDia(d, -1); }
+      N.seq = n;
+    }
+    N.carregado = true;
+    if (S.aba === "home") heroPadrao();
+    else if (!mostrarRecadoNaAba(S.aba)) {
+      const r1 = recadoAtual();
+      if (r1 && !sessao.get("recado:" + r1.tipo + r1.em)) {
+        sessao.set("recado:" + r1.tipo + r1.em, "1");
+        depois(() => falar(textoRecado(r1), { forte: true, expr: "curioso", acoes: [{ t: BOTAO_RECADO[r1.tipo], fn: () => abrirRecado(r1) }] }), 1200);
+      }
+    }
+  }
+  function definirTreinoHoje(trs) {
+    if (!trs) return;
+    const hoje = diaLocal();
+    const t = trs.filter(x => String(x.data || "").slice(0, 10) === hoje && x.status === "prescrito")[0];
+    N.treinoHoje = t ? { titulo: t.titulo || pegar(() => TREINO_TIPOS[t.tipo]) || "Treino" } : null;
+  }
+  async function recarregarTreinoHoje() {
+    const B = fb(); if (!B || !S.uid || !podeVer("treinoAtleta")) return;
+    const trs = await Promise.resolve(B.query(`atletas/${S.uid}/treinos`, "status", "==", "prescrito", null, "DESCENDING", 80, true)).catch(() => null);
+    if (S.montado) { definirTreinoHoje(trs); heroPadrao(); }
+  }
+  /* lembrete diário do check-in (notificações): o Breu só oferece; quem ativa é a pessoa, em Meus dados */
+  async function lembreteOferecivel() {
+    const p = pref(), agora = Date.now();
+    if (p.lembreteNao && agora - p.lembreteNao < 30 * 864e5) return false;
+    if (p.lembreteOferta && agora - p.lembreteOferta < 7 * 864e5) return false;
+    if (window.AM_DEMO || !("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return false;
+    if (!pegar(() => CFG.publico.vapidPublica) || Notification.permission === "denied") return false;
+    const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
+    if (!reg || !reg.pushManager) return false;
+    const sub = await reg.pushManager.getSubscription().catch(() => null);
+    return !sub;
+  }
+  async function ofertarLembrete() {
+    if (!S.montado || S.quieto || S.modo || !(await lembreteOferecivel())) return;
+    falar(V(F.lembrete.oferta), { forte: true, expr: "curioso", aoMostrar: () => salvarPref({ lembreteOferta: Date.now() }), acoes: [{ t: "Quero", fn: irParaNotificacoes }, { t: "Agora não", fn: () => salvarPref({ lembreteNao: Date.now() }) }] });
+  }
+  function irParaNotificacoes() {
+    marcarAcao();
+    S.semBoasVindas = "dados"; // a explicação certa vem logo abaixo, no lugar das boas-vindas da aba
+    irPara("dados");
+    esperar(() => document.querySelector("#md-push #pu-on, #md-push .am-dica"), 6000).then(x => {
+      const box = document.getElementById("md-push"); if (!x || !box) return;
+      const card = box.closest(".am-card") || box;
+      rolarAte(card); destacar(card);
+      depois(() => falar(V(F.lembrete.como), { forte: true, expr: "foco" }), 600);
+    });
+  }
+
   /* ════ contexto: aba, modos e sinais vindos da tela ════ */
   const BASE_ABA = { home: "foco", pre: "garra", pos: "foco", treino: "garra", plano: "foco", agenda: "curioso", ia: "curioso", dados: "foco" };
   const baseDaAba = a => (S.quieto ? "respira" : BASE_ABA[a] || "foco");
@@ -605,13 +951,20 @@
     if (a === "home") montarHero(); else soltarHero();
     if (!S.modo) base(baseDaAba(a));
     atualizarDock();
+    if (mostrarRecadoNaAba(a)) return;
+    if (a === "treino" && N.treinoHoje && !sessao.get("treinoAba" + diaLocal())) {
+      sessao.set("treinoAba" + diaLocal(), "1");
+      depois(() => { if (S.aba === "treino" && N.treinoHoje) falar(V(F.treinoAba, { titulo: N.treinoHoje.titulo }), { forte: true, expr: "garra" }); }, 900);
+      return;
+    }
+    if (S.semBoasVindas === a) { S.semBoasVindas = null; return; }
     const vistas = (sessao.get("abas") || "").split(",");
     if (F.abas[a] && !vistas.includes(a)) {
       depois(() => { if (S.aba === a && falar(V(F.abas[a]), { expr: BASE_ABA[a], forte: true })) sessao.set("abas", (sessao.get("abas") || "").split(",").concat(a).join(",")); }, 900);
     } else if (!reduz()) classe(instancias(), "orelha-" + (Math.random() < .5 ? "e" : "d"), 500);
   }
   function lerTela() {
-    if (!S.montado) return;
+    if (!S.montado || S.visao !== "atleta") return;
     conferirCobertura();
     const A = app();
     const aba = (A && A.abaAtleta) || (document.querySelector(".mob-tb.on") || {}).dataset?.id || "home";
@@ -674,6 +1027,7 @@
       if (grav) { base("curioso"); classe(instancias(), "orelha-e", 500); depois(() => classe(instancias(), "orelha-d", 500), 260); if (!sessao.get("ouvindo")) { sessao.set("ouvindo", "1"); falar(V(F.ck.ouvindo), { forte: true, ms: 2200 }); } }
       else if (!S.modo) base(baseDaAba(S.aba));
     }
+    decorarVaziosAtleta();
   }
   function entrarModo(m) {
     S.modo = m;
@@ -720,11 +1074,26 @@
   /* ── avisos do app (toasts): o Breu reage ao resultado das ações ── */
   function toast(t) {
     const txt = (t.textContent || "").trim(), tipo = t.classList.contains("erro") ? "erro" : t.classList.contains("ok") ? "ok" : "info";
+    if (S.visao === "equipe") { // na equipe, só uma reação discreta
+      if (tipo === "ok") { reagir("vibra", 1300); if (EQ.pend) EQ.pend.em = 0; } else if (tipo === "erro") reagir("apoio", 1800);
+      return;
+    }
     if (S.modo === "sos") return;
     if (/^Check-in salvo/.test(txt)) {
-      S.ckFeito = true; depois(heroPadrao, 300);
-      if (/equipe vai ver/.test(txt)) { reagir("apoio", 3200); falar(V(F.ck.salvo_alerta), { forte: true }); }
+      S.ckFeito = true;
+      const alerta = /equipe vai ver/.test(txt);
+      let marco = 0;
+      if (N.carregado && !N.seqHoje) {
+        N.seq += 1; N.seqHoje = true;
+        const chave = N.seq + "@" + diaLocal();
+        if (MARCOS.includes(N.seq) && pref().marco !== chave) { marco = N.seq; salvarPref({ marco: chave }); }
+      }
+      atualizarSeqChip();
+      depois(heroPadrao, 300);
+      if (alerta) { reagir("apoio", 3200); falar(V(F.ck.salvo_alerta), { forte: true }); }
+      else if (marco) { reagir("vibra", 3600); festejar(); falar(V(F.seq.marco, { n: marco }), { forte: true }); }
       else { reagir("vibra", 3000); festejar(); falar(V(F.ck.salvo), { forte: true }); }
+      if (!alerta) depois(ofertarLembrete, 7000);
       return;
     }
     if (/^Raio-X enviado/.test(txt)) {
@@ -735,10 +1104,40 @@
       return;
     }
     const tr = txt.match(/^Treino registrado: (\d+) UA/);
-    if (tr) { reagir("garra", 2600); festejar(); falar(V(F.treino, { ua: tr[1] + " UA" }), { forte: true }); return; }
+    if (tr) { reagir("garra", 2600); festejar(); falar(V(F.treino, { ua: tr[1] + " UA" }), { forte: true }); depois(recarregarTreinoHoje, 1500); return; }
     if (tipo === "ok") reagir("vibra", 1600);
     else if (tipo === "erro") reagir("apoio", 2400);
     else reagir("curioso", 1600);
+  }
+
+  /* ════ estados vazios com o Breu: um atalho para o próximo passo ════ */
+  function decorarVazio(p, o) {
+    p.setAttribute("data-breu", "1"); p.classList.add("breu-vazio");
+    const av = document.createElement("span"); av.className = "breu-vazio-av"; av.setAttribute("aria-hidden", "true");
+    const svg = instancia("busto", null, o.x || "curioso"); av.appendChild(svg); S.extras.add(svg);
+    const txt = document.createElement("span"); txt.className = "breu-vazio-txt";
+    while (p.firstChild) txt.appendChild(p.firstChild);
+    p.append(av, txt);
+    if (o.b) {
+      const b = document.createElement("button"); b.type = "button"; b.className = "breu-vazio-btn"; b.textContent = o.b;
+      b.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); o.fn(); });
+      txt.appendChild(b);
+    }
+  }
+  const VAZIOS_ATLETA = [
+    { card: /Analytics/i, b: "Fazer check-in", fn: irCheckin },
+    { card: /Gráfico de Evolução/i, b: "Fazer check-in", fn: irCheckin },
+    { card: /Sala de Troféus/i, quando: () => !!document.getElementById("rp-torn"), b: "Registrar Raio-X", fn: irRaioX },
+    { card: /Análises de vídeo/i, quando: () => !!document.getElementById("ia-file"), b: "Enviar vídeo", fn: () => { const f = document.getElementById("ia-file"); if (f) f.click(); } }
+  ];
+  function decorarVaziosAtleta() {
+    const c = document.getElementById("mob-content"); if (!c || !S.rig) return;
+    c.querySelectorAll(".am-vazio:not([data-breu])").forEach(p => {
+      const card = p.closest(".am-card"), tit = card ? ((card.querySelector(".am-tit span") || {}).textContent || "") : "";
+      const r = VAZIOS_ATLETA.find(v => v.card.test(tit) && (!v.quando || v.quando()));
+      if (r) decorarVazio(p, { b: r.b, fn: () => { marcarAcao(); r.fn(); }, x: "curioso" });
+      else p.setAttribute("data-breu", "0");
+    });
   }
 
   /* ════ repouso: boceja, cochila e acorda ════ */
@@ -766,7 +1165,29 @@
     }, 5000);
   }
 
-  /* ════ ouvintes globais ════ */
+  /* ════ ouvintes ════ */
+  /* avisos (toasts) e banners flutuantes do app */
+  function observarAvisos(comBanners) {
+    const vistosT = new WeakSet();
+    const varrer = () => {
+      document.querySelectorAll("#am-toasts .am-toast").forEach(t => { if (!vistosT.has(t)) { vistosT.add(t); toast(t); } });
+      if (!comBanners || !S.dock) return;
+      // banners do app no rodapé (instalar / nova versão): o Breu sobe só se o banner ficar embaixo dele
+      const xDock = innerWidth - (parseFloat(getComputedStyle(S.dock).right) || 12) - (S.dock.offsetWidth || 72);
+      const b = Array.from(document.querySelectorAll("body > .am-flutua")).filter(x => x.getClientRects().length && x.getBoundingClientRect().right > xDock);
+      const alto = b.reduce((m, x) => Math.max(m, x.getBoundingClientRect().height), 0);
+      S.dock.style.setProperty("--breu-elev", alto ? Math.round(alto + 12) + "px" : "0px");
+    };
+    document.querySelectorAll("#am-toasts .am-toast").forEach(t => vistosT.add(t));
+    const mb = new MutationObserver(varrer);
+    mb.observe(document.body, { childList: true });
+    const caixa = document.getElementById("am-toasts");
+    if (caixa) { caixa.dataset.breu = "1"; mb.observe(caixa, { childList: true }); }
+    const mbt = new MutationObserver(() => { const cx = document.getElementById("am-toasts"); if (cx && !cx.dataset.breu) { cx.dataset.breu = "1"; mb.observe(cx, { childList: true }); } });
+    mbt.observe(document.body, { childList: true });
+    S.obs.push(mb, mbt);
+    varrer();
+  }
   function ligarOuvintes() {
     ouvir(window, "pointermove", e => { S.ptr = { x: e.clientX, y: e.clientY }; S.ptrT = Date.now(); if (Date.now() - S.ultimaAcao > 1500) marcarAcao(); agendarOlhar(); }, { passive: true });
     ouvir(window, "pointerdown", e => {
@@ -783,7 +1204,16 @@
       if (t.id === "rp-conf") reagir(+t.value >= 8 ? "garra" : +t.value <= 3 ? "apoio" : "foco", 1800);
     }, true);
     ouvir(document, "click", e => {
-      const t = e.target && e.target.closest ? e.target.closest("[data-res],.check-tile") : null;
+      const alvo = e.target && e.target.closest ? e.target : null; if (!alvo) return;
+      // recurso bloqueado pelo plano: o Breu explica quem libera
+      const g = alvo.closest("#mob-content .am-gate");
+      if (g) {
+        const plano = ((g.querySelector(".lock-plan-name") || {}).textContent || "").replace("+", "").trim() || "Pro";
+        marcarAcao(); reagir("curioso", 2200);
+        falar(V(F.bloqueado, { plano }), { usuario: true });
+        return;
+      }
+      const t = alvo.closest("[data-res],.check-tile");
       if (!t) return;
       if (t.dataset.res) { S.resultado = t.dataset.res; reagir(/Vitória/.test(t.dataset.res) ? "vibra" : /Derrota/.test(t.dataset.res) ? "apoio" : "foco", 2000); }
       else reagir("garra", 900);
@@ -813,8 +1243,8 @@
       S.escondidoEm = 0;
     });
     ouvir(window, "resize", () => { cancelar(S.rzT); S.rzT = depois(() => conferirCobertura(true), 200); }, { passive: true });
-    ouvir(window, "offline", () => reagir("apoio", 2600));
-    ouvir(window, "online", () => reagir("vibra", 1600));
+    ouvir(window, "offline", () => { reagir("apoio", 2600); falar(V(F.offline), { forte: true, expr: "apoio" }); depois(() => heroPadrao(), 300); });
+    ouvir(window, "online", () => { reagir("vibra", 1600); depois(() => heroPadrao(), 300); });
     if (mmReduz.addEventListener) ouvir(mmReduz, "change", () => olharPara(null, null));
 
     // mudanças na tela do app (abas, cards, S.O.S, respiração...)
@@ -826,28 +1256,10 @@
     });
     mo.observe(document.getElementById("app"), { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] });
     S.obs.push(mo);
-    // avisos (toasts) e banners flutuantes do app
-    const vistos = new WeakSet();
-    const varrer = () => {
-      document.querySelectorAll("#am-toasts .am-toast").forEach(t => { if (!vistos.has(t)) { vistos.add(t); toast(t); } });
-      // banners do app no rodapé (instalar / nova versão): o Breu sobe só se o banner ficar embaixo dele
-      const xDock = S.dock ? innerWidth - (parseFloat(getComputedStyle(S.dock).right) || 12) - (S.dock.offsetWidth || 72) : innerWidth;
-      const b = Array.from(document.querySelectorAll("body > .am-flutua")).filter(x => x.getClientRects().length && x.getBoundingClientRect().right > xDock);
-      const alto = b.reduce((m, x) => Math.max(m, x.getBoundingClientRect().height), 0);
-      if (S.dock) S.dock.style.setProperty("--breu-elev", alto ? Math.round(alto + 12) + "px" : "0px");
-    };
-    document.querySelectorAll("#am-toasts .am-toast").forEach(t => vistos.add(t));
-    const mb = new MutationObserver(varrer);
-    mb.observe(document.body, { childList: true });
-    const caixa = document.getElementById("am-toasts");
-    if (caixa) mb.observe(caixa, { childList: true });
-    const mbt = new MutationObserver(() => { const cx = document.getElementById("am-toasts"); if (cx && !cx.dataset.breu) { cx.dataset.breu = "1"; mb.observe(cx, { childList: true }); } });
-    mbt.observe(document.body, { childList: true });
-    S.obs.push(mb, mbt);
-    varrer();
+    observarAvisos(true);
   }
 
-  /* ════ montar / desmontar ════ */
+  /* ════ montar / desmontar (atleta) ════ */
   async function montar() {
     const A = app();
     if (!A || !A.user || S.montando) return;
@@ -863,7 +1275,7 @@
     catch (e) { S.montando = false; return; }
     const B = app();
     if (!B || !B.user || B.user.uid !== A.user.uid || !document.querySelector(".phone-header")) { S.montando = false; return; }
-    S.montado = true; S.montando = false;
+    S.montado = true; S.montando = false; S.visao = "atleta";
     S.base = S.quieto ? "respira" : "foco"; S.expr = S.base;
     criarDock();
     const c = document.getElementById("mob-content");
@@ -872,6 +1284,7 @@
     cicloPiscar(); cicloOrelhas(); cicloRepouso();
     lerTela();
     atualizarDock();
+    depois(carregarNovidades, 600);
     // entrada
     const primeiraVez = !p.intro, cresceu = p.versaoVista === "sub15" && S.versao === "15";
     salvarPref({ intro: true, versaoVista: S.versao });
@@ -895,21 +1308,311 @@
     soltarHero(); S.hero = null; S.svgH = null;
     if (S.dock) S.dock.remove();
     const c = document.getElementById("mob-content"); if (c) c.classList.remove("breu-folga");
-    Object.assign(S, { dock: null, btn: null, fala: null, svgC: null, aba: null, modo: null, resp: null, ckFeito: null, dormindo: false, bocejou: false, exprTimer: 0, falaTimer: 0, ckUltimo: {}, ckFalado: {}, gravando: false, iaTxt: "", tecladoAberto: false, rolando: false });
+    desmontarEquipe();
+    S.extras.clear();
+    Object.assign(S, { visao: null, dock: null, btn: null, fala: null, svgC: null, aba: null, modo: null, resp: null, ckFeito: null, dormindo: false, bocejou: false, exprTimer: 0, falaTimer: 0, ckUltimo: {}, ckFalado: {}, gravando: false, iaTxt: "", tecladoAberto: false, rolando: false, cobertura: 0, bloqueando: false, critico: false, forcaDentro: 0, fila: [] });
+    Object.assign(N, { carregado: false, recados: [], treinoHoje: null, seq: 0, seqHoje: false });
   }
 
-  /* o app troca a tela inteira ao entrar/sair: confere se a visão do atleta está aberta */
-  function conferir() {
+  /* ════ termos: menores de 18 precisam do responsável (o Breu explica, não apressa o aceite) ════ */
+  const T = { obs: null, alvo: null };
+  function conferirTermos() {
+    const A = app(), form = document.getElementById("cs-form");
+    const atleta = !!(A && A.user && A.cargo === "paciente" && form);
+    if (!atleta) { if (T.obs) { T.obs.disconnect(); T.obs = null; T.alvo = null; } return; }
+    const box = form.parentNode;
+    if (T.alvo !== box) {
+      if (T.obs) T.obs.disconnect();
+      T.alvo = box;
+      T.obs = new MutationObserver(() => decorarTermos());
+      T.obs.observe(box, { childList: true, subtree: true });
+    }
+    decorarTermos();
+  }
+  function decorarTermos() {
+    const A = app(), resp = document.querySelector("#cs-form .am-resp");
+    if (!resp || !A || !A.user || resp.querySelector(".breu-termos")) return;
+    const nasc = (document.getElementById("cs-nasc") || {}).value || A.user.nascimento;
+    const id = idadeDe(nasc); if (id === null || id >= 18) return;
+    const versao = id < 15 ? "sub15" : "15";
+    carregarRig(versao).then(rig => {
+      if (!resp.isConnected || resp.querySelector(".breu-termos")) return;
+      const d = document.createElement("div"); d.className = "breu-termos"; d.setAttribute("role", "note");
+      const av = document.createElement("span"); av.className = "breu-termos-av"; av.setAttribute("aria-hidden", "true");
+      av.appendChild(instancia("busto", rig, "apoio"));
+      const p = document.createElement("p");
+      const nome = document.createElement("b"); nome.textContent = "Breu";
+      p.append(nome, document.createTextNode(" " + (versao === "sub15" ? F.termos.s : F.termos.m)));
+      d.append(av, p);
+      resp.prepend(d);
+    }).catch(() => {});
+  }
+
+  /* ════ EQUIPE: assistente com pendências do dia e dicas de cada tela ════ */
+  function moduloOk(id) {
+    const b = document.querySelector('.psico-sidebar .nav-item[data-mod="' + id + '"]');
+    return !!b && !b.classList.contains("locked-nav");
+  }
+  function nomeModulo(id) {
+    const b = document.querySelector('.psico-sidebar .nav-item[data-mod="' + id + '"]');
+    return (b && b.textContent.trim()) || (DICAS[id] && DICAS[id].t) || id;
+  }
+  function abrirModulo(id, depoisDe) {
+    pegar(() => APP.abrirModulo(id));
+    if (depoisDe) esperar(depoisDe, 5000);
+  }
+  function convidarAtleta() {
+    abrirModulo("atletas_pro", () => { const b = document.getElementById("atl-conv"); if (b) { b.click(); return true; } return false; });
+  }
+  function montarEquipe() {
+    const A = app(); if (!A || !A.user || S.montando) return;
+    S.montando = true;
+    const uid = A.user.uid || "anon";
+    carregarRig("15").then(rig => {
+      S.montando = false;
+      const B = app();
+      if (!B || !B.user || B.user.uid !== uid || !document.getElementById("dash-main") || S.montado) return;
+      Object.assign(S, { montado: true, visao: "equipe", uid, nome: primeiro(B.user.nome), versao: "15", rig, base: "foco", expr: "foco", quieto: false, modo: null });
+      criarEquipe();
+      ligarOuvintesEquipe();
+      cicloPiscar(); cicloOrelhas();
+      lerTelaEquipe();
+      depois(carregarPendencias, 1800);
+    }).catch(() => { S.montando = false; });
+  }
+  function botaoEntrada(cls) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "breu-eq-btn " + cls;
+    b.setAttribute("aria-haspopup", "dialog"); b.setAttribute("aria-expanded", "false"); b.setAttribute("aria-controls", "breu-eq-painel");
+    b.innerHTML = `<span class="breu-eq-av"><i class="breu-eq-dot" hidden></i></span><span class="breu-eq-txt"><b>Breu</b><span class="breu-eq-st"></span></span>`;
+    const svg = instancia("busto"); b.querySelector(".breu-eq-av").prepend(svg); EQ.avs.push(svg);
+    b.addEventListener("click", () => { if (EQ.painel && !EQ.painel.hidden) fecharPainel(); else abrirPainel(b); });
+    return b;
+  }
+  function criarEquipe() {
+    EQ.card = botaoEntrada("breu-eq-card");
+    EQ.pill = botaoEntrada("breu-eq-pill");
+    if (!pref().eqVisto) { EQ.card.dataset.novo = "1"; EQ.pill.dataset.novo = "1"; }
+    const ovl = document.createElement("div"); ovl.className = "breu-eq-ovl"; ovl.hidden = true; ovl.addEventListener("click", () => fecharPainel());
+    const p = document.createElement("aside");
+    p.className = "breu-eq-painel"; p.id = "breu-eq-painel"; p.hidden = true;
+    p.setAttribute("role", "dialog"); p.setAttribute("aria-labelledby", "breu-eq-tit");
+    p.innerHTML = `<div class="breu-eq-cab"><span class="breu-eq-cab-av"></span><div class="breu-eq-cab-txt"><p class="breu-eq-kick">Breu · assistente da equipe</p><h2 class="breu-eq-tit" id="breu-eq-tit" tabindex="-1"></h2></div><button type="button" class="breu-eq-x" aria-label="Fechar o Breu">×</button></div><div class="breu-eq-corpo"><p class="breu-eq-intro" hidden></p><section class="breu-eq-sec"><h3 class="breu-eq-h">Hoje</h3><div class="breu-eq-pend" aria-live="polite"></div></section><section class="breu-eq-sec breu-eq-tela"><h3 class="breu-eq-h">Nesta tela · <span class="breu-eq-mod"></span></h3><ul class="breu-eq-dicas"></ul><div class="breu-eq-links"></div></section><details class="breu-eq-sec breu-eq-atl"><summary class="breu-eq-h">O Breu dos atletas</summary><div class="breu-eq-atl-c"><div class="breu-eq-duas"></div><ul class="breu-eq-dicas"></ul></div></details></div>`;
+    const cab = instancia("busto"); p.querySelector(".breu-eq-cab-av").appendChild(cab); EQ.avs.push(cab);
+    p.querySelector(".breu-eq-x").addEventListener("click", () => fecharPainel());
+    const ul = p.querySelector(".breu-eq-atl .breu-eq-dicas");
+    EQT.atletas.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+    p.querySelector(".breu-eq-atl").addEventListener("toggle", e => { if (e.target.open) mostrarDuasVersoes(); });
+    document.body.append(ovl, p);
+    EQ.ovl = ovl; EQ.painel = p;
+    garantirEntradas();
+    atualizarStatus();
+  }
+  function mostrarDuasVersoes() {
+    const box = EQ.painel && EQ.painel.querySelector(".breu-eq-duas");
+    if (!box || box.children.length) return;
+    [["sub15", "Sub-15 · até 14 anos"], ["15", "15+ · humanoide"]].forEach(([v, rot]) => {
+      const fig = document.createElement("figure"); fig.className = "breu-eq-ver";
+      const cap = document.createElement("figcaption"); cap.textContent = rot;
+      box.appendChild(fig);
+      carregarRig(v).then(rig => { if (!fig.isConnected) return; const s = instancia("inteiro", rig, "foco"); fig.prepend(s); S.extras.add(s); fig.appendChild(cap); }).catch(() => fig.remove());
+    });
+  }
+  /* o app redesenha o menu lateral a cada troca de tela: o Breu volta para o lugar dele */
+  function garantirEntradas() {
+    const side = document.querySelector(".psico-sidebar");
+    if (side && EQ.card && EQ.card.parentNode !== side) side.insertBefore(EQ.card, side.querySelector(".am-ver"));
+    const topo = document.querySelector("#dash-main .am-topo");
+    if (topo && EQ.pill && EQ.pill.parentNode !== topo) topo.appendChild(EQ.pill);
+  }
+  function abrirPainel(origem) {
+    if (!EQ.painel) return;
+    EQ.origem = origem || EQ.card;
+    // no celular o menu lateral pode estar aberto: fecha antes
+    const ovlApp = document.querySelector("body > .ovl.show"); if (ovlApp) ovlApp.click();
+    if (EQ.card.dataset.novo) { salvarPref({ eqVisto: true }); delete EQ.card.dataset.novo; delete EQ.pill.dataset.novo; EQ.mostrarIntro = true; }
+    const intro = EQ.painel.querySelector(".breu-eq-intro");
+    intro.hidden = !EQ.mostrarIntro;
+    if (EQ.mostrarIntro) intro.textContent = V({ m: EQT.intro });
+    EQ.painel.querySelector(".breu-eq-tit").textContent = saudacaoEquipe();
+    desenharPend(); desenharTela();
+    EQ.painel.hidden = false; EQ.ovl.hidden = false;
+    [EQ.card, EQ.pill].forEach(b => b && b.setAttribute("aria-expanded", "true"));
+    reagir("curioso", 1200);
+    depois(() => { const t = EQ.painel.querySelector(".breu-eq-tit"); try { t.focus({ preventScroll: true }); } catch (e) {} }, 30);
+    if (!EQ.pend || Date.now() - EQ.pend.em > 3 * 60000) carregarPendencias();
+  }
+  function fecharPainel(semFoco) {
+    if (!EQ.painel || EQ.painel.hidden) return;
+    EQ.painel.hidden = true; EQ.ovl.hidden = true; EQ.mostrarIntro = false;
+    [EQ.card, EQ.pill].forEach(b => b && b.setAttribute("aria-expanded", "false"));
+    if (semFoco) return;
+    const volta = [EQ.origem, EQ.card, EQ.pill].find(b => b && b.isConnected && b.getClientRects().length);
+    if (volta) try { volta.focus({ preventScroll: true }); } catch (e) {}
+  }
+  function saudacaoEquipe() {
+    const h = new Date().getHours(), n = S.nome ? ", " + S.nome : "";
+    return (h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite") + n + ".";
+  }
+  async function carregarPendencias() {
+    if (EQ.carregando || !S.montado || S.visao !== "equipe") return;
+    const B = fb(), uid = S.uid; if (!B) return;
+    EQ.carregando = true;
+    if (!EQ.pend) desenharPend();
+    const ini = new Date(); ini.setHours(0, 0, 0, 0);
+    const hoje = diaLocal(), ok = p => Promise.resolve(p).catch(() => null);
+    const verCk = moduloOk("dashboard") || moduloOk("checkins"), verAg = moduloOk("agenda"), admin = !!pegar(() => ehAdmin());
+    const [cks, ag, lg] = await Promise.all([
+      verCk ? ok(B.query("checkins", "data", ">=", ini.toISOString(), "data", "DESCENDING", 500, true)) : null,
+      verAg ? ok(B.query("agenda", "dataHora", ">=", hoje, "dataHora", "ASCENDING", 300, true)) : null,
+      admin ? ok(B.query("solicitacoes_lgpd", "status", "in", ["aberta", "em_andamento"], null, "DESCENDING", 200, true)) : null
+    ]);
+    EQ.carregando = false;
+    if (!S.montado || S.uid !== uid) return;
+    const itens = [];
+    if (cks) {
+      const pessoas = new Set(cks.filter(r => { const al = pegar(() => alertasCk(r)); return al && al.length; }).map(r => r.pacienteId));
+      if (pessoas.size) {
+        const mod = moduloOk("dashboard") ? "dashboard" : "checkins";
+        itens.push({ tipo: "alerta", urg: true, n: pessoas.size, txt: `${plural(pessoas.size, "atleta", "atletas")} com sinal de alerta no check-in de hoje.`, mod, botao: mod === "dashboard" ? "Ver no Radar" : "Ver check-ins" });
+      }
+    }
+    if (ag) {
+      const agora = new Date(Date.now() - 30 * 60000), lim = `${diaLocal(agora)}T${p2(agora.getHours())}:${p2(agora.getMinutes())}`;
+      const minhas = ag.filter(s => String(s.dataHora).slice(0, 10) === hoje && s.profissionalId === uid && String(s.dataHora) >= lim)
+        .sort((a, b) => String(a.dataHora).localeCompare(String(b.dataHora)));
+      if (minhas.length) {
+        const pr = minhas[0], quem = primeiro(pr.nome);
+        const txt = minhas.length === 1 ? `1 sessão sua hoje, às ${hhmm(pr.dataHora)}${quem ? " (" + quem + ")" : ""}.` : `${minhas.length} sessões suas hoje · a próxima às ${hhmm(pr.dataHora)}${quem ? " (" + quem + ")" : ""}.`;
+        itens.push({ tipo: "sessao", n: minhas.length, txt, mod: "agenda", botao: "Abrir agenda" });
+      }
+    }
+    if (lg && lg.length) {
+      const venc = lg.filter(s => Date.now() - Date.parse(s.criadoEm) >= 15 * 864e5).length;
+      itens.push({ tipo: "lgpd", urg: venc > 0, n: lg.length, venc, txt: `${plural(lg.length, "pedido LGPD em aberto", "pedidos LGPD em aberto")}${venc ? ` · ${venc === 1 ? "1 passou" : venc + " passaram"} de 15 dias` : ""}.`, mod: "lgpd", botao: "Abrir pedidos" });
+    }
+    EQ.pend = { em: Date.now(), itens };
+    desenharPend();
+  }
+  function desenharPend() {
+    const box = EQ.painel && EQ.painel.querySelector(".breu-eq-pend");
+    if (box) {
+      box.textContent = "";
+      const P = EQ.pend;
+      if (!P || (!P.itens.length && EQ.carregando)) { const p = document.createElement("p"); p.className = "breu-eq-vazio"; p.textContent = EQT.carregando; box.appendChild(p); }
+      else if (!P.itens.length) { const p = document.createElement("p"); p.className = "breu-eq-vazio"; p.textContent = EQT.nada; box.appendChild(p); }
+      else P.itens.forEach(it => {
+        const d = document.createElement("div"); d.className = "breu-eq-item" + (it.urg ? " urg" : "") + " t-" + it.tipo;
+        const p = document.createElement("p"); p.textContent = it.txt; d.appendChild(p);
+        if (it.mod && moduloOk(it.mod)) {
+          const b = document.createElement("button"); b.type = "button"; b.className = "breu-eq-ir"; b.textContent = it.botao;
+          b.addEventListener("click", () => { fecharPainel(true); abrirModulo(it.mod); });
+          d.appendChild(b);
+        }
+        box.appendChild(d);
+      });
+    }
+    atualizarStatus();
+  }
+  /* texto curto e ponto colorido no botão do Breu */
+  function atualizarStatus() {
+    const P = EQ.pend, it = P ? P.itens : [];
+    const al = it.find(x => x.tipo === "alerta"), lg = it.find(x => x.tipo === "lgpd"), se = it.find(x => x.tipo === "sessao");
+    let txt = "Dicas desta tela", cor = "";
+    if (!P) txt = "Conferindo o dia...";
+    if (al) { txt = plural(al.n, "alerta hoje", "alertas hoje"); cor = "urg"; }
+    else if (lg && lg.venc) { txt = "LGPD: prazo vencido"; cor = "urg"; }
+    else if (se) { txt = plural(se.n, "sessão hoje", "sessões hoje"); cor = "info"; }
+    else if (lg) { txt = plural(lg.n, "pedido LGPD", "pedidos LGPD"); cor = "atencao"; }
+    else if (P) txt = "Tudo em dia";
+    [EQ.card, EQ.pill].forEach(b => {
+      if (!b) return;
+      const novo = !!b.dataset.novo;
+      b.querySelector(".breu-eq-st").textContent = novo ? "Oi! Clique aqui" : txt;
+      const dot = b.querySelector(".breu-eq-dot");
+      dot.hidden = !cor || novo; if (cor) dot.dataset.cor = cor;
+      b.toggleAttribute("data-urg", cor === "urg" && !novo);
+      b.setAttribute("aria-label", "Breu, assistente da equipe: " + (novo ? "pendências do dia e dicas de cada tela" : txt));
+    });
+  }
+  function desenharTela() {
+    if (!EQ.painel) return;
+    const aba = pegar(() => APP.abaStaff) || "dashboard", sec = EQ.painel.querySelector(".breu-eq-tela");
+    const d = DICAS[aba] || { t: nomeModulo(aba), d: [EQT.padrao], l: [] };
+    EQ.abaHelp = aba;
+    sec.querySelector(".breu-eq-mod").textContent = d.t;
+    const ul = sec.querySelector(".breu-eq-dicas"); ul.textContent = "";
+    d.d.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+    const links = sec.querySelector(".breu-eq-links"); links.textContent = "";
+    (d.l || []).filter(id => id !== aba && moduloOk(id)).forEach(id => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "breu-eq-link"; b.textContent = nomeModulo(id);
+      b.addEventListener("click", () => { abrirModulo(id); });
+      links.appendChild(b);
+    });
+    links.hidden = !links.children.length;
+  }
+  /* nenhum atleta ainda: o Breu leva direto para o convite */
+  function decorarVaziosEquipe() {
+    const main = document.getElementById("dash-main"); if (!main || !S.rig) return;
+    const podeConvidar = moduloOk("atletas_pro");
+    main.querySelectorAll(".am-vazio:not([data-breu])").forEach(p => {
+      if (podeConvidar && /Nenhum atleta (cadastrado|ainda)/.test(p.textContent || "")) decorarVazio(p, { b: "Convidar atleta", fn: convidarAtleta, x: "curioso" });
+      else p.setAttribute("data-breu", "0");
+    });
+    main.querySelectorAll(".am-selbar .am-dica:not([data-breu])").forEach(s => {
+      if (podeConvidar && /Nenhum atleta cadastrado/.test(s.textContent || "")) {
+        s.setAttribute("data-breu", "1");
+        const b = document.createElement("button"); b.type = "button"; b.className = "breu-eq-link"; b.textContent = "Convidar atleta";
+        b.addEventListener("click", convidarAtleta);
+        s.after(b);
+      } else s.setAttribute("data-breu", "0");
+    });
+  }
+  function lerTelaEquipe() {
+    if (!S.montado || S.visao !== "equipe") return;
+    garantirEntradas();
+    const aberto = EQ.painel && !EQ.painel.hidden;
+    if (aberto && document.querySelector("#am-sos-faixa .glow-r")) fecharPainel(true); // S.O.S chegou: o painel sai da frente
+    else if (aberto && pegar(() => APP.abaStaff) !== EQ.abaHelp) desenharTela();
+    decorarVaziosEquipe();
+  }
+  function ligarOuvintesEquipe() {
+    ouvir(window, "pointermove", e => { S.ptr = { x: e.clientX, y: e.clientY }; S.ptrT = Date.now(); agendarOlhar(); }, { passive: true });
+    ouvir(window, "pointerdown", e => { S.ptr = { x: e.clientX, y: e.clientY }; S.ptrT = Date.now(); agendarOlhar(); depois(agendarOlhar, 9100); }, { passive: true, capture: true });
+    ouvir(document, "keydown", e => { if (e.key === "Escape" && EQ.painel && !EQ.painel.hidden && !document.querySelector(".pro-modal-overlay.active")) { e.stopPropagation(); fecharPainel(); } }, true);
+    let pend = false;
+    const mo = new MutationObserver(() => {
+      garantirEntradas(); // sem esperar o próximo quadro: o menu lateral não pisca
+      if (pend) return; pend = true;
+      requestAnimationFrame(() => { pend = false; lerTelaEquipe(); });
+    });
+    mo.observe(document.getElementById("app"), { childList: true, subtree: true });
+    S.obs.push(mo);
+    observarAvisos(false);
+  }
+  function desmontarEquipe() {
+    [EQ.card, EQ.pill, EQ.painel, EQ.ovl].forEach(n => n && n.remove());
+    Object.assign(EQ, { card: null, pill: null, painel: null, ovl: null, avs: [], pend: null, carregando: false, abaHelp: null, origem: null, mostrarIntro: false });
+  }
+
+  /* ════ início: o app troca a tela inteira ao entrar e sair ════ */
+  function visaoAtual() {
     const A = app();
-    const atleta = !!(A && A.user && A.cargo === "paciente" && document.querySelector(".phone-header") && document.getElementById("mob-content"));
-    if (atleta && S.montado && A.user.uid !== S.uid) desmontar();
-    if (atleta && !S.montado) montar();
-    else if (!atleta && S.montado) desmontar();
-    else if (atleta && S.montado) {
+    if (!A || !A.user) return null;
+    if (A.cargo === "paciente" && document.querySelector(".phone-header") && document.getElementById("mob-content")) return "atleta";
+    if (pegar(() => isStaff(A.cargo)) && document.getElementById("dash-main")) return "equipe";
+    return null;
+  }
+  function conferir() {
+    const A = app(), v = visaoAtual();
+    if (S.montado && (v !== S.visao || !A || !A.user || A.user.uid !== S.uid)) desmontar();
+    if (v && !S.montado) { if (v === "atleta") montar(); else montarEquipe(); }
+    else if (v === "atleta" && S.montado) {
       const c = document.getElementById("mob-content");
       if (c && !c.classList.contains("breu-folga")) c.classList.add("breu-folga");
       if (S.dock && !S.dock.isConnected) document.body.appendChild(S.dock);
-    }
+    } else if (v === "equipe" && S.montado) lerTelaEquipe();
+    conferirTermos();
   }
   function iniciar() {
     const raiz = document.getElementById("app");
@@ -919,5 +1622,10 @@
     conferir();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
-  window.Breu = { versao: VERSAO, reagir: (x, ms) => S.montado && reagir(x, ms), falar: t => S.montado && falar(String(t), { usuario: true }), estado: () => ({ montado: S.montado, versao: S.versao, expr: S.expr, aba: S.aba, modo: S.modo, quieto: S.quieto, idade: S.idade }) };
+  window.Breu = {
+    versao: VERSAO,
+    reagir: (x, ms) => S.montado && reagir(x, ms),
+    falar: t => S.montado && falar(String(t), { usuario: true }),
+    estado: () => ({ montado: S.montado, visao: S.visao, versao: S.versao, expr: S.expr, aba: S.aba, modo: S.modo, quieto: S.quieto, idade: S.idade, seq: N.seq, seqHoje: N.seqHoje, recados: N.recados.map(r => r.tipo), treinoHoje: N.treinoHoje && N.treinoHoje.titulo, pendencias: EQ.pend && EQ.pend.itens.map(i => i.tipo + ":" + i.n) })
+  };
 })();
